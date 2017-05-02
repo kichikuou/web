@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "outFile": "../docs/shell.js",
+        "noImplicitAny": true,
+        "sourceMap": false
+    },
+    "files": [
+        "shell.ts"
+    ]
+}
