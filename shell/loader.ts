@@ -58,7 +58,6 @@ namespace xsystem35 {
             }
             if (this.imgFile && this.cueFile) {
                 this.imageReader = await CDImage.createReader(this.imgFile, this.cueFile);
-                await xsystem35.fileSystemReady;
                 this.startLoad();
             }
         }
@@ -77,16 +76,21 @@ namespace xsystem35 {
         private async startLoad() {
             let isofs = await CDImage.ISO9660FileSystem.create(this.imageReader);
             // this.walk(isofs, isofs.rootDir(), '/');
-            let gamedata = await isofs.getDirEnt('gamedata', isofs.rootDir());
+            let gamedata = await isofs.getDirEnt('gamedata', isofs.rootDir()) ||
+                           await isofs.getDirEnt('mugen', isofs.rootDir());
             if (!gamedata) {
-                this.setError('インストールできません。GAMEDATAフォルダが見つかりません。');
+                this.shell.addToast('インストールできません。イメージ内にGAMEDATAフォルダが見つかりません。', 'danger');
                 return;
             }
+
+            let isSystem3 = !!await isofs.getDirEnt('system3.exe', gamedata);
+            shell.loadModule(isSystem3 ? 'system3' : 'xsystem35');
+            await xsystem35.fileSystemReady;
             this.shell.loadStarted();
 
             let aldFiles = [];
             for (let e of await isofs.readDir(gamedata)) {
-                if (!e.name.toLowerCase().endsWith('.ald'))
+                if (!e.name.toLowerCase().endsWith(isSystem3 ? '.dat' : '.ald'))
                     continue;
                 // Store contents in the emscripten heap, so that it can be mmap-ed without copying
                 let ptr = Module.getMemory(e.size);
@@ -94,13 +98,16 @@ namespace xsystem35 {
                 FS.writeFile(e.name, Module.HEAPU8.subarray(ptr, ptr + e.size), { encoding: 'binary', canOwn: true });
                 aldFiles.push(e.name);
             }
-            FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
-            FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
-            this.shell.loaded();
-        }
+            if (isSystem3) {
+                let savedir = '/save/' + isofs.volumeLabel();
+                Module.arguments.push('-savedir', savedir + '/');
+                xsystem35.saveDirReady.then(() => { mkdirIfNotExist(savedir); });
+            } else {
+                FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
+                FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
+            }
 
-        private setError(msg: string) {
-            console.log(msg);
+            this.shell.loaded();
         }
 
         private createGr(files: string[]): string {

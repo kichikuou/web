@@ -106,15 +106,15 @@ namespace xsystem35 {
                     });
                 },
             ];
+        }
 
-            document.addEventListener('DOMContentLoaded', () => {
-                let useWasm = typeof WebAssembly === 'object' && this.params.get('wasm') !== '0';
-                let src = useWasm ? 'xsystem35.js' : 'xsystem35.asm.js';
-                let script = document.createElement('script');
-                script.src = src;
-                script.onerror = () => { this.addToast('xsystem35の読み込みに失敗しました。リロードしてください。', 'danger'); };
-                document.body.appendChild(script);
-            });
+        loadModule(name: 'system3' | 'xsystem35') {
+            let useWasm = typeof WebAssembly === 'object' && this.params.get('wasm') !== '0';
+            let src = name + (useWasm ? '.js' : '.asm.js');
+            let script = document.createElement('script');
+            script.src = src;
+            script.onerror = () => { this.addToast(src + 'の読み込みに失敗しました。リロードしてください。', 'danger'); };
+            document.body.appendChild(script);
         }
 
         loadStarted() {

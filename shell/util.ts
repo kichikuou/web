@@ -53,6 +53,15 @@ function openFileInput(): Promise<File> {
     });
 }
 
+function mkdirIfNotExist(path: string) {
+    try {
+        FS.mkdir(path);
+    } catch (err) {
+        if (<any>err.code !== 'EEXIST')
+            throw err;
+    }
+}
+
 declare var WebAssembly: any;
 
 // xsystem35 exported functions

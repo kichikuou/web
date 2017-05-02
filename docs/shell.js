@@ -54,6 +54,15 @@ function openFileInput() {
         input.click();
     });
 }
+function mkdirIfNotExist(path) {
+    try {
+        FS.mkdir(path);
+    }
+    catch (err) {
+        if (err.code !== 'EEXIST')
+            throw err;
+    }
+}
 /// <reference path="util.ts" />
 var CDImage;
 (function (CDImage) {
@@ -381,7 +390,6 @@ var xsystem35;
                 }
                 if (this.imgFile && this.cueFile) {
                     this.imageReader = yield CDImage.createReader(this.imgFile, this.cueFile);
-                    yield xsystem35.fileSystemReady;
                     this.startLoad();
                 }
             });
@@ -401,15 +409,19 @@ var xsystem35;
             return __awaiter(this, void 0, void 0, function* () {
                 let isofs = yield CDImage.ISO9660FileSystem.create(this.imageReader);
                 // this.walk(isofs, isofs.rootDir(), '/');
-                let gamedata = yield isofs.getDirEnt('gamedata', isofs.rootDir());
+                let gamedata = (yield isofs.getDirEnt('gamedata', isofs.rootDir())) ||
+                    (yield isofs.getDirEnt('mugen', isofs.rootDir()));
                 if (!gamedata) {
-                    this.setError('インストールできません。GAMEDATAフォルダが見つかりません。');
+                    this.shell.addToast('インストールできません。イメージ内にGAMEDATAフォルダが見つかりません。', 'danger');
                     return;
                 }
+                let isSystem3 = !!(yield isofs.getDirEnt('system3.exe', gamedata));
+                xsystem35.shell.loadModule(isSystem3 ? 'system3' : 'xsystem35');
+                yield xsystem35.fileSystemReady;
                 this.shell.loadStarted();
                 let aldFiles = [];
                 for (let e of yield isofs.readDir(gamedata)) {
-                    if (!e.name.toLowerCase().endsWith('.ald'))
+                    if (!e.name.toLowerCase().endsWith(isSystem3 ? '.dat' : '.ald'))
                         continue;
                     // Store contents in the emscripten heap, so that it can be mmap-ed without copying
                     let ptr = Module.getMemory(e.size);
@@ -417,13 +429,17 @@ var xsystem35;
                     FS.writeFile(e.name, Module.HEAPU8.subarray(ptr, ptr + e.size), { encoding: 'binary', canOwn: true });
                     aldFiles.push(e.name);
                 }
-                FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
-                FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
+                if (isSystem3) {
+                    let savedir = '/save/' + isofs.volumeLabel();
+                    Module.arguments.push('-savedir', savedir + '/');
+                    xsystem35.saveDirReady.then(() => { mkdirIfNotExist(savedir); });
+                }
+                else {
+                    FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
+                    FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
+                }
                 this.shell.loaded();
             });
-        }
-        setError(msg) {
-            console.log(msg);
         }
         createGr(files) {
             const resourceType = {
@@ -491,13 +507,7 @@ var xsystem35;
         downloadSaveData() {
             return __awaiter(this, void 0, void 0, function* () {
                 let zip = new JSZip();
-                let folder = zip.folder('save');
-                for (let name of FS.readdir('/save')) {
-                    if (!name.toLowerCase().endsWith('.asd'))
-                        continue;
-                    let content = FS.readFile('/save/' + name, { encoding: 'binary' });
-                    folder.file(name, content);
-                }
+                this.storeZip('/save', zip.folder('save'));
                 let blob = yield zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
                 if (navigator.msSaveBlob) {
                     navigator.msSaveBlob(blob, 'savedata.zip');
@@ -512,6 +522,21 @@ var xsystem35;
                 }
             });
         }
+        storeZip(dir, zip) {
+            for (let name of FS.readdir(dir)) {
+                let path = dir + '/' + name;
+                if (name[0] === '.') {
+                    continue;
+                }
+                else if (FS.isDir(FS.stat(path).mode)) {
+                    this.storeZip(path, zip.folder(name));
+                }
+                else if (!name.toLowerCase().endsWith('.asd.')) {
+                    let content = FS.readFile(path, { encoding: 'binary' });
+                    zip.file(name, content);
+                }
+            }
+        }
         uploadSaveData() {
             openFileInput().then((file) => {
                 this.extractSaveData(file);
@@ -519,23 +544,25 @@ var xsystem35;
         }
         extractSaveData(file) {
             return __awaiter(this, void 0, void 0, function* () {
-                function basename(path) {
-                    return path.slice(path.lastIndexOf('/') + 1);
-                }
-                function addSaveFile(name, content) {
-                    console.log(name);
-                    FS.writeFile('/save/' + name, new Uint8Array(content), { encoding: 'binary' });
+                function addSaveFile(path, content) {
+                    FS.writeFile(path, new Uint8Array(content), { encoding: 'binary' });
                 }
                 try {
                     yield xsystem35.saveDirReady;
                     if (file.name.toLowerCase().endsWith('.asd')) {
-                        addSaveFile(file.name, yield readFileAsArrayBuffer(file));
+                        addSaveFile('/save/' + file.name, yield readFileAsArrayBuffer(file));
                     }
                     else {
                         let zip = new JSZip();
                         yield zip.loadAsync(yield readFileAsArrayBuffer(file));
-                        for (let f of zip.file(/\.asd$/i))
-                            addSaveFile(basename(f.name), yield f.async('arraybuffer'));
+                        let entries = [];
+                        zip.folder('save').forEach((path, z) => { entries.push(z); });
+                        for (let z of entries) {
+                            if (z.dir)
+                                mkdirIfNotExist('/' + z.name.slice(0, -1));
+                            else
+                                addSaveFile('/' + z.name, yield z.async('arraybuffer'));
+                        }
                     }
                     xsystem35.shell.syncfs(0);
                     xsystem35.shell.addToast('セーブデータの復元に成功しました。', 'success');
@@ -1145,14 +1172,14 @@ var xsystem35;
                     });
                 },
             ];
-            document.addEventListener('DOMContentLoaded', () => {
-                let useWasm = typeof WebAssembly === 'object' && this.params.get('wasm') !== '0';
-                let src = useWasm ? 'xsystem35.js' : 'xsystem35.asm.js';
-                let script = document.createElement('script');
-                script.src = src;
-                script.onerror = () => { this.addToast('xsystem35の読み込みに失敗しました。リロードしてください。', 'danger'); };
-                document.body.appendChild(script);
-            });
+        }
+        loadModule(name) {
+            let useWasm = typeof WebAssembly === 'object' && this.params.get('wasm') !== '0';
+            let src = name + (useWasm ? '.js' : '.asm.js');
+            let script = document.createElement('script');
+            script.src = src;
+            script.onerror = () => { this.addToast(src + 'の読み込みに失敗しました。リロードしてください。', 'danger'); };
+            document.body.appendChild(script);
         }
         loadStarted() {
             $('#loader').hidden = true;
