@@ -1102,13 +1102,10 @@ var xsystem35;
             this.status = document.getElementById('status');
             this.parseParams(location.search.slice(1));
             this.initModule();
-            this.setStatus('Downloading...');
-            window.onerror = () => {
-                this.setStatus('Exception thrown, see JavaScript console');
-                this.setStatus = (text) => {
-                    if (text)
-                        Module.printErr('[post-exception status] ' + text);
-                };
+            window.onerror = (message, url, line, column, error) => {
+                console.log(JSON.stringify({ message, url, line, column }));
+                this.addToast('エラーが発生しました。', 'danger');
+                window.onerror = null;
             };
             this.imageLoader = new xsystem35.ImageLoader(this);
             this.volumeControl = new xsystem35.VolumeControl();
@@ -1155,7 +1152,6 @@ var xsystem35;
                     $('.navbar-brand').textContent = title.slice(colon + 1);
             };
             Module.canvas = document.getElementById('canvas');
-            Module.setStatus = this.setStatus.bind(this);
             Module.preRun = [
                 () => { Module.addRunDependency('gameFiles'); },
                 fsReady,
@@ -1194,10 +1190,6 @@ var xsystem35;
                     Module.arguments.push('-antialias');
                 Module.removeRunDependency('gameFiles');
             }, 0);
-        }
-        setStatus(text) {
-            console.log(text);
-            this.status.innerHTML = text;
         }
         windowSizeChanged() {
             this.zoom.handleZoom();

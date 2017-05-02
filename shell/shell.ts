@@ -33,12 +33,10 @@ namespace xsystem35 {
             this.parseParams(location.search.slice(1));
             this.initModule();
 
-            this.setStatus('Downloading...');
-            window.onerror = () => {
-                this.setStatus('Exception thrown, see JavaScript console');
-                this.setStatus = (text: string) => {
-                    if (text) Module.printErr('[post-exception status] ' + text);
-                };
+            window.onerror = (message, url, line, column, error) => {
+                console.log(JSON.stringify({message, url, line, column}));
+                this.addToast('エラーが発生しました。', 'danger');
+                window.onerror = null;
             };
 
             this.imageLoader = new ImageLoader(this);
@@ -89,7 +87,6 @@ namespace xsystem35 {
                     $('.navbar-brand').textContent = title.slice(colon + 1);
             };
             Module.canvas = <HTMLCanvasElement>document.getElementById('canvas');
-            Module.setStatus = this.setStatus.bind(this);
             Module.preRun = [
                 () => { Module.addRunDependency('gameFiles'); },
                 fsReady,
@@ -131,11 +128,6 @@ namespace xsystem35 {
                     Module.arguments.push('-antialias');
                 Module.removeRunDependency('gameFiles');
             }, 0);
-        }
-
-        setStatus(text: string) {
-            console.log(text);
-            this.status.innerHTML = text;
         }
 
         windowSizeChanged() {
