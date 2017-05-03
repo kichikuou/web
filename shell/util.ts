@@ -33,8 +33,11 @@ function SJISArrayToString(buffer: DataView): string {
             out.push(0xff60 + c - 0xa0);
         else if (c < 0x80)
             out.push(c);
-        else
-            out.push(_sjis2unicode(c, buffer.getUint8(++i)));
+        else {
+            try {  // Emscripten module may not be loaded yet
+                out.push(_sjis2unicode(c, buffer.getUint8(++i)));
+            } catch (err) {}
+        }
     }
     return String.fromCharCode.apply(null, out);
 }
