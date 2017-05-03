@@ -35,7 +35,8 @@ namespace xsystem35 {
             this.initModule();
 
             window.onerror = (message, url, line, column, error) => {
-                console.log(JSON.stringify({message, url, line, column}));
+                let exDescription = JSON.stringify({message, url, line, column});
+                ga('send', 'exception', {exDescription, exFatal: true});
                 this.addToast('エラーが発生しました。', 'danger');
                 window.onerror = null;
             };
