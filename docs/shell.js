@@ -453,10 +453,9 @@ var xsystem35;
                     return;
                 }
                 let isSystem3 = !!(yield isofs.getDirEnt('system3.exe', gamedata));
-                xsystem35.shell.loadModule(isSystem3 ? 'system3' : 'xsystem35');
                 $('#loader').classList.add('module-loading');
-                yield xsystem35.fileSystemReady;
-                this.shell.loadStarted();
+                yield xsystem35.shell.loadModule(isSystem3 ? 'system3' : 'xsystem35');
+                let startTime = performance.now();
                 let aldFiles = [];
                 for (let e of yield isofs.readDir(gamedata)) {
                     if (!e.name.toLowerCase().endsWith(isSystem3 ? '.dat' : '.ald'))
@@ -476,6 +475,7 @@ var xsystem35;
                     FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
                     FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
                 }
+                ga('send', 'timing', 'Image load', this.imgFile.name, Math.round(performance.now() - startTime));
                 this.shell.loaded();
             });
         }
@@ -1222,11 +1222,13 @@ var xsystem35;
             script.src = src;
             script.onerror = () => { this.addToast(src + 'の読み込みに失敗しました。リロードしてください。', 'danger'); };
             document.body.appendChild(script);
-        }
-        loadStarted() {
-            $('#loader').hidden = true;
-            document.body.classList.add('bgblack-fade');
-            this.toolbar.setCloseable();
+            let start = performance.now();
+            return xsystem35.fileSystemReady.then(() => {
+                ga('send', 'timing', 'Module load', src, Math.round(performance.now() - start));
+                $('#loader').hidden = true;
+                document.body.classList.add('bgblack-fade');
+                this.toolbar.setCloseable();
+            });
         }
         loaded() {
             $('#xsystem35').hidden = false;

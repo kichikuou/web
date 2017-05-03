@@ -84,11 +84,10 @@ namespace xsystem35 {
             }
 
             let isSystem3 = !!await isofs.getDirEnt('system3.exe', gamedata);
-            shell.loadModule(isSystem3 ? 'system3' : 'xsystem35');
             $('#loader').classList.add('module-loading');
-            await xsystem35.fileSystemReady;
-            this.shell.loadStarted();
+            await shell.loadModule(isSystem3 ? 'system3' : 'xsystem35');
 
+            let startTime = performance.now();
             let aldFiles = [];
             for (let e of await isofs.readDir(gamedata)) {
                 if (!e.name.toLowerCase().endsWith(isSystem3 ? '.dat' : '.ald'))
@@ -107,6 +106,7 @@ namespace xsystem35 {
                 FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
                 FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
             }
+            ga('send', 'timing', 'Image load', this.imgFile.name, Math.round(performance.now() - startTime));
 
             this.shell.loaded();
         }

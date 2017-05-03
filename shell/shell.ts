@@ -107,19 +107,20 @@ namespace xsystem35 {
             ];
         }
 
-        loadModule(name: 'system3' | 'xsystem35') {
+        loadModule(name: 'system3' | 'xsystem35'): Promise<any> {
             let useWasm = typeof WebAssembly === 'object' && this.params.get('wasm') !== '0';
             let src = name + (useWasm ? '.js' : '.asm.js');
             let script = document.createElement('script');
             script.src = src;
             script.onerror = () => { this.addToast(src + 'の読み込みに失敗しました。リロードしてください。', 'danger'); };
             document.body.appendChild(script);
-        }
-
-        loadStarted() {
-            $('#loader').hidden = true;
-            document.body.classList.add('bgblack-fade');
-            this.toolbar.setCloseable();
+            let start = performance.now();
+            return xsystem35.fileSystemReady.then(() => {
+                ga('send', 'timing', 'Module load', src, Math.round(performance.now() - start));
+                $('#loader').hidden = true;
+                document.body.classList.add('bgblack-fade');
+                this.toolbar.setCloseable();
+            });
         }
 
         loaded() {
