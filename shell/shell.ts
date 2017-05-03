@@ -85,8 +85,11 @@ namespace xsystem35 {
             Module.print = Module.printErr = console.log.bind(console);
             Module.setWindowTitle = (title) => {
                 let colon = title.indexOf(':');
-                if (colon !== -1)
-                    $('.navbar-brand').textContent = title.slice(colon + 1);
+                if (colon !== -1) {
+                    title = title.slice(colon + 1)
+                    $('.navbar-brand').textContent = title;
+                    ga('send', 'event', 'event', 'gamestart', title);
+                }
             };
             Module.canvas = <HTMLCanvasElement>document.getElementById('canvas');
             Module.preRun = [
