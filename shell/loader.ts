@@ -85,6 +85,7 @@ namespace xsystem35 {
 
             let isSystem3 = !!await isofs.getDirEnt('system3.exe', gamedata);
             shell.loadModule(isSystem3 ? 'system3' : 'xsystem35');
+            $('#loader').classList.add('module-loading');
             await xsystem35.fileSystemReady;
             this.shell.loadStarted();
 

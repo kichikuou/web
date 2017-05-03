@@ -120,6 +120,13 @@ header {
 #loader li.notready:after {
     content: " (未選択)";
 }
+#loader.module-loading .hidden-while-loading {
+  display: none;
+}
+#loader.module-loading .show-while-loading {
+  display: block;
+  color: #5764c6;
+}
 
 #unsupported {
   max-width: 640px;

@@ -417,6 +417,7 @@ var xsystem35;
                 }
                 let isSystem3 = !!(yield isofs.getDirEnt('system3.exe', gamedata));
                 xsystem35.shell.loadModule(isSystem3 ? 'system3' : 'xsystem35');
+                $('#loader').classList.add('module-loading');
                 yield xsystem35.fileSystemReady;
                 this.shell.loadStarted();
                 let aldFiles = [];

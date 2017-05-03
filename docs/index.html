@@ -40,11 +40,12 @@
       <a target="_blank" href="help.html">遊び方はこちら。</a></p>
       <p><strong>(注意) 18歳未満の人は利用できません。</strong></p>
       <p>以下のファイルをドラッグ＆ドロップするか、「ファイルを選択」ボタンを押して選択してください。</p>
-      <ul>
+      <ul class="hidden-while-loading">
         <li id="imgReady" class="notready">KICHIKUOU.img</li>
         <li id="cueReady" class="notready">KICHIKUOU.cue</li>
       </ul>
-      <input type="file" id="fileselect" class="form-input" multiple/>
+      <input type="file" id="fileselect" class="form-input hidden-while-loading" multiple/>
+      <p class="show-while-loading" hidden>Loading...</p>
     </div>
 
     <div id="xsystem35" hidden>
