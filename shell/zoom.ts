@@ -1,4 +1,5 @@
 /// <reference path="util.ts" />
+/// <reference path="config.ts" />
 
 namespace xsystem35 {
     export class ZoomManager {
@@ -8,10 +9,10 @@ namespace xsystem35 {
 
         constructor() {
             this.zoomSelect.addEventListener('change', this.handleZoom.bind(this));
-            this.zoomSelect.value = localStorage.getItem('zoom') || 'fit';
+            this.zoomSelect.value = config.zoom;
             if (CSS.supports('image-rendering', 'pixelated') || CSS.supports('image-rendering', '-moz-crisp-edges')) {
                 this.pixelateCheckbox.addEventListener('change', this.handlePixelate.bind(this));
-                if (localStorage.getItem('pixelate') === 'true') {
+                if (config.pixelate) {
                     this.pixelateCheckbox.checked = true;
                     this.handlePixelate();
                 }
@@ -22,7 +23,8 @@ namespace xsystem35 {
 
         handleZoom() {
             let value = this.zoomSelect.value;
-            localStorage.setItem('zoom', value);
+            config.zoom = value;
+            config.persist();
             let navbarStyle = $('.navbar').style;
             if (value === 'fit') {
                 $('#xsystem35').classList.add('fit');
@@ -36,7 +38,8 @@ namespace xsystem35 {
         }
 
         private handlePixelate() {
-            localStorage.setItem('pixelate', String(this.pixelateCheckbox.checked));
+            config.pixelate = this.pixelateCheckbox.checked;
+            config.persist();
             if (this.pixelateCheckbox.checked)
                 this.canvas.classList.add('pixelated');
             else

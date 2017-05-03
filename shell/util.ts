@@ -68,7 +68,6 @@ function mkdirIfNotExist(path: string) {
 declare var WebAssembly: any;
 
 // xsystem35 exported functions
-declare function _musfade_setvolval_all(vol: number): void;
 declare function _ags_setAntialiasedStringMode(on: number): void;
 declare function _ald_getdata(type: number, no: number): number;
 declare function _ald_freedata(data: number): void;

@@ -1,4 +1,5 @@
 /// <reference path="util.ts" />
+/// <reference path="config.ts" />
 /// <reference path="loader.ts" />
 /// <reference path="settings.ts" />
 /// <reference path="zoom.ts" />
@@ -46,7 +47,7 @@ namespace xsystem35 {
             this.toolbar = new ToolBar();
             this.antialiasCheckbox = <HTMLInputElement>$('#antialias');
             this.antialiasCheckbox.addEventListener('change', this.antialiasChanged.bind(this));
-            this.antialiasCheckbox.checked = localStorage.getItem('antialias') !== 'false';
+            this.antialiasCheckbox.checked = config.antialias;
             xsystem35.audio = new AudioManager(this.volumeControl);
             xsystem35.settings = new Settings();
         }
@@ -167,8 +168,10 @@ namespace xsystem35 {
         }
 
         private antialiasChanged() {
-            localStorage.setItem('antialias', String(this.antialiasCheckbox.checked));
-            _ags_setAntialiasedStringMode(this.antialiasCheckbox.checked ? 1 : 0);
+            config.antialias = this.antialiasCheckbox.checked;
+            config.persist();
+            if (!$('#xsystem35').hidden)
+                _ags_setAntialiasedStringMode(this.antialiasCheckbox.checked ? 1 : 0);
         }
     }
 

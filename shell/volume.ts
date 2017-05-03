@@ -1,4 +1,5 @@
 /// <reference path="util.ts" />
+/// <reference path="config.ts" />
 
 namespace xsystem35 {
     export class VolumeControl {
@@ -9,7 +10,7 @@ namespace xsystem35 {
         private slider: HTMLInputElement;
 
         constructor() {
-            this.vol = Number(localStorage.getItem('volume') || 1);
+            this.vol = config.volume;
             this.muted = false;
 
             this.elem = $('#volume-control');
@@ -59,7 +60,8 @@ namespace xsystem35 {
         }
 
         private onSliderValueSettled(e: Event) {
-            localStorage.setItem('volume', this.vol + '');
+            config.volume = this.vol;
+            config.persist();
         }
 
         private dispatchEvent() {

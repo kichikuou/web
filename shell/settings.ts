@@ -1,6 +1,7 @@
 /// <reference path="util.ts" />
 
 namespace xsystem35 {
+    // Settings Dialog
     export class Settings {
         private keyDownHandler: (ev: KeyboardEvent) => void;
         constructor() {

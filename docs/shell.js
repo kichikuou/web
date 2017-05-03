@@ -67,6 +67,39 @@ function mkdirIfNotExist(path) {
             throw err;
     }
 }
+var xsystem35;
+(function (xsystem35) {
+    class Config {
+        constructor() {
+            this.antialias = true;
+            this.pixelate = false;
+            this.volume = 1;
+            this.zoom = 'fit';
+            let json = localStorage.getItem('KichikuouWeb.Config');
+            if (json) {
+                let val = JSON.parse(json);
+                if (val.antialias !== undefined)
+                    this.antialias = val.antialias;
+                if (val.pixelate !== undefined)
+                    this.pixelate = val.pixelate;
+                if (val.volume !== undefined)
+                    this.volume = val.volume;
+                if (val.zoom !== undefined)
+                    this.zoom = val.zoom;
+            }
+        }
+        persist() {
+            localStorage.setItem('KichikuouWeb.Config', JSON.stringify({
+                antialias: this.antialias,
+                pixelate: this.pixelate,
+                volume: this.volume,
+                zoom: this.zoom,
+            }));
+        }
+    }
+    xsystem35.Config = Config;
+    xsystem35.config = new Config();
+})(xsystem35 || (xsystem35 = {}));
 /// <reference path="util.ts" />
 var CDImage;
 (function (CDImage) {
@@ -482,6 +515,7 @@ var xsystem35;
 /// <reference path="util.ts" />
 var xsystem35;
 (function (xsystem35) {
+    // Settings Dialog
     class Settings {
         constructor() {
             $('#settings-button').addEventListener('click', this.openModal.bind(this));
@@ -583,6 +617,7 @@ var xsystem35;
     xsystem35.Settings = Settings;
 })(xsystem35 || (xsystem35 = {}));
 /// <reference path="util.ts" />
+/// <reference path="config.ts" />
 var xsystem35;
 (function (xsystem35) {
     class ZoomManager {
@@ -591,10 +626,10 @@ var xsystem35;
             this.zoomSelect = $('#zoom');
             this.pixelateCheckbox = $('#pixelate');
             this.zoomSelect.addEventListener('change', this.handleZoom.bind(this));
-            this.zoomSelect.value = localStorage.getItem('zoom') || 'fit';
+            this.zoomSelect.value = xsystem35.config.zoom;
             if (CSS.supports('image-rendering', 'pixelated') || CSS.supports('image-rendering', '-moz-crisp-edges')) {
                 this.pixelateCheckbox.addEventListener('change', this.handlePixelate.bind(this));
-                if (localStorage.getItem('pixelate') === 'true') {
+                if (xsystem35.config.pixelate) {
                     this.pixelateCheckbox.checked = true;
                     this.handlePixelate();
                 }
@@ -605,7 +640,8 @@ var xsystem35;
         }
         handleZoom() {
             let value = this.zoomSelect.value;
-            localStorage.setItem('zoom', value);
+            xsystem35.config.zoom = value;
+            xsystem35.config.persist();
             let navbarStyle = $('.navbar').style;
             if (value === 'fit') {
                 $('#xsystem35').classList.add('fit');
@@ -619,7 +655,8 @@ var xsystem35;
             }
         }
         handlePixelate() {
-            localStorage.setItem('pixelate', String(this.pixelateCheckbox.checked));
+            xsystem35.config.pixelate = this.pixelateCheckbox.checked;
+            xsystem35.config.persist();
             if (this.pixelateCheckbox.checked)
                 this.canvas.classList.add('pixelated');
             else
@@ -629,11 +666,12 @@ var xsystem35;
     xsystem35.ZoomManager = ZoomManager;
 })(xsystem35 || (xsystem35 = {}));
 /// <reference path="util.ts" />
+/// <reference path="config.ts" />
 var xsystem35;
 (function (xsystem35) {
     class VolumeControl {
         constructor() {
-            this.vol = Number(localStorage.getItem('volume') || 1);
+            this.vol = xsystem35.config.volume;
             this.muted = false;
             this.elem = $('#volume-control');
             this.icon = $('#volume-control-icon');
@@ -676,7 +714,8 @@ var xsystem35;
             this.dispatchEvent();
         }
         onSliderValueSettled(e) {
-            localStorage.setItem('volume', this.vol + '');
+            xsystem35.config.volume = this.vol;
+            xsystem35.config.persist();
         }
         dispatchEvent() {
             let event = new CustomEvent('volumechange', { detail: this.volume() });
@@ -1087,6 +1126,7 @@ var xsystem35;
     xsystem35.ToolBar = ToolBar;
 })(xsystem35 || (xsystem35 = {}));
 /// <reference path="util.ts" />
+/// <reference path="config.ts" />
 /// <reference path="loader.ts" />
 /// <reference path="settings.ts" />
 /// <reference path="zoom.ts" />
@@ -1119,7 +1159,7 @@ var xsystem35;
             this.toolbar = new xsystem35.ToolBar();
             this.antialiasCheckbox = $('#antialias');
             this.antialiasCheckbox.addEventListener('change', this.antialiasChanged.bind(this));
-            this.antialiasCheckbox.checked = localStorage.getItem('antialias') !== 'false';
+            this.antialiasCheckbox.checked = xsystem35.config.antialias;
             xsystem35.audio = new xsystem35.AudioManager(this.volumeControl);
             xsystem35.settings = new xsystem35.Settings();
         }
@@ -1229,8 +1269,10 @@ var xsystem35;
             }, timeout);
         }
         antialiasChanged() {
-            localStorage.setItem('antialias', String(this.antialiasCheckbox.checked));
-            _ags_setAntialiasedStringMode(this.antialiasCheckbox.checked ? 1 : 0);
+            xsystem35.config.antialias = this.antialiasCheckbox.checked;
+            xsystem35.config.persist();
+            if (!$('#xsystem35').hidden)
+                _ags_setAntialiasedStringMode(this.antialiasCheckbox.checked ? 1 : 0);
         }
     }
     xsystem35.System35Shell = System35Shell;
