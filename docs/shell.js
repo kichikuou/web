@@ -656,6 +656,14 @@ var xsystem35;
             else {
                 this.pixelateCheckbox.setAttribute('disabled', 'true');
             }
+            if (screen.orientation && document.webkitExitFullscreen) {
+                screen.orientation.addEventListener('change', () => {
+                    if (screen.orientation.type.startsWith('landscape'))
+                        document.documentElement.webkitRequestFullScreen();
+                    else
+                        document.webkitExitFullscreen();
+                });
+            }
         }
         handleZoom() {
             let value = this.zoomSelect.value;
