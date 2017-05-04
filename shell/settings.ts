@@ -49,6 +49,7 @@ namespace xsystem35 {
                 elem.click();
                 setTimeout(() => { document.body.removeChild(elem); }, 5000);
             }
+            ga('send', 'event', 'Savedata', 'Downloaded');
         }
 
         private storeZip(dir: string, zip: JSZip) {
@@ -93,9 +94,11 @@ namespace xsystem35 {
                 }
                 xsystem35.shell.syncfs(0);
                 xsystem35.shell.addToast('セーブデータの復元に成功しました。', 'success');
+                ga('send', 'event', 'Savedata', 'Restored');
                 this.checkSaveData();
             } catch (err) {
                 xsystem35.shell.addToast('セーブデータを復元できませんでした。', 'danger');
+                ga('send', 'event', 'Savedata', 'RestoreFailed', err.message);
                 console.warn(err);
             }
         }

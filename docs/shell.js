@@ -449,6 +449,7 @@ var xsystem35;
                 let gamedata = (yield isofs.getDirEnt('gamedata', isofs.rootDir())) ||
                     (yield isofs.getDirEnt('mugen', isofs.rootDir()));
                 if (!gamedata) {
+                    ga('send', 'event', 'Loader', 'NoGamedataDir');
                     this.shell.addToast('インストールできません。イメージ内にGAMEDATAフォルダが見つかりません。', 'danger');
                     return;
                 }
@@ -559,6 +560,7 @@ var xsystem35;
                     elem.click();
                     setTimeout(() => { document.body.removeChild(elem); }, 5000);
                 }
+                ga('send', 'event', 'Savedata', 'Downloaded');
             });
         }
         storeZip(dir, zip) {
@@ -605,10 +607,12 @@ var xsystem35;
                     }
                     xsystem35.shell.syncfs(0);
                     xsystem35.shell.addToast('セーブデータの復元に成功しました。', 'success');
+                    ga('send', 'event', 'Savedata', 'Restored');
                     this.checkSaveData();
                 }
                 catch (err) {
                     xsystem35.shell.addToast('セーブデータを復元できませんでした。', 'danger');
+                    ga('send', 'event', 'Savedata', 'RestoreFailed', err.message);
                     console.warn(err);
                 }
             });
@@ -806,6 +810,7 @@ var xsystem35;
             }
         }
         onAudioError(err) {
+            ga('send', 'event', 'CDDA', 'AudioError');
             let clone = document.importNode($('#cdda-error').content, true);
             let toast = xsystem35.shell.addToast(clone, 'danger');
             toast.querySelector('.cdda-reload-button').addEventListener('click', () => {
@@ -1197,7 +1202,8 @@ var xsystem35;
                 if (colon !== -1) {
                     title = title.slice(colon + 1);
                     $('.navbar-brand').textContent = title;
-                    ga('send', 'event', 'event', 'gamestart', title);
+                    ga('set', 'dimension1', title);
+                    ga('send', 'event', 'Game', 'GameStart', title);
                 }
             };
             Module.canvas = document.getElementById('canvas');
@@ -1223,7 +1229,10 @@ var xsystem35;
             let src = name + (useWasm ? '.js' : '.asm.js');
             let script = document.createElement('script');
             script.src = src;
-            script.onerror = () => { this.addToast(src + 'の読み込みに失敗しました。リロードしてください。', 'danger'); };
+            script.onerror = () => {
+                ga('send', 'event', 'Game', 'ModuleLoadFailed', src);
+                this.addToast(src + 'の読み込みに失敗しました。リロードしてください。', 'danger');
+            };
             document.body.appendChild(script);
             let start = performance.now();
             return xsystem35.fileSystemReady.then(() => {

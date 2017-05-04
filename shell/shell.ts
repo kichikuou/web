@@ -86,9 +86,10 @@ namespace xsystem35 {
             Module.setWindowTitle = (title) => {
                 let colon = title.indexOf(':');
                 if (colon !== -1) {
-                    title = title.slice(colon + 1)
+                    title = title.slice(colon + 1);
                     $('.navbar-brand').textContent = title;
-                    ga('send', 'event', 'event', 'gamestart', title);
+                    ga('set', 'dimension1', title);
+                    ga('send', 'event', 'Game', 'GameStart', title);
                 }
             };
             Module.canvas = <HTMLCanvasElement>document.getElementById('canvas');
@@ -115,7 +116,10 @@ namespace xsystem35 {
             let src = name + (useWasm ? '.js' : '.asm.js');
             let script = document.createElement('script');
             script.src = src;
-            script.onerror = () => { this.addToast(src + 'の読み込みに失敗しました。リロードしてください。', 'danger'); };
+            script.onerror = () => {
+                ga('send', 'event', 'Game', 'ModuleLoadFailed', src);
+                this.addToast(src + 'の読み込みに失敗しました。リロードしてください。', 'danger');
+            };
             document.body.appendChild(script);
             let start = performance.now();
             return xsystem35.fileSystemReady.then(() => {

@@ -79,6 +79,7 @@ namespace xsystem35 {
             let gamedata = await isofs.getDirEnt('gamedata', isofs.rootDir()) ||
                            await isofs.getDirEnt('mugen', isofs.rootDir());
             if (!gamedata) {
+                ga('send', 'event', 'Loader', 'NoGamedataDir');
                 this.shell.addToast('インストールできません。イメージ内にGAMEDATAフォルダが見つかりません。', 'danger');
                 return;
             }

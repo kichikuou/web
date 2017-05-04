@@ -91,6 +91,7 @@ namespace xsystem35 {
         }
 
         private onAudioError(err: ErrorEvent) {
+            ga('send', 'event', 'CDDA', 'AudioError');
             let clone = document.importNode((<HTMLTemplateElement>$('#cdda-error')).content, true);
             let toast = xsystem35.shell.addToast(clone, 'danger');
             toast.querySelector('.cdda-reload-button').addEventListener('click', () => {
