@@ -148,6 +148,11 @@ namespace xsystem35 {
             this.zoom.handleZoom();
         }
 
+        quit() {
+            this.addToast('終了しました。');
+            ga('send', 'event', 'Game', 'GameEnd');
+        }
+
         addToast(msg: string | Node, type?: 'success' | 'danger'): HTMLElement {
             let container = $('.toast-container');
             let div = document.createElement('div');

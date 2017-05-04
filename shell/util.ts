@@ -80,6 +80,7 @@ declare namespace Module {
     function getMemory(size: number): number;
     function setStatus(status: string): void;
     function setWindowTitle(title: string): void;
+    function quit(status: number, toThrow: Error): void;
 }
 
 declare namespace FS {

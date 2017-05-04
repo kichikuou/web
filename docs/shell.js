@@ -1281,6 +1281,10 @@ var xsystem35;
         windowSizeChanged() {
             this.zoom.handleZoom();
         }
+        quit() {
+            this.addToast('終了しました。');
+            ga('send', 'event', 'Game', 'GameEnd');
+        }
         addToast(msg, type) {
             let container = $('.toast-container');
             let div = document.createElement('div');
