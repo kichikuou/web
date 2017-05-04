@@ -1,9 +1,13 @@
 /// <reference path="util.ts" />
 
+declare function FSLib(): {saveDirReady: Promise<typeof FS>};
+
 namespace xsystem35 {
     // Settings Dialog
     export class Settings {
         private keyDownHandler: (ev: KeyboardEvent) => void;
+        private FSready: Promise<typeof FS>;
+
         constructor() {
             $('#settings-button').addEventListener('click', this.openModal.bind(this));
             $('#settings-close').addEventListener('click', this.closeModal.bind(this));
@@ -15,12 +19,17 @@ namespace xsystem35 {
 
             $('#downloadSaveData').addEventListener('click', this.downloadSaveData.bind(this));
             $('#uploadSaveData').addEventListener('click', this.uploadSaveData.bind(this));
-            this.checkSaveData();
         }
 
         private openModal() {
             $('#settings-modal').classList.add('active');
             document.addEventListener('keydown', this.keyDownHandler);
+            if ((<any>window).FS) {
+                this.FSready = xsystem35.saveDirReady;
+            }
+            if (!this.FSready)
+                this.FSready = FSLib().saveDirReady;
+            this.checkSaveData();
         }
 
         private closeModal() {
@@ -29,15 +38,17 @@ namespace xsystem35 {
         }
 
         private checkSaveData() {
-            xsystem35.saveDirReady.then(() => {
-                if ((<string[]>FS.readdir('/save')).some((name) => name.toLowerCase().endsWith('.asd')))
+            if (!$('#downloadSaveData').hasAttribute('disabled'))
+                return;
+            this.FSready.then((fs) => {
+                if ((<string[]>fs.readdir('/save')).some((name) => name.toLowerCase().endsWith('.asd')))
                     $('#downloadSaveData').removeAttribute('disabled');
             });
         }
 
         private async downloadSaveData() {
             let zip = new JSZip();
-            this.storeZip('/save', zip.folder('save'));
+            this.storeZip(await this.FSready, '/save', zip.folder('save'));
             let blob = await zip.generateAsync({type: 'blob', compression: 'DEFLATE'});
             if (navigator.msSaveBlob) {  // Edge
                 navigator.msSaveBlob(blob, 'savedata.zip');
@@ -52,15 +63,15 @@ namespace xsystem35 {
             ga('send', 'event', 'Savedata', 'Downloaded');
         }
 
-        private storeZip(dir: string, zip: JSZip) {
-            for (let name of FS.readdir(dir)) {
+        private storeZip(fs: typeof FS, dir: string, zip: JSZip) {
+            for (let name of fs.readdir(dir)) {
                 let path = dir + '/' + name;
                 if (name[0] === '.') {
                     continue;
-                } else if (FS.isDir(FS.stat(path).mode)) {
-                    this.storeZip(path, zip.folder(name));
+                } else if (fs.isDir(fs.stat(path).mode)) {
+                    this.storeZip(fs, path, zip.folder(name));
                 } else if (!name.toLowerCase().endsWith('.asd.')) {
-                    let content = FS.readFile(path, { encoding: 'binary' });
+                    let content = fs.readFile(path, { encoding: 'binary' });
                     zip.file(name, content);
                 }
             }
@@ -73,13 +84,13 @@ namespace xsystem35 {
         }
 
         private async extractSaveData(file: File) {
-            function addSaveFile(path: string, content: ArrayBuffer) {
-                FS.writeFile(path, new Uint8Array(content), { encoding: 'binary' });
+            function addSaveFile(fs: typeof FS, path: string, content: ArrayBuffer) {
+                fs.writeFile(path, new Uint8Array(content), { encoding: 'binary' });
             }
             try {
-                await xsystem35.saveDirReady;
+                let fs = await this.FSready;
                 if (file.name.toLowerCase().endsWith('.asd')) {
-                    addSaveFile('/save/' + file.name, await readFileAsArrayBuffer(file));
+                    addSaveFile(fs, '/save/' + file.name, await readFileAsArrayBuffer(file));
                 } else {
                     let zip = new JSZip();
                     await zip.loadAsync(await readFileAsArrayBuffer(file));
@@ -87,12 +98,19 @@ namespace xsystem35 {
                     zip.folder('save').forEach((path, z) => { entries.push(z); });
                     for (let z of entries) {
                         if (z.dir)
-                            mkdirIfNotExist('/' + z.name.slice(0, -1));
+                            mkdirIfNotExist('/' + z.name.slice(0, -1), fs);
                         else
-                            addSaveFile('/' + z.name, await z.async('arraybuffer'));
+                            addSaveFile(fs, '/' + z.name, await z.async('arraybuffer'));
                     }
                 }
-                xsystem35.shell.syncfs(0);
+                await new Promise((resolve, reject) => {
+                    fs.syncfs(false, (err) => {
+                        if (err)
+                            reject(err);
+                        else
+                            resolve();
+                    });
+                });
                 xsystem35.shell.addToast('セーブデータの復元に成功しました。', 'success');
                 ga('send', 'event', 'Savedata', 'Restored');
                 this.checkSaveData();
@@ -100,6 +118,7 @@ namespace xsystem35 {
                 xsystem35.shell.addToast('セーブデータを復元できませんでした。', 'danger');
                 ga('send', 'event', 'Savedata', 'RestoreFailed', err.message);
                 console.warn(err);
+                ga('send', 'exception', {exDescription: err.stack, exFatal: false});
             }
         }
     }

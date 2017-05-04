@@ -56,9 +56,9 @@ function openFileInput(): Promise<File> {
     });
 }
 
-function mkdirIfNotExist(path: string) {
+function mkdirIfNotExist(path: string, fs?: typeof FS) {
     try {
-        FS.mkdir(path);
+        (fs || FS).mkdir(path);
     } catch (err) {
         if (<any>err.code !== 'EEXIST')
             throw err;

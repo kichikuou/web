@@ -16,7 +16,7 @@ namespace xsystem35 {
         'ttfont_gothic: ' + Font.fname, '',
     ].join('\n');
     export let fileSystemReady: Promise<any>;
-    export let saveDirReady: Promise<any>;
+    export let saveDirReady: Promise<typeof FS>;
     export let cdPlayer: CDPlayer;
     export let audio: AudioManager;
     export let settings: Settings;
@@ -71,7 +71,7 @@ namespace xsystem35 {
         private initModule() {
             let fsReady: () => void;
             fileSystemReady = new Promise((resolve) => { fsReady = resolve; });
-            let idbfsReady: () => void;
+            let idbfsReady: (fs: typeof FS) => void;
             saveDirReady = new Promise((resolve) => { idbfsReady = resolve; });
 
             Module.arguments = [];
@@ -105,7 +105,7 @@ namespace xsystem35 {
                     Module.addRunDependency('syncfs');
                     FS.syncfs(true, (err) => {
                         Module.removeRunDependency('syncfs');
-                        idbfsReady();
+                        idbfsReady(FS);
                     });
                 },
             ];

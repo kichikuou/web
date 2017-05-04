@@ -58,9 +58,9 @@ function openFileInput() {
         input.click();
     });
 }
-function mkdirIfNotExist(path) {
+function mkdirIfNotExist(path, fs) {
     try {
-        FS.mkdir(path);
+        (fs || FS).mkdir(path);
     }
     catch (err) {
         if (err.code !== 'EEXIST')
@@ -528,26 +528,33 @@ var xsystem35;
             $('.modal-overlay').addEventListener('click', this.closeModal.bind(this));
             $('#downloadSaveData').addEventListener('click', this.downloadSaveData.bind(this));
             $('#uploadSaveData').addEventListener('click', this.uploadSaveData.bind(this));
-            this.checkSaveData();
         }
         openModal() {
             $('#settings-modal').classList.add('active');
             document.addEventListener('keydown', this.keyDownHandler);
+            if (window.FS) {
+                this.FSready = xsystem35.saveDirReady;
+            }
+            if (!this.FSready)
+                this.FSready = FSLib().saveDirReady;
+            this.checkSaveData();
         }
         closeModal() {
             $('#settings-modal').classList.remove('active');
             document.removeEventListener('keydown', this.keyDownHandler);
         }
         checkSaveData() {
-            xsystem35.saveDirReady.then(() => {
-                if (FS.readdir('/save').some((name) => name.toLowerCase().endsWith('.asd')))
+            if (!$('#downloadSaveData').hasAttribute('disabled'))
+                return;
+            this.FSready.then((fs) => {
+                if (fs.readdir('/save').some((name) => name.toLowerCase().endsWith('.asd')))
                     $('#downloadSaveData').removeAttribute('disabled');
             });
         }
         downloadSaveData() {
             return __awaiter(this, void 0, void 0, function* () {
                 let zip = new JSZip();
-                this.storeZip('/save', zip.folder('save'));
+                this.storeZip(yield this.FSready, '/save', zip.folder('save'));
                 let blob = yield zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
                 if (navigator.msSaveBlob) {
                     navigator.msSaveBlob(blob, 'savedata.zip');
@@ -563,17 +570,17 @@ var xsystem35;
                 ga('send', 'event', 'Savedata', 'Downloaded');
             });
         }
-        storeZip(dir, zip) {
-            for (let name of FS.readdir(dir)) {
+        storeZip(fs, dir, zip) {
+            for (let name of fs.readdir(dir)) {
                 let path = dir + '/' + name;
                 if (name[0] === '.') {
                     continue;
                 }
-                else if (FS.isDir(FS.stat(path).mode)) {
-                    this.storeZip(path, zip.folder(name));
+                else if (fs.isDir(fs.stat(path).mode)) {
+                    this.storeZip(fs, path, zip.folder(name));
                 }
                 else if (!name.toLowerCase().endsWith('.asd.')) {
-                    let content = FS.readFile(path, { encoding: 'binary' });
+                    let content = fs.readFile(path, { encoding: 'binary' });
                     zip.file(name, content);
                 }
             }
@@ -585,13 +592,13 @@ var xsystem35;
         }
         extractSaveData(file) {
             return __awaiter(this, void 0, void 0, function* () {
-                function addSaveFile(path, content) {
-                    FS.writeFile(path, new Uint8Array(content), { encoding: 'binary' });
+                function addSaveFile(fs, path, content) {
+                    fs.writeFile(path, new Uint8Array(content), { encoding: 'binary' });
                 }
                 try {
-                    yield xsystem35.saveDirReady;
+                    let fs = yield this.FSready;
                     if (file.name.toLowerCase().endsWith('.asd')) {
-                        addSaveFile('/save/' + file.name, yield readFileAsArrayBuffer(file));
+                        addSaveFile(fs, '/save/' + file.name, yield readFileAsArrayBuffer(file));
                     }
                     else {
                         let zip = new JSZip();
@@ -600,12 +607,19 @@ var xsystem35;
                         zip.folder('save').forEach((path, z) => { entries.push(z); });
                         for (let z of entries) {
                             if (z.dir)
-                                mkdirIfNotExist('/' + z.name.slice(0, -1));
+                                mkdirIfNotExist('/' + z.name.slice(0, -1), fs);
                             else
-                                addSaveFile('/' + z.name, yield z.async('arraybuffer'));
+                                addSaveFile(fs, '/' + z.name, yield z.async('arraybuffer'));
                         }
                     }
-                    xsystem35.shell.syncfs(0);
+                    yield new Promise((resolve, reject) => {
+                        fs.syncfs(false, (err) => {
+                            if (err)
+                                reject(err);
+                            else
+                                resolve();
+                        });
+                    });
                     xsystem35.shell.addToast('セーブデータの復元に成功しました。', 'success');
                     ga('send', 'event', 'Savedata', 'Restored');
                     this.checkSaveData();
@@ -614,6 +628,7 @@ var xsystem35;
                     xsystem35.shell.addToast('セーブデータを復元できませんでした。', 'danger');
                     ga('send', 'event', 'Savedata', 'RestoreFailed', err.message);
                     console.warn(err);
+                    ga('send', 'exception', { exDescription: err.stack, exFatal: false });
                 }
             });
         }
@@ -1219,7 +1234,7 @@ var xsystem35;
                     Module.addRunDependency('syncfs');
                     FS.syncfs(true, (err) => {
                         Module.removeRunDependency('syncfs');
-                        idbfsReady();
+                        idbfsReady(FS);
                     });
                 },
             ];
