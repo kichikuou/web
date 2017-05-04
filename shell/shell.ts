@@ -113,6 +113,10 @@ namespace xsystem35 {
 
         loadModule(name: 'system3' | 'xsystem35'): Promise<any> {
             let useWasm = typeof WebAssembly === 'object' && this.params.get('wasm') !== '0';
+            if (navigator.userAgent.match(/Android.*Chrome\/58\./)) {
+                ga('send', 'event', 'Game', 'WasmDisabled');
+                useWasm = false;
+            }
             let src = name + (useWasm ? '.js' : '.asm.js');
             let script = document.createElement('script');
             script.src = src;
