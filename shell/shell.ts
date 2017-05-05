@@ -136,6 +136,7 @@ namespace xsystem35 {
 
         loaded() {
             $('#xsystem35').hidden = false;
+            document.body.classList.add('game');
             $('#toolbar').classList.remove('before-game-start');
             setTimeout(() => {
                 if (this.antialiasCheckbox.checked)

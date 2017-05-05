@@ -1,4 +1,8 @@
 body {
+    min-height: 100vh;
+}
+
+body.game {
   position: fixed;
   left: 0;
   right: 0;
@@ -96,6 +100,11 @@ header {
 .contents {
   flex: 1;
   display: flex;
+}
+
+h1 {
+    margin: 2rem auto;
+    font-size: 3.2rem;
 }
 
 #loader {
