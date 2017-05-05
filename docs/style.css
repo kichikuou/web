@@ -9,7 +9,7 @@ body {
 }
 
 header {
-  background-color: rgb(68,68,68);
+  background-color: rgb(69,77,93);
   color: #ccc;
 }
 
@@ -20,7 +20,7 @@ header {
     top: 0px;
     width: 40px;
     height: 10px;
-    background-color: rgba(68,68,68,0.7);
+    background-color: rgba(69,77,93,0.7);
   }
 
   .toolbar-handler-icon {
@@ -39,7 +39,7 @@ header {
     left: 0;
     right: 0;
     transition: top 0.4s ease;
-    background-color: rgba(68,68,68,0.85);
+    background-color: rgba(69,77,93,0.85);
   }
 
   header.closeable.closed {
