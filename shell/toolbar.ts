@@ -45,6 +45,8 @@ namespace xsystem35 {
             }
             ctx.putImageData(image, 0, 0);
 
+            ga('send', 'event', 'Toolbar', 'Screenshot');
+
             let url;
             if (canvas.toBlob) {
                 let blob = await new Promise((resolve) => canvas.toBlob(resolve));

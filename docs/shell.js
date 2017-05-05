@@ -1128,6 +1128,7 @@ var xsystem35;
                     pixels += 4;
                 }
                 ctx.putImageData(image, 0, 0);
+                ga('send', 'event', 'Toolbar', 'Screenshot');
                 let url;
                 if (canvas.toBlob) {
                     let blob = yield new Promise((resolve) => canvas.toBlob(resolve));
