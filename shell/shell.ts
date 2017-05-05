@@ -165,7 +165,7 @@ namespace xsystem35 {
                 div.appendChild(msg);
             let btn = document.createElement('button');
             btn.setAttribute('class', 'btn btn-clear float-right');
-            function dismiss() { container.removeChild(div); }
+            function dismiss() { if (div.parentNode === container) container.removeChild(div); }
             btn.addEventListener('click', dismiss);
             if (type !== 'danger')
                 setTimeout(dismiss, 5000);
