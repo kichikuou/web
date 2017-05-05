@@ -45,13 +45,17 @@
       <p>アリスソフトの <a href="http://www.alicesoft.com/annai.html#free">配布フリー宣言</a> に基づいて配布されている「鬼畜王ランス」等のゲームをWebブラウザ上で遊べるようにしたものです。
       <a target="_blank" href="help.html">遊び方はこちら。</a></p>
       <p><strong>(注意) 18歳未満の人は利用できません。</strong></p>
-      <p>ゲームのCDイメージファイルをドラッグ＆ドロップするか、「ファイルを選択」ボタンを押して選択してください。</p>
+      <p>ゲームのCDイメージファイルをドラッグ＆ドロップするか、下の「ファイルを選択」ボタンを押して選択してください。</p>
       <ul class="hidden-while-loading">
         <li id="imgReady" class="notready">KICHIKUOU.img</li>
         <li id="cueReady" class="notready">KICHIKUOU.cue</li>
       </ul>
       <input type="file" id="fileselect" class="form-input hidden-while-loading" multiple/>
       <p class="show-while-loading" hidden>Loading...</p>
+
+      <div id="unsupported" hidden>
+	このブラウザでは利用できません。
+      </div>
 
       <div class="social-buttons">
 	<a href="http://b.hatena.ne.jp/entry/" class="hatena-bookmark-button" data-hatena-bookmark-layout="basic-counter" title="このエントリーをはてなブックマークに追加"><img src="https://b.st-hatena.com/images/entry-button/button-only@2x.png" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a><script type="text/javascript" src="https://b.st-hatena.com/js/bookmark_button.js" charset="utf-8" async="async"></script>
@@ -63,10 +67,6 @@
     <div id="xsystem35" hidden>
       <audio id="audio"></audio>
       <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
-    </div>
-
-    <div id="unsupported" hidden>
-      このブラウザでは利用できません。
     </div>
   </div>
 
@@ -133,7 +133,6 @@
   <script src="//cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js" async></script>
   <script>
     if (xsystem35.shell === undefined) {
-      loader.hidden = true;
       unsupported.hidden = false;
     }
   </script>
