@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>鬼畜王 on Web ヘルプ</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spectre.css/0.2.10/spectre.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
 <style>
 
 header {
@@ -25,6 +26,17 @@ header {
 
 .navbar-brand {
   color: #ccc;
+}
+
+.navbar .btn-link {
+    color: #ccc;
+}
+
+.navbar .btn.btn-link:focus,
+.navbar .btn.btn-link:hover,
+.navbar .btn.btn-link:active,
+.navbar .btn.btn-link.active {
+  color: #eee;
 }
 
 body > section {
@@ -56,7 +68,10 @@ ol, ul {
 <header id="toolbar">
   <div class="navbar">
     <section class="navbar-primary">
-      <span class="navbar-brand text-ellipsis ml-5">鬼畜王 on Web ヘルプ</span>
+      <span class="navbar-brand text-ellipsis ml-5">ヘルプ</span>
+    </section>
+    <section class="navbar-section">
+      <a href="./" target="_blank" class="btn btn-link">鬼畜王 on Web <i class="fa fa-external-link"></i></a>
     </section>
   </div>
 </header>
