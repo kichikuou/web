@@ -40,6 +40,14 @@ namespace xsystem35 {
                 this.addToast('エラーが発生しました。', 'danger');
                 window.onerror = null;
             };
+            // Chrome only
+            window.addEventListener('unhandledrejection', (evt: any) => {
+                let err: Error = evt.reason;
+                console.log(err);
+                let exDescription = JSON.stringify({message: err.message, stack: err.stack});
+                ga('send', 'exception', {exDescription, exFatal: true});
+                // this.addToast('エラーが発生しました。', 'danger');
+            });
 
             this.imageLoader = new ImageLoader(this);
             this.volumeControl = new VolumeControl();

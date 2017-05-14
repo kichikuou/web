@@ -1190,6 +1190,14 @@ var xsystem35;
                 this.addToast('エラーが発生しました。', 'danger');
                 window.onerror = null;
             };
+            // Chrome only
+            window.addEventListener('unhandledrejection', (evt) => {
+                let err = evt.reason;
+                console.log(err);
+                let exDescription = JSON.stringify({ message: err.message, stack: err.stack });
+                ga('send', 'exception', { exDescription, exFatal: true });
+                // this.addToast('エラーが発生しました。', 'danger');
+            });
             this.imageLoader = new xsystem35.ImageLoader(this);
             this.volumeControl = new xsystem35.VolumeControl();
             xsystem35.cdPlayer = new xsystem35.CDPlayer(this.imageLoader, this.volumeControl);
