@@ -317,6 +317,8 @@ var CDImage;
                     throw new Error(mdsFile.name + ': not a mds file');
                 let header = new DataView(buf, 0, 0x70);
                 let entries = header.getUint8(0x62);
+                if (0x70 + entries * 0x58 > buf.byteLength)
+                    throw new Error(mdsFile.name + ': unknown format');
                 this.tracks = [];
                 for (let i = 0; i < entries; i++) {
                     let trackData = new DataView(buf, 0x70 + i * 0x50, 0x50);
@@ -426,8 +428,14 @@ var xsystem35;
                     $('#cueReady').textContent = file.name;
                 }
                 if (this.imgFile && this.cueFile) {
-                    this.imageReader = yield CDImage.createReader(this.imgFile, this.cueFile);
-                    this.startLoad();
+                    try {
+                        this.imageReader = yield CDImage.createReader(this.imgFile, this.cueFile);
+                        this.startLoad();
+                    }
+                    catch (err) {
+                        ga('send', 'event', 'Loader', 'LoadFailed', err.message);
+                        this.shell.addToast('インストールできません。認識できない形式です。', 'danger');
+                    }
                 }
             });
         }

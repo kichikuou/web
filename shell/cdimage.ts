@@ -227,6 +227,8 @@ namespace CDImage {
 
             let header = new DataView(buf, 0, 0x70);
             let entries = header.getUint8(0x62);
+            if (0x70 + entries * 0x58 > buf.byteLength)
+                throw new Error(mdsFile.name + ': unknown format');
 
             this.tracks = [];
             for (let i = 0; i < entries; i++) {

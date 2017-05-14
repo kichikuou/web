@@ -57,8 +57,13 @@ namespace xsystem35 {
                 $('#cueReady').textContent = file.name;
             }
             if (this.imgFile && this.cueFile) {
-                this.imageReader = await CDImage.createReader(this.imgFile, this.cueFile);
-                this.startLoad();
+                try {
+                    this.imageReader = await CDImage.createReader(this.imgFile, this.cueFile);
+                    this.startLoad();
+                } catch (err) {
+                    ga('send', 'event', 'Loader', 'LoadFailed', err.message);
+                    this.shell.addToast('インストールできません。認識できない形式です。', 'danger');
+                }
             }
         }
 
