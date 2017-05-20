@@ -427,6 +427,12 @@ var xsystem35;
                     $('#cueReady').classList.remove('notready');
                     $('#cueReady').textContent = file.name;
                 }
+                else if (name.endsWith('.rar')) {
+                    this.shell.addToast('展開前のrarファイルは読み込めません。', 'warning');
+                }
+                else {
+                    this.shell.addToast(name + ' は認識できない形式です。', 'warning');
+                }
                 if (this.imgFile && this.cueFile) {
                     try {
                         this.imageReader = yield CDImage.createReader(this.imgFile, this.cueFile);
@@ -1344,8 +1350,9 @@ var xsystem35;
             function dismiss() { if (div.parentNode === container)
                 container.removeChild(div); }
             btn.addEventListener('click', dismiss);
-            if (type !== 'error')
-                setTimeout(dismiss, 5000);
+            let timeout = { success: 5000, warning: 10000, error: null }[type];
+            if (timeout)
+                setTimeout(dismiss, timeout);
             div.insertBefore(btn, div.firstChild);
             container.insertBefore(div, container.firstChild);
             return div;

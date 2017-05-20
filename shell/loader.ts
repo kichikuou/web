@@ -55,6 +55,10 @@ namespace xsystem35 {
                 this.cueFile = file;
                 $('#cueReady').classList.remove('notready');
                 $('#cueReady').textContent = file.name;
+            } else if (name.endsWith('.rar')) {
+                this.shell.addToast('展開前のrarファイルは読み込めません。', 'warning');
+            } else {
+                this.shell.addToast(name + ' は認識できない形式です。', 'warning');
             }
             if (this.imgFile && this.cueFile) {
                 try {

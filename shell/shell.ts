@@ -162,7 +162,7 @@ namespace xsystem35 {
             ga('send', 'event', 'Game', 'GameEnd');
         }
 
-        addToast(msg: string | Node, type?: 'success' | 'error'): HTMLElement {
+        addToast(msg: string | Node, type?: 'success' | 'warning' | 'error'): HTMLElement {
             let container = $('.toast-container');
             let div = document.createElement('div');
             div.classList.add('toast');
@@ -176,8 +176,9 @@ namespace xsystem35 {
             btn.setAttribute('class', 'btn btn-clear float-right');
             function dismiss() { if (div.parentNode === container) container.removeChild(div); }
             btn.addEventListener('click', dismiss);
-            if (type !== 'error')
-                setTimeout(dismiss, 5000);
+            let timeout = {success: 5000, warning: 10000, error: null}[type];
+            if (timeout)
+                setTimeout(dismiss, timeout);
             div.insertBefore(btn, div.firstChild);
             container.insertBefore(div, container.firstChild);
             return div;
