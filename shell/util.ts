@@ -65,8 +65,6 @@ function mkdirIfNotExist(path: string, fs?: typeof FS) {
     }
 }
 
-declare var WebAssembly: any;
-
 // xsystem35 exported functions
 declare function _ags_setAntialiasedStringMode(on: number): void;
 declare function _ald_getdata(type: number, no: number): number;
