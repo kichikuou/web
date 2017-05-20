@@ -80,9 +80,11 @@ namespace xsystem35 {
 
         private async startLoad() {
             let isofs = await CDImage.ISO9660FileSystem.create(this.imageReader);
-            // this.walk(isofs, isofs.rootDir(), '/');
-            let gamedata = await isofs.getDirEnt('gamedata', isofs.rootDir()) ||
-                           await isofs.getDirEnt('mugen', isofs.rootDir());
+            let rootDir = isofs.rootDir();
+            // this.walk(isofs, rootDir, '/');
+            let gamedata = await isofs.getDirEnt('gamedata', rootDir) ||
+                           await isofs.getDirEnt('mugen', rootDir) ||
+                           (await isofs.getDirEnt('system3.exe', rootDir) && rootDir);
             if (!gamedata) {
                 ga('send', 'event', 'Loader', 'NoGamedataDir');
                 this.shell.addToast('インストールできません。イメージ内にGAMEDATAフォルダが見つかりません。', 'danger');
@@ -105,7 +107,16 @@ namespace xsystem35 {
                 aldFiles.push(e.name);
             }
             if (isSystem3) {
-                let savedir = '/save/' + isofs.volumeLabel();
+                let dirname = isofs.volumeLabel();
+                if (!dirname) {
+                    if (await isofs.getDirEnt('prog.bat', rootDir))
+                        dirname = 'ProG';
+                    else {
+                        dirname = 'untitled';
+                        ga('send', 'event', 'Loader', 'NoVolumeLabel');
+                    }
+                }
+                let savedir = '/save/' + dirname;
                 Module.arguments.push('-savedir', savedir + '/');
                 xsystem35.saveDirReady.then(() => { mkdirIfNotExist(savedir); });
             } else {
