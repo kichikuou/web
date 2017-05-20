@@ -68,7 +68,7 @@ header {
     flex-wrap: nowrap;
 }
 
-.navbar .navbar-primary {
+.navbar .navbar-center {
   flex: 1;
   min-width: 0;
 }

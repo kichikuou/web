@@ -37,7 +37,7 @@ namespace xsystem35 {
             window.onerror = (message, url, line, column, error) => {
                 let exDescription = JSON.stringify({message, url, line, column});
                 ga('send', 'exception', {exDescription, exFatal: true});
-                this.addToast('エラーが発生しました。', 'danger');
+                this.addToast('エラーが発生しました。', 'error');
                 window.onerror = null;
             };
             // Chrome only
@@ -46,7 +46,7 @@ namespace xsystem35 {
                 console.log(err);
                 let exDescription = JSON.stringify({message: err.message, stack: err.stack});
                 ga('send', 'exception', {exDescription, exFatal: true});
-                // this.addToast('エラーが発生しました。', 'danger');
+                // this.addToast('エラーが発生しました。', 'error');
             });
 
             this.imageLoader = new ImageLoader(this);
@@ -130,7 +130,7 @@ namespace xsystem35 {
             script.src = src;
             script.onerror = () => {
                 ga('send', 'event', 'Game', 'ModuleLoadFailed', src);
-                this.addToast(src + 'の読み込みに失敗しました。リロードしてください。', 'danger');
+                this.addToast(src + 'の読み込みに失敗しました。リロードしてください。', 'error');
             };
             document.body.appendChild(script);
             let start = performance.now();
@@ -162,7 +162,7 @@ namespace xsystem35 {
             ga('send', 'event', 'Game', 'GameEnd');
         }
 
-        addToast(msg: string | Node, type?: 'success' | 'danger'): HTMLElement {
+        addToast(msg: string | Node, type?: 'success' | 'error'): HTMLElement {
             let container = $('.toast-container');
             let div = document.createElement('div');
             div.classList.add('toast');
@@ -176,7 +176,7 @@ namespace xsystem35 {
             btn.setAttribute('class', 'btn btn-clear float-right');
             function dismiss() { if (div.parentNode === container) container.removeChild(div); }
             btn.addEventListener('click', dismiss);
-            if (type !== 'danger')
+            if (type !== 'error')
                 setTimeout(dismiss, 5000);
             div.insertBefore(btn, div.firstChild);
             container.insertBefore(div, container.firstChild);

@@ -434,7 +434,7 @@ var xsystem35;
                     }
                     catch (err) {
                         ga('send', 'event', 'Loader', 'LoadFailed', err.message);
-                        this.shell.addToast('インストールできません。認識できない形式です。', 'danger');
+                        this.shell.addToast('インストールできません。認識できない形式です。', 'error');
                     }
                 }
             });
@@ -457,7 +457,7 @@ var xsystem35;
                 let gamedata = yield this.findGameDir(isofs);
                 if (!gamedata) {
                     ga('send', 'event', 'Loader', 'NoGamedataDir');
-                    this.shell.addToast('インストールできません。イメージ内にGAMEDATAフォルダが見つかりません。', 'danger');
+                    this.shell.addToast('インストールできません。イメージ内にGAMEDATAフォルダが見つかりません。', 'error');
                     return;
                 }
                 let isSystem3 = !!(yield isofs.getDirEnt('system3.exe', gamedata));
@@ -659,7 +659,7 @@ var xsystem35;
                     this.checkSaveData();
                 }
                 catch (err) {
-                    xsystem35.shell.addToast('セーブデータを復元できませんでした。', 'danger');
+                    xsystem35.shell.addToast('セーブデータを復元できませんでした。', 'error');
                     ga('send', 'event', 'Savedata', 'RestoreFailed', err.message);
                     console.warn(err);
                     ga('send', 'exception', { exDescription: err.stack, exFatal: false });
@@ -869,7 +869,7 @@ var xsystem35;
         onAudioError(err) {
             ga('send', 'event', 'CDDA', 'AudioError');
             let clone = document.importNode($('#cdda-error').content, true);
-            let toast = xsystem35.shell.addToast(clone, 'danger');
+            let toast = xsystem35.shell.addToast(clone, 'error');
             toast.querySelector('.cdda-reload-button').addEventListener('click', () => {
                 this.imageLoader.reloadImage().then(() => {
                     this.play(this.currentTrack, this.audio.loop ? 1 : 0);
@@ -1213,7 +1213,7 @@ var xsystem35;
             window.onerror = (message, url, line, column, error) => {
                 let exDescription = JSON.stringify({ message, url, line, column });
                 ga('send', 'exception', { exDescription, exFatal: true });
-                this.addToast('エラーが発生しました。', 'danger');
+                this.addToast('エラーが発生しました。', 'error');
                 window.onerror = null;
             };
             // Chrome only
@@ -1222,7 +1222,7 @@ var xsystem35;
                 console.log(err);
                 let exDescription = JSON.stringify({ message: err.message, stack: err.stack });
                 ga('send', 'exception', { exDescription, exFatal: true });
-                // this.addToast('エラーが発生しました。', 'danger');
+                // this.addToast('エラーが発生しました。', 'error');
             });
             this.imageLoader = new xsystem35.ImageLoader(this);
             this.volumeControl = new xsystem35.VolumeControl();
@@ -1301,7 +1301,7 @@ var xsystem35;
             script.src = src;
             script.onerror = () => {
                 ga('send', 'event', 'Game', 'ModuleLoadFailed', src);
-                this.addToast(src + 'の読み込みに失敗しました。リロードしてください。', 'danger');
+                this.addToast(src + 'の読み込みに失敗しました。リロードしてください。', 'error');
             };
             document.body.appendChild(script);
             let start = performance.now();
@@ -1344,7 +1344,7 @@ var xsystem35;
             function dismiss() { if (div.parentNode === container)
                 container.removeChild(div); }
             btn.addEventListener('click', dismiss);
-            if (type !== 'danger')
+            if (type !== 'error')
                 setTimeout(dismiss, 5000);
             div.insertBefore(btn, div.firstChild);
             container.insertBefore(div, container.firstChild);

@@ -62,7 +62,7 @@ namespace xsystem35 {
                     this.startLoad();
                 } catch (err) {
                     ga('send', 'event', 'Loader', 'LoadFailed', err.message);
-                    this.shell.addToast('インストールできません。認識できない形式です。', 'danger');
+                    this.shell.addToast('インストールできません。認識できない形式です。', 'error');
                 }
             }
         }
@@ -84,7 +84,7 @@ namespace xsystem35 {
             let gamedata = await this.findGameDir(isofs);
             if (!gamedata) {
                 ga('send', 'event', 'Loader', 'NoGamedataDir');
-                this.shell.addToast('インストールできません。イメージ内にGAMEDATAフォルダが見つかりません。', 'danger');
+                this.shell.addToast('インストールできません。イメージ内にGAMEDATAフォルダが見つかりません。', 'error');
                 return;
             }
 

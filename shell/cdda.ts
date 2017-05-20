@@ -93,7 +93,7 @@ namespace xsystem35 {
         private onAudioError(err: ErrorEvent) {
             ga('send', 'event', 'CDDA', 'AudioError');
             let clone = document.importNode((<HTMLTemplateElement>$('#cdda-error')).content, true);
-            let toast = xsystem35.shell.addToast(clone, 'danger');
+            let toast = xsystem35.shell.addToast(clone, 'error');
             toast.querySelector('.cdda-reload-button').addEventListener('click', () => {
                 this.imageLoader.reloadImage().then(() => {
                     this.play(this.currentTrack, this.audio.loop ? 1 : 0);

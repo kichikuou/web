@@ -115,7 +115,7 @@ namespace xsystem35 {
                 ga('send', 'event', 'Savedata', 'Restored');
                 this.checkSaveData();
             } catch (err) {
-                xsystem35.shell.addToast('セーブデータを復元できませんでした。', 'danger');
+                xsystem35.shell.addToast('セーブデータを復元できませんでした。', 'error');
                 ga('send', 'event', 'Savedata', 'RestoreFailed', err.message);
                 console.warn(err);
                 ga('send', 'exception', {exDescription: err.stack, exFatal: false});
