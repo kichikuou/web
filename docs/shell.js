@@ -453,11 +453,8 @@ var xsystem35;
         startLoad() {
             return __awaiter(this, void 0, void 0, function* () {
                 let isofs = yield CDImage.ISO9660FileSystem.create(this.imageReader);
-                let rootDir = isofs.rootDir();
-                // this.walk(isofs, rootDir, '/');
-                let gamedata = (yield isofs.getDirEnt('gamedata', rootDir)) ||
-                    (yield isofs.getDirEnt('mugen', rootDir)) ||
-                    ((yield isofs.getDirEnt('system3.exe', rootDir)) && rootDir);
+                // this.walk(isofs, isofs.rootDir(), '/');
+                let gamedata = yield this.findGameDir(isofs);
                 if (!gamedata) {
                     ga('send', 'event', 'Loader', 'NoGamedataDir');
                     this.shell.addToast('インストールできません。イメージ内にGAMEDATAフォルダが見つかりません。', 'danger');
@@ -478,16 +475,7 @@ var xsystem35;
                     aldFiles.push(e.name);
                 }
                 if (isSystem3) {
-                    let dirname = isofs.volumeLabel();
-                    if (!dirname) {
-                        if (yield isofs.getDirEnt('prog.bat', rootDir))
-                            dirname = 'ProG';
-                        else {
-                            dirname = 'untitled';
-                            ga('send', 'event', 'Loader', 'NoVolumeLabel');
-                        }
-                    }
-                    let savedir = '/save/' + dirname;
+                    let savedir = yield this.saveDir(isofs);
                     Module.arguments.push('-savedir', savedir + '/');
                     xsystem35.saveDirReady.then(() => { mkdirIfNotExist(savedir); });
                 }
@@ -497,6 +485,33 @@ var xsystem35;
                 }
                 ga('send', 'timing', 'Image load', this.imgFile.name, Math.round(performance.now() - startTime));
                 this.shell.loaded();
+            });
+        }
+        findGameDir(isofs) {
+            return __awaiter(this, void 0, void 0, function* () {
+                for (let e of yield isofs.readDir(isofs.rootDir())) {
+                    if (e.isDirectory) {
+                        if (e.name.toLowerCase() === 'gamedata' || (yield isofs.getDirEnt('system3.exe', e)))
+                            return e;
+                    }
+                    if (e.name.toLowerCase() === 'system3.exe')
+                        return isofs.rootDir();
+                }
+                return null;
+            });
+        }
+        saveDir(isofs) {
+            return __awaiter(this, void 0, void 0, function* () {
+                let dirname = isofs.volumeLabel();
+                if (!dirname) {
+                    if (yield isofs.getDirEnt('prog.bat', isofs.rootDir()))
+                        dirname = 'ProG';
+                    else {
+                        dirname = 'untitled';
+                        ga('send', 'event', 'Loader', 'NoVolumeLabel');
+                    }
+                }
+                return '/save/' + dirname;
             });
         }
         createGr(files) {

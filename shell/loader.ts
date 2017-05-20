@@ -80,11 +80,8 @@ namespace xsystem35 {
 
         private async startLoad() {
             let isofs = await CDImage.ISO9660FileSystem.create(this.imageReader);
-            let rootDir = isofs.rootDir();
-            // this.walk(isofs, rootDir, '/');
-            let gamedata = await isofs.getDirEnt('gamedata', rootDir) ||
-                           await isofs.getDirEnt('mugen', rootDir) ||
-                           (await isofs.getDirEnt('system3.exe', rootDir) && rootDir);
+            // this.walk(isofs, isofs.rootDir(), '/');
+            let gamedata = await this.findGameDir(isofs);
             if (!gamedata) {
                 ga('send', 'event', 'Loader', 'NoGamedataDir');
                 this.shell.addToast('インストールできません。イメージ内にGAMEDATAフォルダが見つかりません。', 'danger');
@@ -107,16 +104,7 @@ namespace xsystem35 {
                 aldFiles.push(e.name);
             }
             if (isSystem3) {
-                let dirname = isofs.volumeLabel();
-                if (!dirname) {
-                    if (await isofs.getDirEnt('prog.bat', rootDir))
-                        dirname = 'ProG';
-                    else {
-                        dirname = 'untitled';
-                        ga('send', 'event', 'Loader', 'NoVolumeLabel');
-                    }
-                }
-                let savedir = '/save/' + dirname;
+                let savedir = await this.saveDir(isofs);
                 Module.arguments.push('-savedir', savedir + '/');
                 xsystem35.saveDirReady.then(() => { mkdirIfNotExist(savedir); });
             } else {
@@ -126,6 +114,31 @@ namespace xsystem35 {
             ga('send', 'timing', 'Image load', this.imgFile.name, Math.round(performance.now() - startTime));
 
             this.shell.loaded();
+        }
+
+        private async findGameDir(isofs: CDImage.ISO9660FileSystem): Promise<CDImage.DirEnt> {
+            for (let e of await isofs.readDir(isofs.rootDir())) {
+                if (e.isDirectory) {
+                    if (e.name.toLowerCase() === 'gamedata' || await isofs.getDirEnt('system3.exe', e))
+                        return e;
+                }
+                if (e.name.toLowerCase() === 'system3.exe')
+                    return isofs.rootDir();
+            }
+            return null;
+        }
+
+        private async saveDir(isofs: CDImage.ISO9660FileSystem): Promise<string> {
+            let dirname = isofs.volumeLabel();
+            if (!dirname) {
+                if (await isofs.getDirEnt('prog.bat', isofs.rootDir()))
+                    dirname = 'ProG';
+                else {
+                    dirname = 'untitled';
+                    ga('send', 'event', 'Loader', 'NoVolumeLabel');
+                }
+            }
+            return '/save/' + dirname;
         }
 
         private createGr(files: string[]): string {
