@@ -66,14 +66,18 @@ namespace xsystem35 {
             this.audio.load();
             let p: any = this.audio.play();  // Edge returns undefined
             if (p instanceof Promise) {
-                p.catch(() => {
-                    // Audio still locked?
-                    let handler = () => {
-                        this.audio.play();
-                        window.removeEventListener('touchend', handler);
-                    };
-                    window.addEventListener('touchend', handler);
-                    ga('send', 'event', 'CDDA', 'UnlockAgain');
+                p.catch((err) => {
+                    if (err.message.indexOf('gesture') >= 0) {
+                        // Audio still locked?
+                        let handler = () => {
+                            this.audio.play();
+                            window.removeEventListener('touchend', handler);
+                        };
+                        window.addEventListener('touchend', handler);
+                        ga('send', 'event', 'CDDA', 'UnlockAgain');
+                    } else {
+                        throw err;
+                    }
                 });
             }
         }
