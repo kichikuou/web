@@ -848,7 +848,18 @@ var xsystem35;
             this.audio.setAttribute('src', URL.createObjectURL(blob));
             this.audio.loop = (loop !== 0);
             this.audio.load();
-            this.audio.play();
+            let p = this.audio.play(); // Edge returns undefined
+            if (p instanceof Promise) {
+                p.catch(() => {
+                    // Audio still locked?
+                    let handler = () => {
+                        this.audio.play();
+                        window.removeEventListener('touchend', handler);
+                    };
+                    window.addEventListener('touchend', handler);
+                    ga('send', 'event', 'CDDA', 'UnlockAgain');
+                });
+            }
         }
         onVisibilityChange() {
             if (document.hidden)
