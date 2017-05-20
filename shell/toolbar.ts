@@ -53,18 +53,27 @@ namespace xsystem35 {
                 url = URL.createObjectURL(blob);
             } else if (canvas.msToBlob) {  // Edge
                 let blob = canvas.msToBlob();
-                navigator.msSaveBlob(blob, 'screenshot.png');
+                navigator.msSaveBlob(blob, getScreenshotFilename());
                 return;
             } else {  // Safari
                 url = canvas.toDataURL();
             }
             let elem = document.createElement('a');
-            elem.setAttribute('download', 'screenshot.png');
+            elem.setAttribute('download', getScreenshotFilename());
             elem.setAttribute('href', url);
             elem.setAttribute('target', '_blank');  // Unless this, iOS safari replaces current page
             document.body.appendChild(elem);
             elem.click();
             setTimeout(() => { document.body.removeChild(elem); }, 5000);
         }
+    }
+
+    function getScreenshotFilename(): string {
+        let now = new Date();
+        let MM = ('0' + (now.getMonth() + 1)).slice(-2);
+        let DD = ('0' + now.getDate()).slice(-2);
+        let hh = ('0' + now.getHours()).slice(-2);
+        let mm = ('0' + now.getMinutes()).slice(-2);
+        return 'Screenshot-' + now.getFullYear() + MM + DD + '-' + hh + mm + '.png';
     }
 }

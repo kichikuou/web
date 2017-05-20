@@ -1176,14 +1176,14 @@ var xsystem35;
                 }
                 else if (canvas.msToBlob) {
                     let blob = canvas.msToBlob();
-                    navigator.msSaveBlob(blob, 'screenshot.png');
+                    navigator.msSaveBlob(blob, getScreenshotFilename());
                     return;
                 }
                 else {
                     url = canvas.toDataURL();
                 }
                 let elem = document.createElement('a');
-                elem.setAttribute('download', 'screenshot.png');
+                elem.setAttribute('download', getScreenshotFilename());
                 elem.setAttribute('href', url);
                 elem.setAttribute('target', '_blank'); // Unless this, iOS safari replaces current page
                 document.body.appendChild(elem);
@@ -1193,6 +1193,14 @@ var xsystem35;
         }
     }
     xsystem35.ToolBar = ToolBar;
+    function getScreenshotFilename() {
+        let now = new Date();
+        let MM = ('0' + (now.getMonth() + 1)).slice(-2);
+        let DD = ('0' + now.getDate()).slice(-2);
+        let hh = ('0' + now.getHours()).slice(-2);
+        let mm = ('0' + now.getMinutes()).slice(-2);
+        return 'Screenshot-' + now.getFullYear() + MM + DD + '-' + hh + mm + '.png';
+    }
 })(xsystem35 || (xsystem35 = {}));
 /// <reference path="util.ts" />
 /// <reference path="config.ts" />
