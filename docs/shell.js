@@ -848,6 +848,7 @@ var xsystem35;
             this.audio.setAttribute('src', URL.createObjectURL(blob));
             this.audio.loop = (loop !== 0);
             this.audio.load();
+            let start = performance.now();
             let p = this.audio.play(); // Edge returns undefined
             if (p instanceof Promise) {
                 p.catch((err) => {
@@ -861,6 +862,7 @@ var xsystem35;
                         ga('send', 'event', 'CDDA', 'UnlockAgain');
                     }
                     else {
+                        ga('send', 'timing', 'CddaPlayError', err.message, Math.round(performance.now() - start));
                         throw err;
                     }
                 });
