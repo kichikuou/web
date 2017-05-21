@@ -559,6 +559,7 @@ var xsystem35;
     // Settings Dialog
     class Settings {
         constructor() {
+            this.antialias = $('#antialias');
             $('#settings-button').addEventListener('click', this.openModal.bind(this));
             $('#settings-close').addEventListener('click', this.closeModal.bind(this));
             this.keyDownHandler = (ev) => {
@@ -566,6 +567,8 @@ var xsystem35;
                     this.closeModal();
             };
             $('.modal-overlay').addEventListener('click', this.closeModal.bind(this));
+            this.antialias.addEventListener('change', this.antialiasChanged.bind(this));
+            this.antialias.checked = xsystem35.config.antialias;
             $('#downloadSaveData').addEventListener('click', this.downloadSaveData.bind(this));
             $('#uploadSaveData').addEventListener('click', this.uploadSaveData.bind(this));
         }
@@ -582,6 +585,12 @@ var xsystem35;
         closeModal() {
             $('#settings-modal').classList.remove('active');
             document.removeEventListener('keydown', this.keyDownHandler);
+        }
+        antialiasChanged() {
+            xsystem35.config.antialias = this.antialias.checked;
+            xsystem35.config.persist();
+            if (!$('#xsystem35').hidden)
+                _ags_setAntialiasedStringMode(xsystem35.config.antialias ? 1 : 0);
         }
         checkSaveData() {
             if (!$('#downloadSaveData').hasAttribute('disabled'))
@@ -1261,9 +1270,6 @@ var xsystem35;
             xsystem35.cdPlayer = new xsystem35.CDPlayer(this.imageLoader, this.volumeControl);
             this.zoom = new xsystem35.ZoomManager();
             this.toolbar = new xsystem35.ToolBar();
-            this.antialiasCheckbox = $('#antialias');
-            this.antialiasCheckbox.addEventListener('change', this.antialiasChanged.bind(this));
-            this.antialiasCheckbox.checked = xsystem35.config.antialias;
             xsystem35.audio = new xsystem35.AudioManager(this.volumeControl);
             xsystem35.settings = new xsystem35.Settings();
         }
@@ -1349,7 +1355,7 @@ var xsystem35;
             document.body.classList.add('game');
             $('#toolbar').classList.remove('before-game-start');
             setTimeout(() => {
-                if (this.antialiasCheckbox.checked)
+                if (xsystem35.config.antialias)
                     Module.arguments.push('-antialias');
                 Module.removeRunDependency('gameFiles');
             }, 0);
@@ -1391,12 +1397,6 @@ var xsystem35;
                         console.log('FS.syncfs error: ', err);
                 });
             }, timeout);
-        }
-        antialiasChanged() {
-            xsystem35.config.antialias = this.antialiasCheckbox.checked;
-            xsystem35.config.persist();
-            if (!$('#xsystem35').hidden)
-                _ags_setAntialiasedStringMode(this.antialiasCheckbox.checked ? 1 : 0);
         }
     }
     xsystem35.System35Shell = System35Shell;

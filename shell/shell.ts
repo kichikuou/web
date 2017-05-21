@@ -28,7 +28,6 @@ namespace xsystem35 {
         private zoom: ZoomManager;
         private volumeControl: VolumeControl;
         private toolbar: ToolBar;
-        private antialiasCheckbox: HTMLInputElement;
 
         constructor() {
             this.parseParams(location.search.slice(1));
@@ -54,9 +53,6 @@ namespace xsystem35 {
             xsystem35.cdPlayer = new CDPlayer(this.imageLoader, this.volumeControl);
             this.zoom = new ZoomManager();
             this.toolbar = new ToolBar();
-            this.antialiasCheckbox = <HTMLInputElement>$('#antialias');
-            this.antialiasCheckbox.addEventListener('change', this.antialiasChanged.bind(this));
-            this.antialiasCheckbox.checked = config.antialias;
             xsystem35.audio = new AudioManager(this.volumeControl);
             xsystem35.settings = new Settings();
         }
@@ -147,7 +143,7 @@ namespace xsystem35 {
             document.body.classList.add('game');
             $('#toolbar').classList.remove('before-game-start');
             setTimeout(() => {
-                if (this.antialiasCheckbox.checked)
+                if (config.antialias)
                     Module.arguments.push('-antialias');
                 Module.removeRunDependency('gameFiles');
             }, 0);
@@ -193,13 +189,6 @@ namespace xsystem35 {
                         console.log('FS.syncfs error: ', err);
                 });
             }, timeout);
-        }
-
-        private antialiasChanged() {
-            config.antialias = this.antialiasCheckbox.checked;
-            config.persist();
-            if (!$('#xsystem35').hidden)
-                _ags_setAntialiasedStringMode(this.antialiasCheckbox.checked ? 1 : 0);
         }
     }
 

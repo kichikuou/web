@@ -5,6 +5,8 @@ declare function FSLib(): {saveDirReady: Promise<typeof FS>};
 namespace xsystem35 {
     // Settings Dialog
     export class Settings {
+        private antialias: HTMLInputElement = <HTMLInputElement>$('#antialias');
+
         private keyDownHandler: (ev: KeyboardEvent) => void;
         private FSready: Promise<typeof FS>;
 
@@ -16,6 +18,9 @@ namespace xsystem35 {
                     this.closeModal();
             };
             $('.modal-overlay').addEventListener('click', this.closeModal.bind(this));
+
+            this.antialias.addEventListener('change', this.antialiasChanged.bind(this));
+            this.antialias.checked = config.antialias;
 
             $('#downloadSaveData').addEventListener('click', this.downloadSaveData.bind(this));
             $('#uploadSaveData').addEventListener('click', this.uploadSaveData.bind(this));
@@ -35,6 +40,13 @@ namespace xsystem35 {
         private closeModal() {
             $('#settings-modal').classList.remove('active');
             document.removeEventListener('keydown', this.keyDownHandler);
+        }
+
+        private antialiasChanged() {
+            config.antialias = this.antialias.checked;
+            config.persist();
+            if (!$('#xsystem35').hidden)
+                _ags_setAntialiasedStringMode(config.antialias ? 1 : 0);
         }
 
         private checkSaveData() {
