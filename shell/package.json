@@ -7,5 +7,8 @@
     "@types/google.analytics": "0.0.33",
     "@types/jszip": "0.0.32",
     "@types/text-encoding": "0.0.30"
+  },
+  "devDependencies": {
+    "typescript": "^2.3.2"
   }
 }
