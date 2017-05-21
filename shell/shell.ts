@@ -179,7 +179,7 @@ namespace xsystem35 {
             btn.setAttribute('class', 'btn btn-clear float-right');
             function dismiss() { if (div.parentNode === container) container.removeChild(div); }
             btn.addEventListener('click', dismiss);
-            let timeout = {success: 5000, warning: 10000, error: null}[type];
+            let timeout = type ? {success: 5000, warning: 10000, error: null}[type] : 5000;
             if (timeout)
                 setTimeout(dismiss, timeout);
             div.insertBefore(btn, div.firstChild);
