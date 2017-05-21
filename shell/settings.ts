@@ -6,6 +6,7 @@ namespace xsystem35 {
     // Settings Dialog
     export class Settings {
         private antialias: HTMLInputElement = <HTMLInputElement>$('#antialias');
+        private unloadConfirmation: HTMLInputElement = <HTMLInputElement>$('#unload-confirmation');
 
         private keyDownHandler: (ev: KeyboardEvent) => void;
         private FSready: Promise<typeof FS>;
@@ -21,6 +22,8 @@ namespace xsystem35 {
 
             this.antialias.addEventListener('change', this.antialiasChanged.bind(this));
             this.antialias.checked = config.antialias;
+            this.unloadConfirmation.addEventListener('change', this.unloadConfirmationChanged.bind(this));
+            this.unloadConfirmation.checked = config.unloadConfirmation;
 
             $('#downloadSaveData').addEventListener('click', this.downloadSaveData.bind(this));
             $('#uploadSaveData').addEventListener('click', this.uploadSaveData.bind(this));
@@ -47,6 +50,11 @@ namespace xsystem35 {
             config.persist();
             if (!$('#xsystem35').hidden)
                 _ags_setAntialiasedStringMode(config.antialias ? 1 : 0);
+        }
+
+        private unloadConfirmationChanged() {
+            config.unloadConfirmation = this.unloadConfirmation.checked;
+            config.persist();
         }
 
         private checkSaveData() {

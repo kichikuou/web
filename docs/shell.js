@@ -73,6 +73,7 @@ var xsystem35;
         constructor() {
             this.antialias = true;
             this.pixelate = false;
+            this.unloadConfirmation = true;
             this.volume = 1;
             this.zoom = 'fit';
             let json = localStorage.getItem('KichikuouWeb.Config');
@@ -82,6 +83,8 @@ var xsystem35;
                     this.antialias = val.antialias;
                 if (val.pixelate !== undefined)
                     this.pixelate = val.pixelate;
+                if (val.unloadConfirmation !== undefined)
+                    this.unloadConfirmation = val.unloadConfirmation;
                 if (val.volume !== undefined)
                     this.volume = val.volume;
                 if (val.zoom !== undefined)
@@ -92,6 +95,7 @@ var xsystem35;
             localStorage.setItem('KichikuouWeb.Config', JSON.stringify({
                 antialias: this.antialias,
                 pixelate: this.pixelate,
+                unloadConfirmation: this.unloadConfirmation,
                 volume: this.volume,
                 zoom: this.zoom,
             }));
@@ -560,6 +564,7 @@ var xsystem35;
     class Settings {
         constructor() {
             this.antialias = $('#antialias');
+            this.unloadConfirmation = $('#unload-confirmation');
             $('#settings-button').addEventListener('click', this.openModal.bind(this));
             $('#settings-close').addEventListener('click', this.closeModal.bind(this));
             this.keyDownHandler = (ev) => {
@@ -569,6 +574,8 @@ var xsystem35;
             $('.modal-overlay').addEventListener('click', this.closeModal.bind(this));
             this.antialias.addEventListener('change', this.antialiasChanged.bind(this));
             this.antialias.checked = xsystem35.config.antialias;
+            this.unloadConfirmation.addEventListener('change', this.unloadConfirmationChanged.bind(this));
+            this.unloadConfirmation.checked = xsystem35.config.unloadConfirmation;
             $('#downloadSaveData').addEventListener('click', this.downloadSaveData.bind(this));
             $('#uploadSaveData').addEventListener('click', this.uploadSaveData.bind(this));
         }
@@ -591,6 +598,10 @@ var xsystem35;
             xsystem35.config.persist();
             if (!$('#xsystem35').hidden)
                 _ags_setAntialiasedStringMode(xsystem35.config.antialias ? 1 : 0);
+        }
+        unloadConfirmationChanged() {
+            xsystem35.config.unloadConfirmation = this.unloadConfirmation.checked;
+            xsystem35.config.persist();
         }
         checkSaveData() {
             if (!$('#downloadSaveData').hasAttribute('disabled'))
@@ -1354,11 +1365,16 @@ var xsystem35;
             $('#xsystem35').hidden = false;
             document.body.classList.add('game');
             $('#toolbar').classList.remove('before-game-start');
+            window.onbeforeunload = this.onBeforeUnload.bind(this);
             setTimeout(() => {
                 if (xsystem35.config.antialias)
                     Module.arguments.push('-antialias');
                 Module.removeRunDependency('gameFiles');
             }, 0);
+        }
+        onBeforeUnload(e) {
+            if (xsystem35.config.unloadConfirmation)
+                e.returnValue = 'セーブしていないデータは失われます。';
         }
         windowSizeChanged() {
             this.zoom.handleZoom();
@@ -1366,6 +1382,7 @@ var xsystem35;
         quit() {
             this.addToast('終了しました。');
             ga('send', 'event', 'Game', 'GameEnd');
+            window.onbeforeunload = null;
         }
         addToast(msg, type) {
             let container = $('.toast-container');

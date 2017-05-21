@@ -142,11 +142,17 @@ namespace xsystem35 {
             $('#xsystem35').hidden = false;
             document.body.classList.add('game');
             $('#toolbar').classList.remove('before-game-start');
+            window.onbeforeunload = this.onBeforeUnload.bind(this);
             setTimeout(() => {
                 if (config.antialias)
                     Module.arguments.push('-antialias');
                 Module.removeRunDependency('gameFiles');
             }, 0);
+        }
+
+        onBeforeUnload(e: BeforeUnloadEvent) {
+            if (config.unloadConfirmation)
+                e.returnValue = 'セーブしていないデータは失われます。';
         }
 
         windowSizeChanged() {
@@ -156,6 +162,7 @@ namespace xsystem35 {
         quit() {
             this.addToast('終了しました。');
             ga('send', 'event', 'Game', 'GameEnd');
+            window.onbeforeunload = null;
         }
 
         addToast(msg: string | Node, type?: 'success' | 'warning' | 'error'): HTMLElement {

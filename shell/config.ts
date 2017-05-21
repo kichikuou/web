@@ -2,6 +2,7 @@ namespace xsystem35 {
     export class Config {
         antialias = true;
         pixelate = false;
+        unloadConfirmation = true;
         volume = 1;
         zoom = 'fit';
 
@@ -11,6 +12,7 @@ namespace xsystem35 {
                 let val = JSON.parse(json);
                 if (val.antialias !== undefined) this.antialias = val.antialias;
                 if (val.pixelate !== undefined) this.pixelate = val.pixelate;
+                if (val.unloadConfirmation !== undefined) this.unloadConfirmation = val.unloadConfirmation;
                 if (val.volume !== undefined) this.volume = val.volume;
                 if (val.zoom !== undefined) this.zoom = val.zoom;
             }
@@ -20,6 +22,7 @@ namespace xsystem35 {
             localStorage.setItem('KichikuouWeb.Config', JSON.stringify({
                 antialias: this.antialias,
                 pixelate: this.pixelate,
+                unloadConfirmation: this.unloadConfirmation,
                 volume: this.volume,
                 zoom: this.zoom,
             }));
