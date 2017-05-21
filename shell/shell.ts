@@ -108,8 +108,10 @@ namespace xsystem35 {
                     FS.mount(IDBFS, {}, '/save');
                     Module.addRunDependency('syncfs');
                     FS.syncfs(true, (err) => {
-                        Module.removeRunDependency('syncfs');
-                        idbfsReady(FS);
+                        importSaveDataFromLocalFileSystem().then(() => {
+                            Module.removeRunDependency('syncfs');
+                            idbfsReady(FS);
+                        });
                     });
                 },
             ];
@@ -196,6 +198,50 @@ namespace xsystem35 {
                         console.log('FS.syncfs error: ', err);
                 });
             }, timeout);
+        }
+    }
+
+    export async function importSaveDataFromLocalFileSystem() {
+        function requestFileSystem(type: number, size: number): Promise<FileSystem> {
+            return new Promise((resolve, reject) => window.webkitRequestFileSystem(type, size, resolve, reject));
+        }
+        function getDirectory(dir: DirectoryEntry, path: string): Promise<DirectoryEntry> {
+            return new Promise((resolve, reject) => dir.getDirectory(path, {}, resolve, reject));
+        }
+        function readEntries(reader: DirectoryReader): Promise<Entry[]> {
+            return new Promise((resolve, reject) => reader.readEntries(resolve, reject));
+        }
+        function fileOf(entry: FileEntry): Promise<File> {
+            return new Promise((resolve, reject) => entry.file(resolve, reject));
+        }
+
+        if (FS.readdir('/save').length > 2)  // Are there any entries other than . and ..?
+            return;
+        if (!window.webkitRequestFileSystem)
+            return;
+        try {
+            let fs = await requestFileSystem(self.PERSISTENT, 0);
+            let savedir = (await getDirectory(fs.root, 'save')).createReader();
+            let entries: FileEntry[] = [];
+            while (true) {
+                let results = await readEntries(savedir);
+                if (!results.length)
+                    break;
+                for (let e of results) {
+                    if (e.isFile && e.name.toLowerCase().endsWith('.asd'))
+                        entries.push(e as FileEntry);
+                }
+            }
+            if (entries.length && window.confirm('鬼畜王 on Chrome のセーブデータを引き継ぎますか?')) {
+                for (let e of entries) {
+                    let content = await readFileAsArrayBuffer(await fileOf(e));
+                    FS.writeFile('/save/' + e.name, new Uint8Array(content), { encoding: 'binary' });
+                }
+                shell.syncfs(0);
+                ga('send', 'event', 'Game', 'SaveDataImported');
+            }
+        } catch (err) {
+            console.log(err);
         }
     }
 

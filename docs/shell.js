@@ -1333,8 +1333,10 @@ var xsystem35;
                     FS.mount(IDBFS, {}, '/save');
                     Module.addRunDependency('syncfs');
                     FS.syncfs(true, (err) => {
-                        Module.removeRunDependency('syncfs');
-                        idbfsReady(FS);
+                        importSaveDataFromLocalFileSystem().then(() => {
+                            Module.removeRunDependency('syncfs');
+                            idbfsReady(FS);
+                        });
                     });
                 },
             ];
@@ -1417,5 +1419,51 @@ var xsystem35;
         }
     }
     xsystem35.System35Shell = System35Shell;
+    function importSaveDataFromLocalFileSystem() {
+        return __awaiter(this, void 0, void 0, function* () {
+            function requestFileSystem(type, size) {
+                return new Promise((resolve, reject) => window.webkitRequestFileSystem(type, size, resolve, reject));
+            }
+            function getDirectory(dir, path) {
+                return new Promise((resolve, reject) => dir.getDirectory(path, {}, resolve, reject));
+            }
+            function readEntries(reader) {
+                return new Promise((resolve, reject) => reader.readEntries(resolve, reject));
+            }
+            function fileOf(entry) {
+                return new Promise((resolve, reject) => entry.file(resolve, reject));
+            }
+            if (FS.readdir('/save').length > 2)
+                return;
+            if (!window.webkitRequestFileSystem)
+                return;
+            try {
+                let fs = yield requestFileSystem(self.PERSISTENT, 0);
+                let savedir = (yield getDirectory(fs.root, 'save')).createReader();
+                let entries = [];
+                while (true) {
+                    let results = yield readEntries(savedir);
+                    if (!results.length)
+                        break;
+                    for (let e of results) {
+                        if (e.isFile && e.name.toLowerCase().endsWith('.asd'))
+                            entries.push(e);
+                    }
+                }
+                if (entries.length && window.confirm('鬼畜王 on Chrome のセーブデータを引き継ぎますか?')) {
+                    for (let e of entries) {
+                        let content = yield readFileAsArrayBuffer(yield fileOf(e));
+                        FS.writeFile('/save/' + e.name, new Uint8Array(content), { encoding: 'binary' });
+                    }
+                    xsystem35.shell.syncfs(0);
+                    ga('send', 'event', 'Game', 'SaveDataImported');
+                }
+            }
+            catch (err) {
+                console.log(err);
+            }
+        });
+    }
+    xsystem35.importSaveDataFromLocalFileSystem = importSaveDataFromLocalFileSystem;
     xsystem35.shell = new System35Shell();
 })(xsystem35 || (xsystem35 = {}));
