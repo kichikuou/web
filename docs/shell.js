@@ -846,8 +846,13 @@ var xsystem35;
             }
             this.audio.currentTime = 0;
             this.imageLoader.getCDDA(track).then((blob) => {
-                this.blobCache[track] = blob;
-                this.startPlayback(blob, loop);
+                if (blob) {
+                    this.blobCache[track] = blob;
+                    this.startPlayback(blob, loop);
+                }
+                else {
+                    ga('send', 'event', 'CDDA', 'InvalidTrack');
+                }
             });
         }
         stop() {
