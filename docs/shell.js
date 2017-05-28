@@ -1387,6 +1387,14 @@ var xsystem35;
         windowSizeChanged() {
             this.zoom.handleZoom();
         }
+        inputString(title, initialValue, maxLength) {
+            title += ' (全角' + maxLength + '文字まで)';
+            let result = window.prompt(title, initialValue);
+            if (result) {
+                result = result.substring(0, maxLength);
+            }
+            return result;
+        }
         quit() {
             this.addToast('終了しました。');
             ga('send', 'event', 'Game', 'GameEnd');
