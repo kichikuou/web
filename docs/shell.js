@@ -655,6 +655,14 @@ var xsystem35;
                 function addSaveFile(fs, path, content) {
                     fs.writeFile(path, new Uint8Array(content), { encoding: 'binary' });
                 }
+                function decodeFileName(bytes) {
+                    try {
+                        return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+                    }
+                    catch (err) {
+                        return new TextDecoder('shift_jis').decode(bytes);
+                    }
+                }
                 try {
                     let fs = yield this.FSready;
                     if (file.name.toLowerCase().endsWith('.asd')) {
@@ -662,7 +670,10 @@ var xsystem35;
                     }
                     else {
                         let zip = new JSZip();
-                        yield zip.loadAsync(yield readFileAsArrayBuffer(file));
+                        let opts = {};
+                        if (typeof TextDecoder !== 'undefined')
+                            opts = { decodeFileName };
+                        yield zip.loadAsync(yield readFileAsArrayBuffer(file), opts);
                         let entries = [];
                         zip.folder('save').forEach((path, z) => { entries.push(z); });
                         for (let z of entries) {

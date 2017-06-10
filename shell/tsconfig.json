@@ -2,6 +2,7 @@
     "compilerOptions": {
         "target": "es6",
         "outFile": "../docs/shell.js",
+        "newLine": "LF",
         "noImplicitAny": true,
         "sourceMap": false
     },

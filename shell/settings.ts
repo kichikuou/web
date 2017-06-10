@@ -107,13 +107,23 @@ namespace xsystem35 {
             function addSaveFile(fs: typeof FS, path: string, content: ArrayBuffer) {
                 fs.writeFile(path, new Uint8Array(content), { encoding: 'binary' });
             }
+            function decodeFileName(bytes: Uint8Array): string {
+                try {
+                    return new TextDecoder('utf-8', {fatal: true}).decode(bytes);
+                } catch (err) {
+                    return new TextDecoder('shift_jis').decode(bytes);
+                }
+            }
             try {
                 let fs = await this.FSready;
                 if (file.name.toLowerCase().endsWith('.asd')) {
                     addSaveFile(fs, '/save/' + file.name, await readFileAsArrayBuffer(file));
                 } else {
                     let zip = new JSZip();
-                    await zip.loadAsync(await readFileAsArrayBuffer(file));
+                    let opts: JSZipLoadOptions = {};
+                    if (typeof TextDecoder !== 'undefined')
+                        opts = {decodeFileName} as JSZipLoadOptions;
+                    await zip.loadAsync(await readFileAsArrayBuffer(file), opts);
                     let entries: JSZipObject[] = [];
                     zip.folder('save').forEach((path, z) => { entries.push(z); });
                     for (let z of entries) {
