@@ -111,7 +111,7 @@ namespace xsystem35 {
                 try {
                     return new TextDecoder('utf-8', {fatal: true}).decode(bytes);
                 } catch (err) {
-                    return new TextDecoder('shift_jis').decode(bytes);
+                    return new TextDecoder('shift_jis', {fatal: true}).decode(bytes);
                 }
             }
             try {

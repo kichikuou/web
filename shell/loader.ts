@@ -135,9 +135,11 @@ namespace xsystem35 {
         private async saveDir(isofs: CDImage.ISO9660FileSystem): Promise<string> {
             let dirname = isofs.volumeLabel();
             if (!dirname) {
-                if (await isofs.getDirEnt('prog.bat', isofs.rootDir()))
+                if (await isofs.getDirEnt('prog.bat', isofs.rootDir())) {
                     dirname = 'ProG';
-                else {
+                } else if (await isofs.getDirEnt('dps_all.bat', isofs.rootDir())) {
+                    dirname = 'DPS_all';
+                } else {
                     dirname = 'untitled';
                     ga('send', 'event', 'Loader', 'NoVolumeLabel');
                 }

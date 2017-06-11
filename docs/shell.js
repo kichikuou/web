@@ -514,8 +514,12 @@ var xsystem35;
             return __awaiter(this, void 0, void 0, function* () {
                 let dirname = isofs.volumeLabel();
                 if (!dirname) {
-                    if (yield isofs.getDirEnt('prog.bat', isofs.rootDir()))
+                    if (yield isofs.getDirEnt('prog.bat', isofs.rootDir())) {
                         dirname = 'ProG';
+                    }
+                    else if (yield isofs.getDirEnt('dps_all.bat', isofs.rootDir())) {
+                        dirname = 'DPS_all';
+                    }
                     else {
                         dirname = 'untitled';
                         ga('send', 'event', 'Loader', 'NoVolumeLabel');
@@ -660,7 +664,7 @@ var xsystem35;
                         return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
                     }
                     catch (err) {
-                        return new TextDecoder('shift_jis').decode(bytes);
+                        return new TextDecoder('shift_jis', { fatal: true }).decode(bytes);
                     }
                 }
                 try {
