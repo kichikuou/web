@@ -250,7 +250,6 @@ namespace xsystem35 {
                 ga('send', 'event', 'Game', 'SaveDataImported');
             }
         } catch (err) {
-            console.log(err);
         }
     }
 

@@ -1490,7 +1490,6 @@ var xsystem35;
                 }
             }
             catch (err) {
-                console.log(err);
             }
         });
     }
