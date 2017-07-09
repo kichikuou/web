@@ -112,7 +112,8 @@ namespace xsystem35 {
         }
 
         private onAudioError(err: ErrorEvent) {
-            ga('send', 'event', 'CDDA', 'AudioError');
+            let msg = this.audio.error.code + ' ' + this.audio.error.message;
+            ga('send', 'event', 'CDDA', 'AudioError', msg);
             let clone = document.importNode((<HTMLTemplateElement>$('#cdda-error')).content, true);
             let toast = xsystem35.shell.addToast(clone, 'error');
             toast.querySelector('.cdda-reload-button').addEventListener('click', () => {
@@ -134,4 +135,9 @@ namespace xsystem35 {
             window.addEventListener('touchend', hanlder);
         }
     }
+}
+
+// TODO: remove this once lib.es6.d.ts supports it
+interface MediaError {
+    readonly message: string;
 }

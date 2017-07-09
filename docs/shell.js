@@ -932,7 +932,8 @@ var xsystem35;
             }
         }
         onAudioError(err) {
-            ga('send', 'event', 'CDDA', 'AudioError');
+            let msg = this.audio.error.code + ' ' + this.audio.error.message;
+            ga('send', 'event', 'CDDA', 'AudioError', msg);
             let clone = document.importNode($('#cdda-error').content, true);
             let toast = xsystem35.shell.addToast(clone, 'error');
             toast.querySelector('.cdda-reload-button').addEventListener('click', () => {
