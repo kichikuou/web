@@ -12,9 +12,20 @@ namespace xsystem35 {
         }
 
         public hasSaveData(): Promise<boolean> {
-            // TODO: Find System3 save data
-            return this.FSready.then((fs) =>
-                (<string[]>fs.readdir('/save')).some((name) => name.toLowerCase().endsWith('.asd')));
+            function find(fs: typeof FS, dir: string): boolean {
+                if (!fs.isDir(fs.stat(dir).mode))
+                    return false;
+                for (let name of fs.readdir(dir) as string[]) {
+                    if (name[0] === '.')
+                        continue;
+                    if (name.toLowerCase().endsWith('.asd') || name.toLowerCase().endsWith('.dat'))
+                        return true;
+                    if (find(fs, dir + '/' + name))
+                        return true;
+                }
+                return false;
+            }
+            return this.FSready.then((fs) => find(fs, '/save'));
         }
 
         public async download() {

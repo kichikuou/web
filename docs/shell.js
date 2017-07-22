@@ -571,8 +571,20 @@ var xsystem35;
                 this.FSready = FSLib().saveDirReady;
         }
         hasSaveData() {
-            // TODO: Find System3 save data
-            return this.FSready.then((fs) => fs.readdir('/save').some((name) => name.toLowerCase().endsWith('.asd')));
+            function find(fs, dir) {
+                if (!fs.isDir(fs.stat(dir).mode))
+                    return false;
+                for (let name of fs.readdir(dir)) {
+                    if (name[0] === '.')
+                        continue;
+                    if (name.toLowerCase().endsWith('.asd') || name.toLowerCase().endsWith('.dat'))
+                        return true;
+                    if (find(fs, dir + '/' + name))
+                        return true;
+                }
+                return false;
+            }
+            return this.FSready.then((fs) => find(fs, '/save'));
         }
         download() {
             return __awaiter(this, void 0, void 0, function* () {
