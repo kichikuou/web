@@ -304,7 +304,7 @@ var CDImage;
             return msf[0] * 60 * 75 + msf[1] * 75 + msf[2];
         }
     }
-    var MdsTrackMode;
+    let MdsTrackMode;
     (function (MdsTrackMode) {
         MdsTrackMode[MdsTrackMode["Audio"] = 169] = "Audio";
         MdsTrackMode[MdsTrackMode["Mode1"] = 170] = "Mode1";
@@ -561,64 +561,23 @@ var xsystem35;
     }
     xsystem35.ImageLoader = ImageLoader;
 })(xsystem35 || (xsystem35 = {}));
-/// <reference path="util.ts" />
 var xsystem35;
 (function (xsystem35) {
-    // Settings Dialog
-    class Settings {
+    class SaveDataManager {
         constructor() {
-            this.antialias = $('#antialias');
-            this.unloadConfirmation = $('#unload-confirmation');
-            $('#settings-button').addEventListener('click', this.openModal.bind(this));
-            $('#settings-close').addEventListener('click', this.closeModal.bind(this));
-            this.keyDownHandler = (ev) => {
-                if (ev.keyCode === 27)
-                    this.closeModal();
-            };
-            $('.modal-overlay').addEventListener('click', this.closeModal.bind(this));
-            this.antialias.addEventListener('change', this.antialiasChanged.bind(this));
-            this.antialias.checked = xsystem35.config.antialias;
-            this.unloadConfirmation.addEventListener('change', this.unloadConfirmationChanged.bind(this));
-            this.unloadConfirmation.checked = xsystem35.config.unloadConfirmation;
-            $('#downloadSaveData').addEventListener('click', this.downloadSaveData.bind(this));
-            $('#uploadSaveData').addEventListener('click', this.uploadSaveData.bind(this));
-        }
-        openModal() {
-            $('#settings-modal').classList.add('active');
-            document.addEventListener('keydown', this.keyDownHandler);
-            if (window.FS) {
+            if (window.FS)
                 this.FSready = xsystem35.saveDirReady;
-            }
             if (!this.FSready)
                 this.FSready = FSLib().saveDirReady;
-            this.checkSaveData();
         }
-        closeModal() {
-            $('#settings-modal').classList.remove('active');
-            document.removeEventListener('keydown', this.keyDownHandler);
+        hasSaveData() {
+            // TODO: Find System3 save data
+            return this.FSready.then((fs) => fs.readdir('/save').some((name) => name.toLowerCase().endsWith('.asd')));
         }
-        antialiasChanged() {
-            xsystem35.config.antialias = this.antialias.checked;
-            xsystem35.config.persist();
-            if (!$('#xsystem35').hidden)
-                _ags_setAntialiasedStringMode(xsystem35.config.antialias ? 1 : 0);
-        }
-        unloadConfirmationChanged() {
-            xsystem35.config.unloadConfirmation = this.unloadConfirmation.checked;
-            xsystem35.config.persist();
-        }
-        checkSaveData() {
-            if (!$('#downloadSaveData').hasAttribute('disabled'))
-                return;
-            this.FSready.then((fs) => {
-                if (fs.readdir('/save').some((name) => name.toLowerCase().endsWith('.asd')))
-                    $('#downloadSaveData').removeAttribute('disabled');
-            });
-        }
-        downloadSaveData() {
+        download() {
             return __awaiter(this, void 0, void 0, function* () {
                 let zip = new JSZip();
-                this.storeZip(yield this.FSready, '/save', zip.folder('save'));
+                storeZip(yield this.FSready, '/save', zip.folder('save'));
                 let blob = yield zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
                 if (navigator.msSaveBlob) {
                     navigator.msSaveBlob(blob, 'savedata.zip');
@@ -634,39 +593,8 @@ var xsystem35;
                 ga('send', 'event', 'Savedata', 'Downloaded');
             });
         }
-        storeZip(fs, dir, zip) {
-            for (let name of fs.readdir(dir)) {
-                let path = dir + '/' + name;
-                if (name[0] === '.') {
-                    continue;
-                }
-                else if (fs.isDir(fs.stat(path).mode)) {
-                    this.storeZip(fs, path, zip.folder(name));
-                }
-                else if (!name.toLowerCase().endsWith('.asd.')) {
-                    let content = fs.readFile(path, { encoding: 'binary' });
-                    zip.file(name, content);
-                }
-            }
-        }
-        uploadSaveData() {
-            openFileInput().then((file) => {
-                this.extractSaveData(file);
-            });
-        }
-        extractSaveData(file) {
+        extract(file) {
             return __awaiter(this, void 0, void 0, function* () {
-                function addSaveFile(fs, path, content) {
-                    fs.writeFile(path, new Uint8Array(content), { encoding: 'binary' });
-                }
-                function decodeFileName(bytes) {
-                    try {
-                        return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
-                    }
-                    catch (err) {
-                        return new TextDecoder('shift_jis', { fatal: true }).decode(bytes);
-                    }
-                }
                 try {
                     let fs = yield this.FSready;
                     if (file.name.toLowerCase().endsWith('.asd')) {
@@ -697,7 +625,6 @@ var xsystem35;
                     });
                     xsystem35.shell.addToast('セーブデータの復元に成功しました。', 'success');
                     ga('send', 'event', 'Savedata', 'Restored');
-                    this.checkSaveData();
                 }
                 catch (err) {
                     xsystem35.shell.addToast('セーブデータを復元できませんでした。', 'error');
@@ -706,6 +633,93 @@ var xsystem35;
                     ga('send', 'exception', { exDescription: err.stack, exFatal: false });
                 }
             });
+        }
+    }
+    xsystem35.SaveDataManager = SaveDataManager;
+    function storeZip(fs, dir, zip) {
+        for (let name of fs.readdir(dir)) {
+            let path = dir + '/' + name;
+            if (name[0] === '.') {
+                continue;
+            }
+            else if (fs.isDir(fs.stat(path).mode)) {
+                storeZip(fs, path, zip.folder(name));
+            }
+            else if (!name.toLowerCase().endsWith('.asd.')) {
+                let content = fs.readFile(path, { encoding: 'binary' });
+                zip.file(name, content);
+            }
+        }
+    }
+    function addSaveFile(fs, path, content) {
+        fs.writeFile(path, new Uint8Array(content), { encoding: 'binary' });
+    }
+    function decodeFileName(bytes) {
+        try {
+            return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+        }
+        catch (err) {
+            return new TextDecoder('shift_jis', { fatal: true }).decode(bytes);
+        }
+    }
+})(xsystem35 || (xsystem35 = {}));
+/// <reference path="savedata.ts" />
+var xsystem35;
+(function (xsystem35) {
+    // Settings Dialog
+    class Settings {
+        constructor() {
+            this.antialias = $('#antialias');
+            this.unloadConfirmation = $('#unload-confirmation');
+            $('#settings-button').addEventListener('click', this.openModal.bind(this));
+            $('#settings-close').addEventListener('click', this.closeModal.bind(this));
+            this.keyDownHandler = (ev) => {
+                if (ev.keyCode === 27)
+                    this.closeModal();
+            };
+            $('.modal-overlay').addEventListener('click', this.closeModal.bind(this));
+            this.antialias.addEventListener('change', this.antialiasChanged.bind(this));
+            this.antialias.checked = xsystem35.config.antialias;
+            this.unloadConfirmation.addEventListener('change', this.unloadConfirmationChanged.bind(this));
+            this.unloadConfirmation.checked = xsystem35.config.unloadConfirmation;
+            $('#downloadSaveData').addEventListener('click', this.downloadSaveData.bind(this));
+            $('#uploadSaveData').addEventListener('click', this.uploadSaveData.bind(this));
+        }
+        openModal() {
+            $('#settings-modal').classList.add('active');
+            document.addEventListener('keydown', this.keyDownHandler);
+            this.saveDataManager = new xsystem35.SaveDataManager();
+            this.checkSaveData();
+        }
+        closeModal() {
+            $('#settings-modal').classList.remove('active');
+            document.removeEventListener('keydown', this.keyDownHandler);
+            this.saveDataManager = null;
+        }
+        antialiasChanged() {
+            xsystem35.config.antialias = this.antialias.checked;
+            xsystem35.config.persist();
+            if (!$('#xsystem35').hidden)
+                _ags_setAntialiasedStringMode(xsystem35.config.antialias ? 1 : 0);
+        }
+        unloadConfirmationChanged() {
+            xsystem35.config.unloadConfirmation = this.unloadConfirmation.checked;
+            xsystem35.config.persist();
+        }
+        checkSaveData() {
+            return __awaiter(this, void 0, void 0, function* () {
+                if ($('#downloadSaveData').hasAttribute('disabled') &&
+                    (yield this.saveDataManager.hasSaveData()))
+                    $('#downloadSaveData').removeAttribute('disabled');
+            });
+        }
+        downloadSaveData() {
+            return __awaiter(this, void 0, void 0, function* () {
+                this.saveDataManager.download();
+            });
+        }
+        uploadSaveData() {
+            openFileInput().then((file) => this.saveDataManager.extract(file)).then(() => this.checkSaveData());
         }
     }
     xsystem35.Settings = Settings;
