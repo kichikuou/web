@@ -56,6 +56,10 @@ summary {
 ol, ul {
   list-style-position: outside;
 }
+
+img {
+  max-width: 100%;
+}
 </style>
 <script>
   window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
@@ -95,9 +99,9 @@ ol, ul {
     </ul>
     <p>以下の環境で動きます。</p>
     <ul>
-      <li>Google Chrome (PC / Android)</li>
+      <li>Google Chrome (Windows / Mac / Android / ChromeOS)</li>
       <li>Mozilla Firefox</li>
-      <li>Safari (<a href="#bug" onclick="bug.parentElement.open = true;">iOSでは一部不具合があります。</a>)</li>
+      <li>Safari (Mac / iOS)</li>
       <li>Microsoft Edge</li>
       <li>Opera</li>
     </ul>
@@ -106,6 +110,7 @@ ol, ul {
   <details>
     <summary>ゲームを起動する</summary>
     <p>このサイト自体は実行環境のみ提供するもので、ゲームのCDイメージを読み込んで動作します。</p>
+    <p>iOSでの起動方法は<a href="#iOS" onclick="iOS.parentElement.open = true;">こちら</a>を参照下さい。</p>
     <ol>
     <li>以下のどちらかのサイトで、CDイメージをダウンロードします。PC98版とCD版がある場合はCDイメージの方をダウンロードしてください。
     <ul>
@@ -116,6 +121,21 @@ ol, ul {
     <li>ダウンロードしたファイルはRAR形式の圧縮ファイルなので、展開してCD-ROMイメージを取り出します。Windowsなら <a href="http://www.forest.impress.co.jp/library/software/lhaplus/">LhaPlus</a>、Macなら <a href="https://itunes.apple.com/jp/app/the-unarchiver/id425424353">The Unarchiver</a>、Androidなら <a href="https://play.google.com/store/apps/details?id=ru.zdevs.zarchiver&hl=ja">ZArchiver</a> で展開できます。</li>
     <li>展開したフォルダにある拡張子 <code>.img</code> と <code>.cue</code> (または <code>.mdf</code> と <code>.mds</code>) のファイルを、鬼畜王 on Web のページにドラッグ＆ドロップするか、ページにある「ファイルを選択」ボタンを押して選択します。</li>
     <li>ゲームが始まります。セーブデータはブラウザ内に保存されるので、次回ページを開いたときは再度CDイメージを読み込ませればセーブしたところから再開できます。</li>
+    </ol>
+  </details>
+
+  <details>
+    <summary id="iOS">iOSでのプレイ方法</summary>
+    <p>iOS 11以降での起動方法です。スクリーンショットは iPad のものですが、iPhone でも手順は同様です。</p>
+    <ol>
+    <li>「設定」→「一般」→「iPhoneストレージ」から、ストレージの空きを確認しておきます。1.4GB以上の空き容量が必要です。</li>
+    <li>Rar圧縮ファイル解凍のため、<a href="https://itunes.apple.com/jp/app/izip-zip%E5%9C%A7%E7%B8%AE-zip%E8%A7%A3%E5%87%8D-rar%E8%A7%A3%E5%87%8D%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AE%E3%83%84%E3%83%BC%E3%83%AB/id413971331?mt=8">iZip</a> をインストールします。</li>
+    <li><a href="http://www.geocities.jp/webmst_kitana/alicefree/index.html">配布サイト</a>からCDイメージをダウンロードします。数百MBのファイルがダウンロードされますので、WiFi環境でのダウンロードをおすすめします。ダウンロードリンクをタップしてからしばらく時間がかかりますが、そのままお待ち下さい。</li>
+    <li>ダウンロードが完了するとこのような画面になります。「"iZip"で開く」をタップします。<br/><img src="images/ios-download.png"></li>
+    <li>すべてのファイルを解凍するか聞かれます。「OK」をタップすると解凍が始まります。こちらも数分かかります。<br/><img src="images/ios-izip.png"></li>
+    <li>Safariに戻り、鬼畜王 on Web のページで「ファイルを選択」ボタンを押して、「ブラウズ」→「このiPhone内」→「iZip」の中から、ディスクイメージファイルを探して開きます。拡張子が表示されないので全部同じ名前に見えますが、600MB台のが img ファイル、1～2KB のが cue ファイルです。<br/><img src="images/ios-filer.png"></li>
+    <li>img と cue の両方が開かれると、ゲームが始まります。</li>
+    <li>ダウンロードした .rar ファイルはもう不要なので、iZip またはiOS付属の「ファイル」アプリから削除しておきましょう。</li>
     </ol>
   </details>
 
@@ -145,16 +165,6 @@ ol, ul {
     <h5>セーブデータ</h5>
     <p>ブラウザ内に保存されているセーブデータをZIPファイルに保存したり、ZIPファイルから復元できます。セーブデータをバックアップしたり、他のPCに移行する場合に使います。<a href="https://kichikuou.github.io/">鬼畜王 on Chrome</a>で保存したZIPから復元することもできます。</p>
     <p>Windows版のSystem3.xで保存したセーブデータとの互換性はありません。</p>
-  </details>
-
-  <details>
-    <summary id="bug">バグ・制限</summary>
-    <h5>iOS</h5>
-    <p>iOSではiCloud Driveに展開済みのCDイメージを入れておけばSafariから読み込んで遊べますが、以下のような制限があります。</p>
-    <ul>
-    <li>iOS 10 ではしばらく遊んでいるとCDイメージの読み込みに失敗するようになり、BGMが再生できなくなります。エラーが出たときは通知メッセージ上の「imgファイルの再読み込み」をタップして <code>.img</code> ファイルを再度選択してください。iOS 11では修正されたようです。</li>
-    <li>ボリューム調整は本体ボタンからしかできません。ページ上ではミュートのみ可能です。</li>
-    </ul>
   </details>
 
   <details>
