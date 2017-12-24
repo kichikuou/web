@@ -18,7 +18,7 @@ namespace xsystem35 {
             volumeControl.addEventListener(this.onVolumeChanged.bind(this));
             this.audio.volume = volumeControl.volume();
             this.audio.addEventListener('error', this.onAudioError.bind(this));
-            this.removeUserGestureRestriction();
+            this.removeUserGestureRestriction(true);
             if (!this.isVolumeSupported) {
                 volumeControl.hideSlider();
                 if (this.audio.volume === 0)
@@ -71,15 +71,12 @@ namespace xsystem35 {
             let p: any = this.audio.play();  // Edge returns undefined
             if (p instanceof Promise) {
                 p.catch((err) => {
-                    if (err.message.startsWith('The play() request was interrupted')) {
-                        // This is harmless, do nothing
-                    } else if (err.message.indexOf('gesture') >= 0) {
+                    if (err.message.startsWith('The play() request was interrupted') ||  // Chrome
+                        err.name === 'AbortError') {  // Safari
+                        // These errors are harmless, do nothing
+                    } else if (err.name === 'NotAllowedError' || err.message.indexOf('gesture') >= 0) {
                         // Audio still locked?
-                        let handler = () => {
-                            this.audio.play();
-                            window.removeEventListener('touchend', handler);
-                        };
-                        window.addEventListener('touchend', handler);
+                        this.removeUserGestureRestriction(false);
                         ga('send', 'event', 'CDDA', 'UnlockAgain');
                     } else {
                         throw err;
@@ -124,15 +121,19 @@ namespace xsystem35 {
             });
         }
 
-        private removeUserGestureRestriction() {
+        private removeUserGestureRestriction(firstTime: boolean) {
             let hanlder = () => {
-                if (!this.currentTrack) {
+                if (!firstTime) {
+                    this.audio.play();
+                } else if (!this.currentTrack) {
                     this.audio.load();
                     console.log('CDDA unlocked');
                 }
                 window.removeEventListener('touchend', hanlder);
+                window.removeEventListener('mouseup', hanlder);
             };
             window.addEventListener('touchend', hanlder);
+            window.addEventListener('mouseup', hanlder);
         }
     }
 }

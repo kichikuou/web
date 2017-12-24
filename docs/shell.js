@@ -880,7 +880,7 @@ var xsystem35;
             volumeControl.addEventListener(this.onVolumeChanged.bind(this));
             this.audio.volume = volumeControl.volume();
             this.audio.addEventListener('error', this.onAudioError.bind(this));
-            this.removeUserGestureRestriction();
+            this.removeUserGestureRestriction(true);
             if (!this.isVolumeSupported) {
                 volumeControl.hideSlider();
                 if (this.audio.volume === 0)
@@ -930,16 +930,13 @@ var xsystem35;
             let p = this.audio.play(); // Edge returns undefined
             if (p instanceof Promise) {
                 p.catch((err) => {
-                    if (err.message.startsWith('The play() request was interrupted')) {
-                        // This is harmless, do nothing
+                    if (err.message.startsWith('The play() request was interrupted') ||
+                        err.name === 'AbortError') {
+                        // These errors are harmless, do nothing
                     }
-                    else if (err.message.indexOf('gesture') >= 0) {
+                    else if (err.name === 'NotAllowedError' || err.message.indexOf('gesture') >= 0) {
                         // Audio still locked?
-                        let handler = () => {
-                            this.audio.play();
-                            window.removeEventListener('touchend', handler);
-                        };
-                        window.addEventListener('touchend', handler);
+                        this.removeUserGestureRestriction(false);
                         ga('send', 'event', 'CDDA', 'UnlockAgain');
                     }
                     else {
@@ -982,15 +979,20 @@ var xsystem35;
                 });
             });
         }
-        removeUserGestureRestriction() {
+        removeUserGestureRestriction(firstTime) {
             let hanlder = () => {
-                if (!this.currentTrack) {
+                if (!firstTime) {
+                    this.audio.play();
+                }
+                else if (!this.currentTrack) {
                     this.audio.load();
                     console.log('CDDA unlocked');
                 }
                 window.removeEventListener('touchend', hanlder);
+                window.removeEventListener('mouseup', hanlder);
             };
             window.addEventListener('touchend', hanlder);
+            window.addEventListener('mouseup', hanlder);
         }
     }
     xsystem35.CDPlayer = CDPlayer;
