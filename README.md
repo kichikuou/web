@@ -1,6 +1,6 @@
 [鬼畜王 on Web](https://github.com/kichikuou/web/) のソースコードです。
 
-以下、各ディレクトリの説明です。
+### 各ディレクトリの説明
 
 #### shell
 鬼畜王 on Web のJavaScript部分のソースコードです。
@@ -21,3 +21,12 @@
 #### docs
 https://kichikuou.github.io/web/ で公開されるディレクトリです。HTMLなどの静的ファイルと、ビルド済みのJavaScript/Wasmファイルが入っています。
 `system3.*` ファイルは [system3-sdl2](https://github.com/kichikuou/system3-sdl2)、`xsystem35.*` ファイルは [xsystem35-sdl2](https://github.com/kichikuou/xsystem35-sdl2) をビルドしたものです。
+
+### ライセンス
+`shell/`, `fslib/` 以下のコードは [MIT ライセンス](https://github.com/kichikuou/web/blob/master/shell/LICENSE) です。
+
+`docs/xsystem35.*` ファイルは [xsystem35-sdl2](https://github.com/kichikuou/xsystem35-sdl2) からビルドされたもので、[GPL 2.0](https://github.com/kichikuou/xsystem35-sdl2/blob/emscripten/COPYING) に従います。
+
+`docs/system3.*` ファイルは [system3-sdl2](https://github.com/kichikuou/system3-sdl2) からビルドされたもので、 [GPL 2.0](https://github.com/kichikuou/system3-sdl2/blob/master/COPYING.txt) に従います。
+
+`docs/fonts/MTLc3m.ttf` は Android Open Source Project の "モトヤLシーダ3等幅" フォントであり、[Apache License 2.0](https://github.com/kichikuou/web/blob/master/docs/fonts/NOTICE) に従います。

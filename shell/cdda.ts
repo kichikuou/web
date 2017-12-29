@@ -1,3 +1,6 @@
+// Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
+// This source code is governed by the MIT License, see the LICENSE file.
+
 /// <reference path="util.ts" />
 /// <reference path="volume.ts" />
 

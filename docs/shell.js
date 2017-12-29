@@ -6,6 +6,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+// Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
+// This source code is governed by the MIT License, see the LICENSE file.
 let $ = document.querySelector.bind(document);
 function readFileAsArrayBuffer(blob) {
     return new Promise((resolve, reject) => {
@@ -67,6 +69,8 @@ function mkdirIfNotExist(path, fs) {
             throw err;
     }
 }
+// Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
+// This source code is governed by the MIT License, see the LICENSE file.
 var xsystem35;
 (function (xsystem35) {
     class Config {
@@ -104,6 +108,8 @@ var xsystem35;
     xsystem35.Config = Config;
     xsystem35.config = new Config();
 })(xsystem35 || (xsystem35 = {}));
+// Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
+// This source code is governed by the MIT License, see the LICENSE file.
 /// <reference path="util.ts" />
 var CDImage;
 (function (CDImage) {
@@ -304,7 +310,7 @@ var CDImage;
             return msf[0] * 60 * 75 + msf[1] * 75 + msf[2];
         }
     }
-    let MdsTrackMode;
+    var MdsTrackMode;
     (function (MdsTrackMode) {
         MdsTrackMode[MdsTrackMode["Audio"] = 169] = "Audio";
         MdsTrackMode[MdsTrackMode["Mode1"] = 170] = "Mode1";
@@ -380,6 +386,8 @@ var CDImage;
         return buf;
     }
 })(CDImage || (CDImage = {}));
+// Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
+// This source code is governed by the MIT License, see the LICENSE file.
 /// <reference path="util.ts" />
 /// <reference path="cdimage.ts" />
 var xsystem35;
@@ -561,6 +569,8 @@ var xsystem35;
     }
     xsystem35.ImageLoader = ImageLoader;
 })(xsystem35 || (xsystem35 = {}));
+// Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
+// This source code is governed by the MIT License, see the LICENSE file.
 var xsystem35;
 (function (xsystem35) {
     class SaveDataManager {
@@ -688,6 +698,8 @@ var xsystem35;
         }
     }
 })(xsystem35 || (xsystem35 = {}));
+// Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
+// This source code is governed by the MIT License, see the LICENSE file.
 /// <reference path="savedata.ts" />
 var xsystem35;
 (function (xsystem35) {
@@ -749,6 +761,8 @@ var xsystem35;
     }
     xsystem35.Settings = Settings;
 })(xsystem35 || (xsystem35 = {}));
+// Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
+// This source code is governed by the MIT License, see the LICENSE file.
 /// <reference path="util.ts" />
 /// <reference path="config.ts" />
 var xsystem35;
@@ -806,6 +820,8 @@ var xsystem35;
     }
     xsystem35.ZoomManager = ZoomManager;
 })(xsystem35 || (xsystem35 = {}));
+// Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
+// This source code is governed by the MIT License, see the LICENSE file.
 /// <reference path="util.ts" />
 /// <reference path="config.ts" />
 var xsystem35;
@@ -865,6 +881,8 @@ var xsystem35;
     }
     xsystem35.VolumeControl = VolumeControl;
 })(xsystem35 || (xsystem35 = {}));
+// Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
+// This source code is governed by the MIT License, see the LICENSE file.
 /// <reference path="util.ts" />
 /// <reference path="volume.ts" />
 var xsystem35;
@@ -997,6 +1015,8 @@ var xsystem35;
     }
     xsystem35.CDPlayer = CDPlayer;
 })(xsystem35 || (xsystem35 = {}));
+// Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
+// This source code is governed by the MIT License, see the LICENSE file.
 /// <reference path="util.ts" />
 /// <reference path="volume.ts" />
 var xsystem35;
@@ -1227,6 +1247,8 @@ var xsystem35;
         }
     }
 })(xsystem35 || (xsystem35 = {}));
+// Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
+// This source code is governed by the MIT License, see the LICENSE file.
 /// <reference path="util.ts" />
 var xsystem35;
 (function (xsystem35) {
@@ -1303,6 +1325,8 @@ var xsystem35;
         return 'Screenshot-' + now.getFullYear() + MM + DD + '-' + hh + mm + '.png';
     }
 })(xsystem35 || (xsystem35 = {}));
+// Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
+// This source code is governed by the MIT License, see the LICENSE file.
 /// <reference path="util.ts" />
 /// <reference path="config.ts" />
 /// <reference path="loader.ts" />

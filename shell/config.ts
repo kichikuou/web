@@ -1,3 +1,6 @@
+// Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
+// This source code is governed by the MIT License, see the LICENSE file.
+
 namespace xsystem35 {
     export class Config {
         antialias = true;

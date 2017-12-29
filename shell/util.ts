@@ -1,3 +1,6 @@
+// Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
+// This source code is governed by the MIT License, see the LICENSE file.
+
 let $: (selector: string) => HTMLElement = document.querySelector.bind(document);
 
 function readFileAsArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
