@@ -310,7 +310,7 @@ var CDImage;
             return msf[0] * 60 * 75 + msf[1] * 75 + msf[2];
         }
     }
-    var MdsTrackMode;
+    let MdsTrackMode;
     (function (MdsTrackMode) {
         MdsTrackMode[MdsTrackMode["Audio"] = 169] = "Audio";
         MdsTrackMode[MdsTrackMode["Mode1"] = 170] = "Mode1";
@@ -948,7 +948,7 @@ var xsystem35;
             let p = this.audio.play(); // Edge returns undefined
             if (p instanceof Promise) {
                 p.catch((err) => {
-                    if (err.message.startsWith('The play() request was interrupted') ||
+                    if (err.message.startsWith('The play() request was interrupted') || // Chrome
                         err.name === 'AbortError') {
                         // These errors are harmless, do nothing
                     }
@@ -1430,7 +1430,9 @@ var xsystem35;
         }
         loadModule(name) {
             let useWasm = typeof WebAssembly === 'object' && this.params.get('wasm') !== '0';
-            if (navigator.userAgent.match(/Android.*Chrome\/58\./)) {
+            if (navigator.userAgent.match(/Mobile\/15C202/)) {
+                // Disable wasm on iOS 11.2.2 to workaround WebKit hang
+                // https://bugs.webkit.org/show_bug.cgi?id=181781
                 ga('send', 'event', 'Game', 'WasmDisabled');
                 useWasm = false;
             }
