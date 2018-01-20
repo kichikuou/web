@@ -82,7 +82,8 @@ namespace xsystem35 {
                         this.removeUserGestureRestriction(false);
                         ga('send', 'event', 'CDDA', 'UnlockAgain');
                     } else {
-                        throw err;
+                        let exDescription = JSON.stringify({type: 'CDDA', name: err.name, message: err.message});
+                        ga('send', 'exception', {exDescription, exFatal: false});
                     }
                 });
             }

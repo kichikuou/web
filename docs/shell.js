@@ -958,7 +958,8 @@ var xsystem35;
                         ga('send', 'event', 'CDDA', 'UnlockAgain');
                     }
                     else {
-                        throw err;
+                        let exDescription = JSON.stringify({ type: 'CDDA', name: err.name, message: err.message });
+                        ga('send', 'exception', { exDescription, exFatal: false });
                     }
                 });
             }
@@ -1350,7 +1351,7 @@ var xsystem35;
             this.parseParams(location.search.slice(1));
             this.initModule();
             window.onerror = (message, url, line, column, error) => {
-                let exDescription = JSON.stringify({ message, url, line, column });
+                let exDescription = JSON.stringify({ type: 'onerror', message, url, line, column });
                 ga('send', 'exception', { exDescription, exFatal: true });
                 this.addToast('エラーが発生しました。', 'error');
                 window.onerror = null;
@@ -1359,7 +1360,7 @@ var xsystem35;
             window.addEventListener('unhandledrejection', (evt) => {
                 let err = evt.reason;
                 console.log(err);
-                let exDescription = JSON.stringify({ message: err.message, stack: err.stack });
+                let exDescription = JSON.stringify({ type: 'rejection', message: err.message, stack: err.stack });
                 ga('send', 'exception', { exDescription, exFatal: true });
                 // this.addToast('エラーが発生しました。', 'error');
             });
