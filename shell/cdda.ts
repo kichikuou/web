@@ -82,7 +82,8 @@ namespace xsystem35 {
                         this.removeUserGestureRestriction(false);
                         ga('send', 'event', 'CDDA', 'UnlockAgain');
                     } else {
-                        let exDescription = JSON.stringify({type: 'CDDA', name: err.name, message: err.message});
+                        let {name, message} = err;
+                        let exDescription = JSON.stringify({type: 'CDDA', name, message});
                         ga('send', 'exception', {exDescription, exFatal: false});
                     }
                 });
@@ -113,8 +114,9 @@ namespace xsystem35 {
         }
 
         private onAudioError(err: ErrorEvent) {
-            let msg = this.audio.error.code + ' ' + this.audio.error.message;
-            ga('send', 'event', 'CDDA', 'AudioError', msg);
+            let {code, message} = this.audio.error;
+            let exDescription = JSON.stringify({type: 'Audio', code, message});
+            ga('send', 'exception', {exDescription, exFatal: false});
             let clone = document.importNode((<HTMLTemplateElement>$('#cdda-error')).content, true);
             let toast = xsystem35.shell.addToast(clone, 'error');
             toast.querySelector('.cdda-reload-button').addEventListener('click', () => {
