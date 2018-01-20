@@ -93,3 +93,13 @@ declare namespace FS {
 declare namespace EmterpreterAsync {
     function handle(asyncOp: (resume: () => void) => void): void;
 }
+
+// https://storage.spec.whatwg.org
+interface Navigator {
+    storage: StorageManager;
+}
+interface StorageManager {
+    persisted: () => Promise<boolean>;
+    persist: () => Promise<boolean>;
+    // estimate: () => Promise<StorageEstimate>;
+}

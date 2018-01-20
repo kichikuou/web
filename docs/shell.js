@@ -1348,6 +1348,7 @@ var xsystem35;
     class System35Shell {
         constructor() {
             this.status = document.getElementById('status');
+            this.persistRequested = false;
             this.parseParams(location.search.slice(1));
             this.initModule();
             window.onerror = (message, url, line, column, error) => {
@@ -1514,6 +1515,18 @@ var xsystem35;
                         console.log('FS.syncfs error: ', err);
                 });
             }, timeout);
+            this.persistStorage();
+        }
+        persistStorage() {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (this.persistRequested || !(navigator.storage && navigator.storage.persist))
+                    return;
+                this.persistRequested = true;
+                if (yield navigator.storage.persisted())
+                    return;
+                let result = yield navigator.storage.persist();
+                ga('send', 'event', 'Game', 'StoragePersist', result ? 'granted' : 'refused');
+            });
         }
     }
     xsystem35.System35Shell = System35Shell;

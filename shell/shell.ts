@@ -212,6 +212,18 @@ namespace xsystem35 {
                         console.log('FS.syncfs error: ', err);
                 });
             }, timeout);
+            this.persistStorage();
+        }
+
+        private persistRequested = false;
+        async persistStorage() {
+            if (this.persistRequested || !(navigator.storage && navigator.storage.persist))
+                return;
+            this.persistRequested = true;
+            if (await navigator.storage.persisted())
+                return;
+            let result = await navigator.storage.persist();
+            ga('send', 'event', 'Game', 'StoragePersist', result ? 'granted' : 'refused');
         }
     }
 
