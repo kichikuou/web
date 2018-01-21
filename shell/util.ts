@@ -68,6 +68,11 @@ function mkdirIfNotExist(path: string, fs?: typeof FS) {
     }
 }
 
+function gaException(description: any, exFatal: boolean = false) {
+    let exDescription = JSON.stringify(description);
+    ga('send', 'exception', {exDescription, exFatal});
+}
+
 // xsystem35 exported functions
 declare function _ags_setAntialiasedStringMode(on: number): void;
 declare function _ald_getdata(type: number, no: number): number;

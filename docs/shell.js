@@ -69,6 +69,10 @@ function mkdirIfNotExist(path, fs) {
             throw err;
     }
 }
+function gaException(description, exFatal = false) {
+    let exDescription = JSON.stringify(description);
+    ga('send', 'exception', { exDescription, exFatal });
+}
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 var xsystem35;
@@ -959,8 +963,7 @@ var xsystem35;
                     }
                     else {
                         let { name, message } = err;
-                        let exDescription = JSON.stringify({ type: 'CDDA', name, message });
-                        ga('send', 'exception', { exDescription, exFatal: false });
+                        gaException({ type: 'CDDA', name, message });
                     }
                 });
             }
@@ -989,8 +992,7 @@ var xsystem35;
         }
         onAudioError(err) {
             let { code, message } = this.audio.error;
-            let exDescription = JSON.stringify({ type: 'Audio', code, message });
-            ga('send', 'exception', { exDescription, exFatal: false });
+            gaException({ type: 'Audio', code, message });
             let clone = document.importNode($('#cdda-error').content, true);
             let toast = xsystem35.shell.addToast(clone, 'error');
             toast.querySelector('.cdda-reload-button').addEventListener('click', () => {
@@ -1354,8 +1356,7 @@ var xsystem35;
             this.parseParams(location.search.slice(1));
             this.initModule();
             window.onerror = (message, url, line, column, error) => {
-                let exDescription = JSON.stringify({ type: 'onerror', message, url, line, column });
-                ga('send', 'exception', { exDescription, exFatal: true });
+                gaException({ type: 'onerror', message, url, line, column }, true);
                 this.addToast('エラーが発生しました。', 'error');
                 window.onerror = null;
             };
@@ -1363,8 +1364,8 @@ var xsystem35;
             window.addEventListener('unhandledrejection', (evt) => {
                 let err = evt.reason;
                 console.log(err);
-                let exDescription = JSON.stringify({ type: 'rejection', message: err.message, stack: err.stack });
-                ga('send', 'exception', { exDescription, exFatal: true });
+                let { message, stack } = err;
+                gaException({ type: 'rejection', message, stack }, true);
                 // this.addToast('エラーが発生しました。', 'error');
             });
             this.imageLoader = new xsystem35.ImageLoader(this);

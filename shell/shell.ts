@@ -37,8 +37,7 @@ namespace xsystem35 {
             this.initModule();
 
             window.onerror = (message, url, line, column, error) => {
-                let exDescription = JSON.stringify({type: 'onerror', message, url, line, column});
-                ga('send', 'exception', {exDescription, exFatal: true});
+                gaException({type: 'onerror', message, url, line, column}, true);
                 this.addToast('エラーが発生しました。', 'error');
                 window.onerror = null;
             };
@@ -46,8 +45,8 @@ namespace xsystem35 {
             window.addEventListener('unhandledrejection', (evt: any) => {
                 let err: Error = evt.reason;
                 console.log(err);
-                let exDescription = JSON.stringify({type: 'rejection', message: err.message, stack: err.stack});
-                ga('send', 'exception', {exDescription, exFatal: true});
+                let {message, stack} = err;
+                gaException({type: 'rejection', message, stack}, true);
                 // this.addToast('エラーが発生しました。', 'error');
             });
 
