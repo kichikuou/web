@@ -121,8 +121,8 @@ namespace xsystem35 {
 
         loadModule(name: 'system3' | 'xsystem35'): Promise<any> {
             let useWasm = typeof WebAssembly === 'object' && this.params.get('wasm') !== '0';
-            if (navigator.userAgent.match(/Mobile\/15C202/)) {
-                // Disable wasm on iOS 11.2.2 to workaround WebKit hang
+            if (iOSVersion() >= '11.2.2') {
+                // Disable wasm on iOS 11.2.2 or later to workaround WebKit bug
                 // https://bugs.webkit.org/show_bug.cgi?id=181781
                 ga('send', 'event', 'Game', 'WasmDisabled');
                 useWasm = false;
