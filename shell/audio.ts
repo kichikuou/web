@@ -5,6 +5,15 @@
 /// <reference path="volume.ts" />
 
 namespace xsystem35 {
+    enum Status {
+        OK = 0,
+        NG = -1,
+    }
+    enum Bool {
+        FALSE = 0,
+        TRUE = 1,
+    }
+
     declare var webkitAudioContext: any;
     export class AudioManager {
         private context: AudioContext;
@@ -106,27 +115,27 @@ namespace xsystem35 {
             });
         }
 
-        pcm_start(slot: number, loop: number): number {
+        pcm_start(slot: number, loop: number): Status {
             if (this.slots[slot]) {
                 this.slots[slot].start(loop);
-                return 1;
+                return Status.OK;
             }
-            return 0;
+            return Status.NG;
         }
 
-        pcm_stop(slot: number): number {
+        pcm_stop(slot: number): Status {
             if (!this.slots[slot])
-                return 0;
+                return Status.NG;
             this.slots[slot].stop();
             this.slots[slot] = null;
-            return 1;
+            return Status.OK;
         }
 
-        pcm_fadeout(slot: number, msec: number): number {
+        pcm_fadeout(slot: number, msec: number): Status {
             if (!this.slots[slot])
-                return 0;
+                return Status.NG;
             this.slots[slot].fadeout(msec);
-            return 1;
+            return Status.OK;
         }
 
         pcm_getpos(slot: number): number {
@@ -135,11 +144,11 @@ namespace xsystem35 {
             return this.slots[slot].getPosition() * 1000;
         }
 
-        pcm_setvol(slot: number, vol: number): number {
+        pcm_setvol(slot: number, vol: number): Status {
             if (!this.slots[slot])
-                return 0;
+                return Status.NG;
             this.slots[slot].setGain(vol / 100);
-            return 1;
+            return Status.OK;
         }
 
         pcm_getwavelen(slot: number): number {
@@ -148,10 +157,10 @@ namespace xsystem35 {
             return this.slots[slot].duration * 1000;
         }
 
-        pcm_isplaying(slot: number): number {
+        pcm_isplaying(slot: number): Bool {
             if (!this.slots[slot])
-                return 0;
-            return this.slots[slot].isPlaying() ? 1 : 0;
+                return Bool.FALSE;
+            return this.slots[slot].isPlaying() ? Bool.TRUE : Bool.FALSE;
         }
 
         private onVisibilityChange() {

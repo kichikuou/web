@@ -1038,6 +1038,16 @@ var xsystem35;
 /// <reference path="volume.ts" />
 var xsystem35;
 (function (xsystem35) {
+    let Status;
+    (function (Status) {
+        Status[Status["OK"] = 0] = "OK";
+        Status[Status["NG"] = -1] = "NG";
+    })(Status || (Status = {}));
+    let Bool;
+    (function (Bool) {
+        Bool[Bool["FALSE"] = 0] = "FALSE";
+        Bool[Bool["TRUE"] = 1] = "TRUE";
+    })(Bool || (Bool = {}));
     class AudioManager {
         constructor(volumeControl) {
             this.volumeControl = volumeControl;
@@ -1130,22 +1140,22 @@ var xsystem35;
         pcm_start(slot, loop) {
             if (this.slots[slot]) {
                 this.slots[slot].start(loop);
-                return 1;
+                return Status.OK;
             }
-            return 0;
+            return Status.NG;
         }
         pcm_stop(slot) {
             if (!this.slots[slot])
-                return 0;
+                return Status.NG;
             this.slots[slot].stop();
             this.slots[slot] = null;
-            return 1;
+            return Status.OK;
         }
         pcm_fadeout(slot, msec) {
             if (!this.slots[slot])
-                return 0;
+                return Status.NG;
             this.slots[slot].fadeout(msec);
-            return 1;
+            return Status.OK;
         }
         pcm_getpos(slot) {
             if (!this.slots[slot])
@@ -1154,9 +1164,9 @@ var xsystem35;
         }
         pcm_setvol(slot, vol) {
             if (!this.slots[slot])
-                return 0;
+                return Status.NG;
             this.slots[slot].setGain(vol / 100);
-            return 1;
+            return Status.OK;
         }
         pcm_getwavelen(slot) {
             if (!this.slots[slot])
@@ -1165,8 +1175,8 @@ var xsystem35;
         }
         pcm_isplaying(slot) {
             if (!this.slots[slot])
-                return 0;
-            return this.slots[slot].isPlaying() ? 1 : 0;
+                return Bool.FALSE;
+            return this.slots[slot].isPlaying() ? Bool.TRUE : Bool.FALSE;
         }
         onVisibilityChange() {
             if (document.hidden)
