@@ -76,7 +76,12 @@ function iOSVersion() {
     return match[1].replace(/_/g, '.');
 }
 function gaException(description, exFatal = false) {
-    let exDescription = JSON.stringify(description);
+    let exDescription = JSON.stringify(description, (_, value) => {
+        if (value instanceof DOMException) {
+            return { DOMException: value.name, message: value.message };
+        }
+        return value;
+    });
     ga('send', 'exception', { exDescription, exFatal });
 }
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
