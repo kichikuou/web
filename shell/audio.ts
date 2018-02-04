@@ -84,25 +84,28 @@ namespace xsystem35 {
         }
 
         pcm_load(slot: number, no: number) {
-            EmterpreterAsync.handle((resume) => {
+            return EmterpreterAsync.handle((resume: (f: () => Status) => void) => {
                 this.pcm_stop(slot);
                 if (this.bufCache[no]) {
                     this.slots[slot] = new PCMSoundSimple(this.masterGain, this.bufCache[no]);
-                    return resume();
+                    return resume(() => Status.OK);
                 }
                 this.load(no).then((audioBuf) => {
                     this.slots[slot] = new PCMSoundSimple(this.masterGain, audioBuf);
-                    resume();
+                    resume(() => Status.OK);
+                }).catch((err) => {
+                    gaException({type: 'PCM', err});
+                    resume(() => Status.NG);
                 });
             });
         }
 
         pcm_load_mixlr(slot: number, noL: number, noR: number) {
-            EmterpreterAsync.handle((resume) => {
+            return EmterpreterAsync.handle((resume: (f: () => Status) => void) => {
                 this.pcm_stop(slot);
                 if (this.bufCache[noL] && this.bufCache[noR]) {
                     this.slots[slot] = new PCMSoundMixLR(this.masterGain, this.bufCache[noL], this.bufCache[noR]);
-                    return resume();
+                    return resume(() => Status.OK);
                 }
                 let ps: [Promise<AudioBuffer>, Promise<AudioBuffer>] = [
                     this.bufCache[noL] ? Promise.resolve(this.bufCache[noL]) : this.load(noL),
@@ -110,7 +113,10 @@ namespace xsystem35 {
                 ];
                 Promise.all(ps).then((bufs) => {
                     this.slots[slot] = new PCMSoundMixLR(this.masterGain, bufs[0], bufs[1]);
-                    resume();
+                    resume(() => Status.OK);
+                }).catch((err) => {
+                    gaException({type: 'PCM', err});
+                    resume(() => Status.NG);
                 });
             });
         }
