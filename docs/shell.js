@@ -1384,7 +1384,6 @@ var xsystem35;
             xsystem35.cdPlayer = new xsystem35.CDPlayer(this.imageLoader, this.volumeControl);
             this.zoom = new xsystem35.ZoomManager();
             this.toolbar = new xsystem35.ToolBar();
-            xsystem35.audio = new xsystem35.AudioManager(this.volumeControl);
             xsystem35.settings = new xsystem35.Settings();
         }
         parseParams(searchParams) {
@@ -1469,6 +1468,7 @@ var xsystem35;
             });
         }
         loaded() {
+            xsystem35.audio = new xsystem35.AudioManager(this.volumeControl);
             $('#xsystem35').hidden = false;
             document.body.classList.add('game');
             $('#toolbar').classList.remove('before-game-start');
