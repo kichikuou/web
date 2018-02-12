@@ -1056,15 +1056,15 @@ var xsystem35;
             document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this));
         }
         removeUserGestureRestriction() {
-            let hanlder = () => {
+            let handler = () => {
                 let src = this.context.createBufferSource();
                 src.buffer = this.context.createBuffer(1, 1, 22050);
                 src.connect(this.context.destination);
                 src.start();
                 console.log('AudioContext unlocked');
-                window.removeEventListener('touchend', hanlder);
+                window.removeEventListener('touchend', handler);
             };
-            window.addEventListener('touchend', hanlder);
+            window.addEventListener('touchend', handler);
         }
         load(no) {
             let buf = this.getWave(no);

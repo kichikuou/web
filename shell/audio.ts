@@ -31,15 +31,15 @@ namespace xsystem35 {
         }
 
         private removeUserGestureRestriction() {
-            let hanlder = () => {
+            let handler = () => {
                 let src = this.context.createBufferSource();
                 src.buffer = this.context.createBuffer(1, 1, 22050);
                 src.connect(this.context.destination);
                 src.start();
                 console.log('AudioContext unlocked');
-                window.removeEventListener('touchend', hanlder);
+                window.removeEventListener('touchend', handler);
             };
-            window.addEventListener('touchend', hanlder);
+            window.addEventListener('touchend', handler);
         }
 
         private load(no: number): Promise<AudioBuffer> {
