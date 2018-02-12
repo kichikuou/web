@@ -13,21 +13,23 @@ namespace xsystem35 {
         private bufCache: AudioBuffer[];
         private isSafari: boolean;
 
-        constructor(volumeControl: VolumeControl) {
-            if (typeof (AudioContext) !== 'undefined') {
-                this.context = new AudioContext();
-            } else if (typeof (webkitAudioContext) !== 'undefined') {
+        constructor(private volumeControl: VolumeControl) {
+            this.slots = [];
+            this.bufCache = [];
+            document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this));
+            if (typeof (webkitAudioContext) !== 'undefined') {
                 this.context = new webkitAudioContext();
                 this.isSafari = true;
                 this.removeUserGestureRestriction();
             }
+        }
+        init() {
+            if (!this.context)
+                this.context = new AudioContext();
             this.masterGain = this.context.createGain();
             this.masterGain.connect(this.context.destination);
-            this.slots = [];
-            this.bufCache = [];
-            volumeControl.addEventListener(this.onVolumeChanged.bind(this));
-            this.masterGain.gain.value = volumeControl.volume();
-            document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this));
+            this.volumeControl.addEventListener(this.onVolumeChanged.bind(this));
+            this.masterGain.gain.value = this.volumeControl.volume();
         }
 
         private removeUserGestureRestriction() {
