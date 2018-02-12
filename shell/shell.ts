@@ -55,6 +55,7 @@ namespace xsystem35 {
             xsystem35.cdPlayer = new CDPlayer(this.imageLoader, this.volumeControl);
             this.zoom = new ZoomManager();
             this.toolbar = new ToolBar();
+            xsystem35.audio = new AudioManager(this.volumeControl);
             xsystem35.settings = new Settings();
         }
 
@@ -144,7 +145,6 @@ namespace xsystem35 {
         }
 
         loaded() {
-            xsystem35.audio = new AudioManager(this.volumeControl);
             $('#xsystem35').hidden = false;
             document.body.classList.add('game');
             $('#toolbar').classList.remove('before-game-start');
