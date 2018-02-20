@@ -68,11 +68,12 @@ function mkdirIfNotExist(path: string, fs?: typeof FS) {
     }
 }
 
-function iOSVersion(): string {
+function isIOSVersionBetween(from: string, to: string): boolean {
     let match = navigator.userAgent.match(/OS ([0-9_]+) like Mac OS X\)/);
     if (!match)
-        return null;
-    return match[1].replace(/_/g, '.');
+        return false;
+    let ver = match[1].replace(/_/g, '.');
+    return from <= ver && ver < to;
 }
 
 function gaException(description: any, exFatal: boolean = false) {

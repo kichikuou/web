@@ -69,11 +69,12 @@ function mkdirIfNotExist(path, fs) {
             throw err;
     }
 }
-function iOSVersion() {
+function isIOSVersionBetween(from, to) {
     let match = navigator.userAgent.match(/OS ([0-9_]+) like Mac OS X\)/);
     if (!match)
-        return null;
-    return match[1].replace(/_/g, '.');
+        return false;
+    let ver = match[1].replace(/_/g, '.');
+    return from <= ver && ver < to;
 }
 function gaException(description, exFatal = false) {
     let exDescription = JSON.stringify(description, (_, value) => {
@@ -1447,14 +1448,7 @@ var xsystem35;
             ];
         }
         loadModule(name) {
-            let useWasm = typeof WebAssembly === 'object' && this.params.get('wasm') !== '0';
-            if (iOSVersion() >= '11.2.2') {
-                // Disable wasm on iOS 11.2.2 or later to workaround WebKit bug
-                // https://bugs.webkit.org/show_bug.cgi?id=181781
-                ga('send', 'event', 'Game', 'WasmDisabled');
-                useWasm = false;
-            }
-            let src = name + (useWasm ? '.js' : '.asm.js');
+            let src = name + (this.shouldUseWasm() ? '.js' : '.asm.js');
             let script = document.createElement('script');
             script.src = src;
             script.onerror = () => {
@@ -1469,6 +1463,20 @@ var xsystem35;
                 document.body.classList.add('bgblack-fade');
                 this.toolbar.setCloseable();
             });
+        }
+        shouldUseWasm() {
+            if (typeof WebAssembly !== 'object')
+                return false;
+            let param = this.params.get('wasm');
+            if (param)
+                return param !== '0';
+            if (isIOSVersionBetween('11.2.2', '11.3')) {
+                // Disable wasm on iOS 11.2.[2-] to workaround WebKit bug
+                // https://bugs.webkit.org/show_bug.cgi?id=181781
+                ga('send', 'event', 'Game', 'WasmDisabled');
+                return false;
+            }
+            return true;
         }
         loaded() {
             xsystem35.audio.init();

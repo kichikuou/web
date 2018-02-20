@@ -120,14 +120,7 @@ namespace xsystem35 {
         }
 
         loadModule(name: 'system3' | 'xsystem35'): Promise<any> {
-            let useWasm = typeof WebAssembly === 'object' && this.params.get('wasm') !== '0';
-            if (iOSVersion() >= '11.2.2') {
-                // Disable wasm on iOS 11.2.2 or later to workaround WebKit bug
-                // https://bugs.webkit.org/show_bug.cgi?id=181781
-                ga('send', 'event', 'Game', 'WasmDisabled');
-                useWasm = false;
-            }
-            let src = name + (useWasm ? '.js' : '.asm.js');
+            let src = name + (this.shouldUseWasm() ? '.js' : '.asm.js');
             let script = document.createElement('script');
             script.src = src;
             script.onerror = () => {
@@ -142,6 +135,21 @@ namespace xsystem35 {
                 document.body.classList.add('bgblack-fade');
                 this.toolbar.setCloseable();
             });
+        }
+
+        private shouldUseWasm(): boolean {
+            if (typeof WebAssembly !== 'object')
+                return false;
+            let param = this.params.get('wasm');
+            if (param)
+                return param !== '0';
+            if (isIOSVersionBetween('11.2.2', '11.3')) {
+                // Disable wasm on iOS 11.2.[2-] to workaround WebKit bug
+                // https://bugs.webkit.org/show_bug.cgi?id=181781
+                ga('send', 'event', 'Game', 'WasmDisabled');
+                return false;
+            }
+            return true;
         }
 
         loaded() {
