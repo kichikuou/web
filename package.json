@@ -1,7 +1,11 @@
 {
-  "name": "xsystem35-shell",
+  "name": "kichikuou-web",
   "version": "1.0.0",
   "description": "",
+  "repository": "github:kichikuou/web",
+  "scripts": {
+    "build-shell": "cd shell && tsc"
+  },
   "dependencies": {
     "@types/emscripten": "0.0.31",
     "@types/filesystem": "0.0.28",

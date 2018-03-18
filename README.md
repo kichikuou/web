@@ -11,9 +11,8 @@
 
 などのコードが含まれています。ビルドにはNode.jsが必要です。以下のコマンドでビルドできます。
 
-    $ cd shell
     $ npm install
-    $ ./node_modules/.bin/tsc
+    $ npm run build-shell
 
 #### fslib
 鬼畜王 on Web ではCDイメージのロードが始まってからゲームエンジン (system3 / xsystem35) を初期化するのですが、それ以前にemscriptenのIDBFSファイルシステムにアクセスしたい場合があります。これを実現するためのダミーのEmscriptenプログラムです。
