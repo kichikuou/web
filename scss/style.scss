@@ -1,6 +1,5 @@
-@charset "UTF-8";
 body {
-  min-height: 100vh;
+    min-height: 100vh;
 }
 
 body.game {
@@ -14,7 +13,7 @@ body.game {
 }
 
 header {
-  background-color: #454d5d;
+  background-color: rgb(69,77,93);
   color: #ccc;
 }
 
@@ -25,7 +24,7 @@ header {
     top: 0px;
     width: 40px;
     height: 10px;
-    background-color: rgba(69, 77, 93, 0.7);
+    background-color: rgba(69,77,93,0.7);
   }
 
   .toolbar-handler-icon {
@@ -44,13 +43,14 @@ header {
     left: 0;
     right: 0;
     transition: top 0.4s ease;
-    background-color: rgba(69, 77, 93, 0.85);
+    background-color: rgba(69,77,93,0.85);
   }
 
   header.closeable.closed {
     top: -42px;
   }
 }
+
 @media not all and (max-height: 480px) {
   #toolbar-handler {
     display: none;
@@ -60,11 +60,12 @@ header {
     display: none;
   }
 }
+
 .navbar {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 0.5rem 0;
-  flex-wrap: nowrap;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0.5rem 0;
+    flex-wrap: nowrap;
 }
 
 .navbar .navbar-center {
@@ -81,8 +82,8 @@ header {
 }
 
 .navbar .btn-link {
-  font-size: large;
-  color: #ccc;
+    font-size: large;
+    color: #ccc;
 }
 
 .navbar .btn.btn-link:focus,
@@ -102,49 +103,43 @@ header {
 }
 
 h1 {
-  margin: 2rem auto;
-  font-size: 3.2rem;
+    margin: 2rem auto;
+    font-size: 3.2rem;
 }
 
 #loader {
-  max-width: 640px;
-  margin: 2ex auto 0;
+    max-width: 640px;
+    margin: 2ex auto 0;
 }
 
 #loader ul {
-  list-style-type: none;
+    list-style-type: none;
 }
-
 #loader li {
-  color: #5764c6;
+    color: #5764c6;
 }
-
 #loader li:before {
   font-family: FontAwesome;
-  content: "";
+  content: "\f15b";
   padding-right: 0.5em;
 }
-
 #loader li.notready {
-  color: #808080;
+    color: #808080;
 }
-
 #loader li.notready:after {
-  content: " (未選択)";
+    content: " (未選択)";
 }
-
 #loader.module-loading .hidden-while-loading {
   display: none;
 }
-
 #loader.module-loading .show-while-loading {
   display: block;
   color: #5764c6;
 }
 
 .social-buttons {
-  margin: 1em 0;
-  float: right;
+    margin: 1em 0;
+    float: right;
 }
 
 #unsupported {
@@ -154,10 +149,10 @@ h1 {
 }
 
 .bgblack-fade {
-  background-color: black;
-  transition-property: background-color;
-  transition-duration: 1s;
-  transition-timing-function: linear;
+    background-color: black;
+    transition-property: background-color;
+    transition-duration: 1s;
+    transition-timing-function: linear;
 }
 
 #xsystem35 {
@@ -171,7 +166,7 @@ h1 {
 
 /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
 canvas.emscripten {
-  border: 0px none;
+	border: 0px none;
 }
 
 @media all and (min-aspect-ratio: 640/400) {
@@ -187,48 +182,48 @@ canvas.emscripten {
     display: flex;
     align-items: center;
   }
-
   .fit canvas.emscripten {
     width: 100%;
   }
 }
+
 .pixelated {
-  image-rendering: pixelated;
-  image-rendering: -moz-crisp-edges;
+	image-rendering: pixelated;
+	image-rendering: -moz-crisp-edges;
 }
 
 #volume-control {
-  float: right;
-  white-space: nowrap;
+    float: right;
+    white-space: nowrap;
 }
 
 #volume-control-icon {
-  font-size: 20px;
-  width: 26px;
-  padding: 5px;
-  vertical-align: middle;
+    font-size: 20px;
+    width: 26px;
+    padding: 5px;
+    vertical-align: middle;
 }
 
 #volume-control-slider {
-  width: 60px;
-  height: 30px;
-  vertical-align: middle;
+    width: 60px;
+    height: 30px;
+    vertical-align: middle;
 }
 
 .settings section > div {
-  padding-left: 2rem;
+	padding-left: 2rem;
 }
 
 .toast-container {
-  position: fixed;
-  bottom: 30px;
-  left: 30px;
-  width: 400px;
-  z-index: 500;
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    width: 400px;
+    z-index: 500;
 }
 
 .toast {
-  -webkit-animation: slide-down 0.2s ease 1;
-  animation: slide-down 0.2s ease 1;
-  margin: 5px;
+    -webkit-animation: slide-down .2s ease 1;
+    animation: slide-down .2s ease 1;
+    margin: 5px;
 }
