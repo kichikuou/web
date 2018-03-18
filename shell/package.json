@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "dependencies": {
-    "@types/emscripten": "0.0.30",
+    "@types/emscripten": "0.0.31",
     "@types/filesystem": "0.0.28",
-    "@types/google.analytics": "0.0.33",
-    "@types/jszip": "0.0.32",
-    "@types/text-encoding": "0.0.30"
+    "@types/google.analytics": "0.0.38",
+    "@types/jszip": "0.0.33",
+    "@types/text-encoding": "0.0.32"
   },
   "devDependencies": {
-    "typescript": "^2.3.2"
+    "typescript": "^2.7.2"
   }
 }
