@@ -5,22 +5,6 @@ header {
 
 #toolbar-handler {
     display: none;
-}
-
-#toolbar-close-button {
-    display: none;
-}
-
-@media all and (max-height: 480px) {
-    #toolbar-handler.visible {
-        display: initial;
-        position: absolute;
-        right: 0px;
-        top: 0px;
-        width: 40px;
-        height: 10px;
-        background-color: rgba(69,77,93,0.7);
-    }
 
     .toolbar-handler-icon {
         width: 5px;
@@ -31,8 +15,14 @@ header {
         -webkit-transform: rotate(135deg);
         transform: rotate(135deg);
     }
+}
 
-    header.closeable {
+#toolbar-close-button {
+    display: none;
+}
+
+@media all and (max-height: 480px) {
+    header.closeable .navbar {
         position: absolute;
         top: 0;
         left: 0;
@@ -46,7 +36,18 @@ header {
     }
 
     header.closeable.closed {
-        top: -42px;
+        #toolbar-handler {
+            display: initial;
+            position: absolute;
+            right: 0px;
+            top: 0px;
+            width: 40px;
+            height: 10px;
+            background-color: rgba(69,77,93,0.7);
+        }
+        .navbar {
+            top: -42px;
+        }
     }
 }
 

@@ -7,13 +7,34 @@ header {
 #toolbar-handler {
   display: none;
 }
+#toolbar-handler .toolbar-handler-icon {
+  width: 5px;
+  height: 5px;
+  margin: auto;
+  border: solid #ccc;
+  border-width: 2px 2px 0 0;
+  -webkit-transform: rotate(135deg);
+  transform: rotate(135deg);
+}
 
 #toolbar-close-button {
   display: none;
 }
 
 @media all and (max-height: 480px) {
-  #toolbar-handler.visible {
+  header.closeable .navbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    transition: top 0.4s ease;
+    background-color: rgba(69, 77, 93, 0.85);
+  }
+  header.closeable .navbar #toolbar-close-button {
+    display: initial;
+  }
+
+  header.closeable.closed #toolbar-handler {
     display: initial;
     position: absolute;
     right: 0px;
@@ -22,30 +43,7 @@ header {
     height: 10px;
     background-color: rgba(69, 77, 93, 0.7);
   }
-
-  .toolbar-handler-icon {
-    width: 5px;
-    height: 5px;
-    margin: auto;
-    border: solid #ccc;
-    border-width: 2px 2px 0 0;
-    -webkit-transform: rotate(135deg);
-    transform: rotate(135deg);
-  }
-
-  header.closeable {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    transition: top 0.4s ease;
-    background-color: rgba(69, 77, 93, 0.85);
-  }
-  header.closeable #toolbar-close-button {
-    display: initial;
-  }
-
-  header.closeable.closed {
+  header.closeable.closed .navbar {
     top: -42px;
   }
 }

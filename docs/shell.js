@@ -1294,7 +1294,6 @@ var xsystem35;
             $('#screenshot-button').addEventListener('click', this.saveScreenshot.bind(this));
         }
         setCloseable() {
-            this.handler.classList.add('visible');
             this.handler.addEventListener('click', this.open.bind(this));
             $('#toolbar-close-button').addEventListener('click', this.close.bind(this));
             this.toolbar.classList.add('closeable');
@@ -1302,11 +1301,9 @@ var xsystem35;
         }
         open() {
             this.toolbar.classList.remove('closed');
-            this.handler.classList.remove('visible');
         }
         close() {
             this.toolbar.classList.add('closed');
-            this.handler.classList.add('visible');
         }
         saveScreenshot() {
             return __awaiter(this, void 0, void 0, function* () {
