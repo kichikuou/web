@@ -14,6 +14,12 @@
     $ npm install
     $ npm run build-shell
 
+#### scss
+CSS部分のソースコードです。以下のコマンドでビルドできます。
+
+    $ npm install
+    $ npm run build-css
+
 #### fslib
 鬼畜王 on Web ではCDイメージのロードが始まってからゲームエンジン (system3 / xsystem35) を初期化するのですが、それ以前にemscriptenのIDBFSファイルシステムにアクセスしたい場合があります。これを実現するためのダミーのEmscriptenプログラムです。
 
