@@ -4,7 +4,8 @@
   "description": "",
   "repository": "github:kichikuou/web",
   "scripts": {
-    "build-shell": "cd shell && tsc"
+    "build-shell": "cd shell && tsc",
+    "build-css": "sass scss/style.scss >docs/style.css"
   },
   "dependencies": {
     "@types/emscripten": "0.0.31",
@@ -14,6 +15,7 @@
     "@types/text-encoding": "0.0.32"
   },
   "devDependencies": {
-    "typescript": "^2.7.2"
+    "typescript": "^2.7.2",
+    "sass": "^1.0.0-rc.1"
   }
 }
