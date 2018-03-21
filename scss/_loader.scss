@@ -1,0 +1,31 @@
+#loader {
+    max-width: 640px;
+    margin: 2ex auto 0;
+    ul {
+        list-style-type: none;
+    }
+    li {
+        color: #5764c6;
+    }
+    li:before {
+        font-family: FontAwesome;
+        content: "\f15b";
+        padding-right: 0.5em;
+    }
+    li.notready {
+        color: #808080;
+    }
+    li.notready:after {
+        content: " (未選択)";
+    }
+}
+
+#loader.module-loading {
+    .hidden-while-loading {
+        display: none;
+    }
+    .show-while-loading {
+        display: block;
+        color: #5764c6;
+    }
+}

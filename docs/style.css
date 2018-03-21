@@ -1,18 +1,4 @@
 @charset "UTF-8";
-body {
-  min-height: 100vh;
-}
-
-body.game {
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-}
-
 header {
   background-color: #454d5d;
   color: #ccc;
@@ -66,30 +52,87 @@ header {
   padding: 0.5rem 0;
   flex-wrap: nowrap;
 }
-
 .navbar .navbar-center {
   flex: 1;
   min-width: 0;
 }
-
-.navbar-brand {
+.navbar .navbar-brand {
   color: #ccc;
 }
-
 .navbar .navbar-section {
   flex: 0;
 }
-
 .navbar .btn-link {
   font-size: large;
   color: #ccc;
 }
-
 .navbar .btn.btn-link:focus,
 .navbar .btn.btn-link:hover,
 .navbar .btn.btn-link:active,
 .navbar .btn.btn-link.active {
   color: #eee;
+}
+
+#volume-control {
+  float: right;
+  white-space: nowrap;
+}
+
+#volume-control-icon {
+  font-size: 20px;
+  width: 26px;
+  padding: 5px;
+  vertical-align: middle;
+}
+
+#volume-control-slider {
+  width: 60px;
+  height: 30px;
+  vertical-align: middle;
+}
+
+#loader {
+  max-width: 640px;
+  margin: 2ex auto 0;
+}
+#loader ul {
+  list-style-type: none;
+}
+#loader li {
+  color: #5764c6;
+}
+#loader li:before {
+  font-family: FontAwesome;
+  content: "";
+  padding-right: 0.5em;
+}
+#loader li.notready {
+  color: #808080;
+}
+#loader li.notready:after {
+  content: " (未選択)";
+}
+
+#loader.module-loading .hidden-while-loading {
+  display: none;
+}
+#loader.module-loading .show-while-loading {
+  display: block;
+  color: #5764c6;
+}
+
+body {
+  min-height: 100vh;
+}
+
+body.game {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .before-game-start .hidden-until-game-start {
@@ -104,42 +147,6 @@ header {
 h1 {
   margin: 2rem auto;
   font-size: 3.2rem;
-}
-
-#loader {
-  max-width: 640px;
-  margin: 2ex auto 0;
-}
-
-#loader ul {
-  list-style-type: none;
-}
-
-#loader li {
-  color: #5764c6;
-}
-
-#loader li:before {
-  font-family: FontAwesome;
-  content: "";
-  padding-right: 0.5em;
-}
-
-#loader li.notready {
-  color: #808080;
-}
-
-#loader li.notready:after {
-  content: " (未選択)";
-}
-
-#loader.module-loading .hidden-while-loading {
-  display: none;
-}
-
-#loader.module-loading .show-while-loading {
-  display: block;
-  color: #5764c6;
 }
 
 .social-buttons {
@@ -195,24 +202,6 @@ canvas.emscripten {
 .pixelated {
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
-}
-
-#volume-control {
-  float: right;
-  white-space: nowrap;
-}
-
-#volume-control-icon {
-  font-size: 20px;
-  width: 26px;
-  padding: 5px;
-  vertical-align: middle;
-}
-
-#volume-control-slider {
-  width: 60px;
-  height: 30px;
-  vertical-align: middle;
 }
 
 .settings section > div {
