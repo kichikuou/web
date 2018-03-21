@@ -1,6 +1,10 @@
 #loader {
     max-width: 640px;
     margin: 2ex auto 0;
+    h1 {
+        margin: 2rem auto;
+        font-size: 3.2rem;
+    }
     ul {
         list-style-type: none;
     }
@@ -17,6 +21,15 @@
     }
     li.notready:after {
         content: " (未選択)";
+    }
+    .social-buttons {
+        margin: 1em 0;
+        float: right;
+    }
+    #unsupported {
+        max-width: 640px;
+        margin: 2ex auto 0;
+        color: red;
     }
 }
 

@@ -24,22 +24,6 @@ body.game {
     display: flex;
 }
 
-h1 {
-    margin: 2rem auto;
-    font-size: 3.2rem;
-}
-
-.social-buttons {
-    margin: 1em 0;
-    float: right;
-}
-
-#unsupported {
-    max-width: 640px;
-    margin: 2ex auto 0;
-    color: red;
-}
-
 .bgblack-fade {
     background-color: black;
     transition-property: background-color;

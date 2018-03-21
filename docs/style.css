@@ -96,6 +96,10 @@ header {
   max-width: 640px;
   margin: 2ex auto 0;
 }
+#loader h1 {
+  margin: 2rem auto;
+  font-size: 3.2rem;
+}
 #loader ul {
   list-style-type: none;
 }
@@ -112,6 +116,15 @@ header {
 }
 #loader li.notready:after {
   content: " (未選択)";
+}
+#loader .social-buttons {
+  margin: 1em 0;
+  float: right;
+}
+#loader #unsupported {
+  max-width: 640px;
+  margin: 2ex auto 0;
+  color: red;
 }
 
 #loader.module-loading .hidden-while-loading {
@@ -143,22 +156,6 @@ body.game {
 .contents {
   flex: 1;
   display: flex;
-}
-
-h1 {
-  margin: 2rem auto;
-  font-size: 3.2rem;
-}
-
-.social-buttons {
-  margin: 1em 0;
-  float: right;
-}
-
-#unsupported {
-  max-width: 640px;
-  margin: 2ex auto 0;
-  color: red;
 }
 
 .bgblack-fade {
