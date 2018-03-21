@@ -13,7 +13,7 @@ namespace xsystem35 {
         }
 
         setCloseable() {
-            this.handler.hidden = false;
+            this.handler.classList.add('visible');
             this.handler.addEventListener('click', this.open.bind(this));
             $('#toolbar-close-button').addEventListener('click', this.close.bind(this));
             this.toolbar.classList.add('closeable');
@@ -22,12 +22,12 @@ namespace xsystem35 {
 
         private open() {
             this.toolbar.classList.remove('closed');
-            this.handler.hidden = true;
+            this.handler.classList.remove('visible');
         }
 
         private close() {
             this.toolbar.classList.add('closed');
-            this.handler.hidden = false;
+            this.handler.classList.add('visible');
         }
 
         private async saveScreenshot() {

@@ -4,8 +4,17 @@ header {
   color: #ccc;
 }
 
+#toolbar-handler {
+  display: none;
+}
+
+#toolbar-close-button {
+  display: none;
+}
+
 @media all and (max-height: 480px) {
-  #toolbar-handler {
+  #toolbar-handler.visible {
+    display: initial;
     position: absolute;
     right: 0px;
     top: 0px;
@@ -32,18 +41,12 @@ header {
     transition: top 0.4s ease;
     background-color: rgba(69, 77, 93, 0.85);
   }
+  header.closeable #toolbar-close-button {
+    display: initial;
+  }
 
   header.closeable.closed {
     top: -42px;
-  }
-}
-@media not all and (max-height: 480px) {
-  #toolbar-handler {
-    display: none;
-  }
-
-  #toolbar-close-button {
-    display: none;
   }
 }
 .navbar {
