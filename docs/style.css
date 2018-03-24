@@ -179,24 +179,21 @@ canvas.emscripten {
   border: 0px none;
 }
 
-@media all and (min-aspect-ratio: 640/400) {
-  .fit canvas.emscripten {
-    height: 100%;
-    max-height: 100vh;
-    margin: auto;
-    display: block;
-  }
+#xsystem35.fit.pillarbox canvas.emscripten {
+  height: 100%;
+  max-height: 100vh;
+  margin: auto;
+  display: block;
 }
-@media not all and (min-aspect-ratio: 640/400) {
-  #xsystem35.fit {
-    display: flex;
-    align-items: center;
-  }
 
-  .fit canvas.emscripten {
-    width: 100%;
-  }
+#xsystem35.fit.letterbox {
+  display: flex;
+  align-items: center;
 }
+#xsystem35.fit.letterbox canvas.emscripten {
+  width: 100%;
+}
+
 .pixelated {
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;

@@ -172,6 +172,7 @@ namespace xsystem35 {
 
         windowSizeChanged() {
             this.zoom.handleZoom();
+            this.zoom.recalcAspectRatio();
         }
 
         inputString(title: string, initialValue: string, maxLength: number): string {

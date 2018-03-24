@@ -13,6 +13,7 @@ namespace xsystem35 {
         private canvas = <HTMLCanvasElement>$('#canvas');
         private zoomSelect = <HTMLInputElement>$('#zoom');
         private pixelateCheckbox = <HTMLInputElement>$('#pixelate');
+        private throttling = false;
 
         constructor() {
             this.zoomSelect.addEventListener('change', this.handleZoom.bind(this));
@@ -34,6 +35,7 @@ namespace xsystem35 {
                         document.webkitExitFullscreen();
                 });
             }
+            window.addEventListener('resize', this.onResize.bind(this));
         }
 
         handleZoom() {
@@ -49,6 +51,31 @@ namespace xsystem35 {
                 $('#xsystem35').classList.remove('fit');
                 let ratio = Number(value);
                 navbarStyle.maxWidth = this.canvas.style.width = this.canvas.width * ratio + 'px';
+            }
+        }
+
+        onResize() {
+            if (this.throttling)
+                return;
+            this.throttling = true;
+            window.requestAnimationFrame(() => {
+                this.recalcAspectRatio();
+                this.throttling = false;
+            });
+        }
+
+        recalcAspectRatio() {
+            let container = $('#xsystem35');
+            let containerAspect = container.offsetWidth / container.offsetHeight;
+            if (!containerAspect)
+                return;
+            let canvasAspect = this.canvas.width / this.canvas.height;
+            if (containerAspect < canvasAspect) {
+                container.classList.add('letterbox');
+                container.classList.remove('pillarbox');
+            } else {
+                container.classList.remove('letterbox');
+                container.classList.add('pillarbox');
             }
         }
 

@@ -788,6 +788,7 @@ var xsystem35;
             this.canvas = $('#canvas');
             this.zoomSelect = $('#zoom');
             this.pixelateCheckbox = $('#pixelate');
+            this.throttling = false;
             this.zoomSelect.addEventListener('change', this.handleZoom.bind(this));
             this.zoomSelect.value = xsystem35.config.zoom;
             if (CSS.supports('image-rendering', 'pixelated') || CSS.supports('image-rendering', '-moz-crisp-edges')) {
@@ -808,6 +809,7 @@ var xsystem35;
                         document.webkitExitFullscreen();
                 });
             }
+            window.addEventListener('resize', this.onResize.bind(this));
         }
         handleZoom() {
             let value = this.zoomSelect.value;
@@ -823,6 +825,30 @@ var xsystem35;
                 $('#xsystem35').classList.remove('fit');
                 let ratio = Number(value);
                 navbarStyle.maxWidth = this.canvas.style.width = this.canvas.width * ratio + 'px';
+            }
+        }
+        onResize() {
+            if (this.throttling)
+                return;
+            this.throttling = true;
+            window.requestAnimationFrame(() => {
+                this.recalcAspectRatio();
+                this.throttling = false;
+            });
+        }
+        recalcAspectRatio() {
+            let container = $('#xsystem35');
+            let containerAspect = container.offsetWidth / container.offsetHeight;
+            if (!containerAspect)
+                return;
+            let canvasAspect = this.canvas.width / this.canvas.height;
+            if (containerAspect < canvasAspect) {
+                container.classList.add('letterbox');
+                container.classList.remove('pillarbox');
+            }
+            else {
+                container.classList.remove('letterbox');
+                container.classList.add('pillarbox');
             }
         }
         handlePixelate() {
@@ -1509,6 +1535,7 @@ var xsystem35;
         }
         windowSizeChanged() {
             this.zoom.handleZoom();
+            this.zoom.recalcAspectRatio();
         }
         inputString(title, initialValue, maxLength) {
             title += ' (全角' + maxLength + '文字まで)';
