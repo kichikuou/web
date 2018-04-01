@@ -447,6 +447,7 @@ var xsystem35;
     class ImageLoader {
         constructor(shell) {
             this.shell = shell;
+            this.installing = false;
             $('#fileselect').addEventListener('change', this.handleFileSelect.bind(this), false);
             document.body.ondragover = this.handleDragOver.bind(this);
             document.body.ondrop = this.handleDrop.bind(this);
@@ -480,6 +481,8 @@ var xsystem35;
         }
         setFile(file) {
             return __awaiter(this, void 0, void 0, function* () {
+                if (this.installing)
+                    return;
                 let name = file.name.toLowerCase();
                 if (name.endsWith('.img') || name.endsWith('.mdf')) {
                     this.imageFile = file;
@@ -498,14 +501,16 @@ var xsystem35;
                     this.shell.addToast(name + ' は認識できない形式です。', 'warning');
                 }
                 if (this.imageFile && this.metadataFile) {
+                    this.installing = true;
                     try {
                         this.imageReader = yield CDImage.createReader(this.imageFile, this.metadataFile);
-                        this.startLoad();
+                        yield this.startLoad();
                     }
                     catch (err) {
                         ga('send', 'event', 'Loader', 'LoadFailed', err.message);
                         this.shell.addToast('インストールできません。認識できない形式です。', 'error');
                     }
+                    this.installing = false;
                 }
             });
         }

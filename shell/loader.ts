@@ -9,6 +9,7 @@ namespace xsystem35 {
         private imageFile: File;
         private metadataFile: File;
         private imageReader: CDImage.Reader;
+        private installing = false;
 
         constructor(private shell: System35Shell) {
             $('#fileselect').addEventListener('change', this.handleFileSelect.bind(this), false);
@@ -49,6 +50,8 @@ namespace xsystem35 {
         }
 
         private async setFile(file: File) {
+            if (this.installing)
+                return;
             let name = file.name.toLowerCase();
             if (name.endsWith('.img') || name.endsWith('.mdf')) {
                 this.imageFile = file;
@@ -64,13 +67,15 @@ namespace xsystem35 {
                 this.shell.addToast(name + ' は認識できない形式です。', 'warning');
             }
             if (this.imageFile && this.metadataFile) {
+                this.installing = true;
                 try {
                     this.imageReader = await CDImage.createReader(this.imageFile, this.metadataFile);
-                    this.startLoad();
+                    await this.startLoad();
                 } catch (err) {
                     ga('send', 'event', 'Loader', 'LoadFailed', err.message);
                     this.shell.addToast('インストールできません。認識できない形式です。', 'error');
                 }
+                this.installing = false;
             }
         }
 
