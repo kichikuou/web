@@ -6,8 +6,8 @@
 
 namespace xsystem35 {
     export class ImageLoader {
-        private imgFile: File;
-        private cueFile: File;
+        private imageFile: File;
+        private metadataFile: File;
         private imageReader: CDImage.Reader;
 
         constructor(private shell: System35Shell) {
@@ -51,11 +51,11 @@ namespace xsystem35 {
         private async setFile(file: File) {
             let name = file.name.toLowerCase();
             if (name.endsWith('.img') || name.endsWith('.mdf')) {
-                this.imgFile = file;
+                this.imageFile = file;
                 $('#imgReady').classList.remove('notready');
                 $('#imgReady').textContent = file.name;
-            } else if (name.endsWith('.cue') || name.endsWith('.mds')) {
-                this.cueFile = file;
+            } else if (name.endsWith('.cue') || name.endsWith('.ccd') || name.endsWith('.mds')) {
+                this.metadataFile = file;
                 $('#cueReady').classList.remove('notready');
                 $('#cueReady').textContent = file.name;
             } else if (name.endsWith('.rar')) {
@@ -63,9 +63,9 @@ namespace xsystem35 {
             } else {
                 this.shell.addToast(name + ' は認識できない形式です。', 'warning');
             }
-            if (this.imgFile && this.cueFile) {
+            if (this.imageFile && this.metadataFile) {
                 try {
-                    this.imageReader = await CDImage.createReader(this.imgFile, this.cueFile);
+                    this.imageReader = await CDImage.createReader(this.imageFile, this.metadataFile);
                     this.startLoad();
                 } catch (err) {
                     ga('send', 'event', 'Loader', 'LoadFailed', err.message);
@@ -118,7 +118,7 @@ namespace xsystem35 {
                 FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
                 FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
             }
-            ga('send', 'timing', 'Image load', this.imgFile.name, Math.round(performance.now() - startTime));
+            ga('send', 'timing', 'Image load', this.imageFile.name, Math.round(performance.now() - startTime));
 
             this.shell.loaded();
         }

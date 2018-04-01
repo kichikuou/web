@@ -112,14 +112,18 @@ namespace CDImage {
         resetImage(image: File): void;
     }
 
-    export async function createReader(img: File, cue: File) {
-        if (cue.name.endsWith('.cue')) {
+    export async function createReader(img: File, metadata: File) {
+        if (metadata.name.endsWith('.cue')) {
             let reader = new ImgCueReader(img);
-            await reader.parseCue(cue);
+            await reader.parseCue(metadata);
+            return reader;
+        } else if (metadata.name.endsWith('.ccd')) {
+            let reader = new ImgCueReader(img);
+            await reader.parseCcd(metadata);
             return reader;
         } else {
             let reader = new MdfMdsReader(img);
-            await reader.parseMds(cue);
+            await reader.parseMds(metadata);
             return reader;
         }
     }
@@ -149,7 +153,7 @@ namespace CDImage {
     }
 
     class ImgCueReader extends ImageReaderBase implements Reader {
-        private tracks: Array<{ type: string; index: string[]; }>;
+        private tracks: Array<{ isAudio: boolean; index: number[]; }>;
 
         constructor(img: File) {
             super(img);
@@ -174,11 +178,42 @@ namespace CDImage {
                 switch (fields[0]) {
                     case 'TRACK':
                         currentTrack = Number(fields[1]);
-                        this.tracks[currentTrack] = { type: fields[2], index: [] };
+                        this.tracks[currentTrack] = { isAudio: fields[2] === 'AUDIO', index: [] };
                         break;
                     case 'INDEX':
                         if (currentTrack)
-                            this.tracks[currentTrack].index[Number(fields[1])] = fields[2];
+                            this.tracks[currentTrack].index[Number(fields[1])] = this.indexToSector(fields[2]);
+                        break;
+                    default:
+                        // Do nothing
+                }
+            }
+        }
+
+        async parseCcd(ccdFile: File) {
+            let lines = (await readFileAsText(ccdFile)).split('\n');
+            this.tracks = [];
+            let currentTrack: number = null;
+            for (let line of lines) {
+                line = line.trim();
+                let match = line.match(/\[TRACK ([0-9]+)\]/);
+                if (match) {
+                    currentTrack = Number(match[1]);
+                    this.tracks[currentTrack] = { isAudio: undefined, index: [] };
+                    continue;
+                }
+                if (!currentTrack)
+                    continue;
+                let keyval = line.split(/=/);
+                switch (keyval[0]) {
+                    case 'MODE':
+                        this.tracks[currentTrack].isAudio = keyval[1] === '0';
+                        break;
+                    case 'INDEX 0':
+                        this.tracks[currentTrack].index[0] = Number(keyval[1]);
+                        break;
+                    case 'INDEX 1':
+                        this.tracks[currentTrack].index[1] = Number(keyval[1]);
                         break;
                     default:
                         // Do nothing
@@ -191,14 +226,14 @@ namespace CDImage {
         }
 
         async extractTrack(track: number): Promise<Blob> {
-            if (!this.tracks[track] || this.tracks[track].type !== 'AUDIO')
+            if (!this.tracks[track] || !this.tracks[track].isAudio)
                 return;
 
-            let start = this.indexToSector(this.tracks[track].index[1]) * 2352;
+            let start = this.tracks[track].index[1] * 2352;
             let end: number;
             if (this.tracks[track + 1]) {
                 let index = this.tracks[track + 1].index[0] || this.tracks[track + 1].index[1];
-                end = this.indexToSector(index) * 2352;
+                end = index * 2352;
             } else {
                 end = this.image.size;
             }

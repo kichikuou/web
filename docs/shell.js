@@ -232,16 +232,21 @@ var CDImage;
         }
     }
     CDImage.DirEnt = DirEnt;
-    function createReader(img, cue) {
+    function createReader(img, metadata) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (cue.name.endsWith('.cue')) {
+            if (metadata.name.endsWith('.cue')) {
                 let reader = new ImgCueReader(img);
-                yield reader.parseCue(cue);
+                yield reader.parseCue(metadata);
+                return reader;
+            }
+            else if (metadata.name.endsWith('.ccd')) {
+                let reader = new ImgCueReader(img);
+                yield reader.parseCcd(metadata);
                 return reader;
             }
             else {
                 let reader = new MdfMdsReader(img);
-                yield reader.parseMds(cue);
+                yield reader.parseMds(metadata);
                 return reader;
             }
         });
@@ -290,11 +295,42 @@ var CDImage;
                     switch (fields[0]) {
                         case 'TRACK':
                             currentTrack = Number(fields[1]);
-                            this.tracks[currentTrack] = { type: fields[2], index: [] };
+                            this.tracks[currentTrack] = { isAudio: fields[2] === 'AUDIO', index: [] };
                             break;
                         case 'INDEX':
                             if (currentTrack)
-                                this.tracks[currentTrack].index[Number(fields[1])] = fields[2];
+                                this.tracks[currentTrack].index[Number(fields[1])] = this.indexToSector(fields[2]);
+                            break;
+                        default:
+                    }
+                }
+            });
+        }
+        parseCcd(ccdFile) {
+            return __awaiter(this, void 0, void 0, function* () {
+                let lines = (yield readFileAsText(ccdFile)).split('\n');
+                this.tracks = [];
+                let currentTrack = null;
+                for (let line of lines) {
+                    line = line.trim();
+                    let match = line.match(/\[TRACK ([0-9]+)\]/);
+                    if (match) {
+                        currentTrack = Number(match[1]);
+                        this.tracks[currentTrack] = { isAudio: undefined, index: [] };
+                        continue;
+                    }
+                    if (!currentTrack)
+                        continue;
+                    let keyval = line.split(/=/);
+                    switch (keyval[0]) {
+                        case 'MODE':
+                            this.tracks[currentTrack].isAudio = keyval[1] === '0';
+                            break;
+                        case 'INDEX 0':
+                            this.tracks[currentTrack].index[0] = Number(keyval[1]);
+                            break;
+                        case 'INDEX 1':
+                            this.tracks[currentTrack].index[1] = Number(keyval[1]);
                             break;
                         default:
                     }
@@ -306,13 +342,13 @@ var CDImage;
         }
         extractTrack(track) {
             return __awaiter(this, void 0, void 0, function* () {
-                if (!this.tracks[track] || this.tracks[track].type !== 'AUDIO')
+                if (!this.tracks[track] || !this.tracks[track].isAudio)
                     return;
-                let start = this.indexToSector(this.tracks[track].index[1]) * 2352;
+                let start = this.tracks[track].index[1] * 2352;
                 let end;
                 if (this.tracks[track + 1]) {
                     let index = this.tracks[track + 1].index[0] || this.tracks[track + 1].index[1];
-                    end = this.indexToSector(index) * 2352;
+                    end = index * 2352;
                 }
                 else {
                     end = this.image.size;
@@ -446,12 +482,12 @@ var xsystem35;
             return __awaiter(this, void 0, void 0, function* () {
                 let name = file.name.toLowerCase();
                 if (name.endsWith('.img') || name.endsWith('.mdf')) {
-                    this.imgFile = file;
+                    this.imageFile = file;
                     $('#imgReady').classList.remove('notready');
                     $('#imgReady').textContent = file.name;
                 }
-                else if (name.endsWith('.cue') || name.endsWith('.mds')) {
-                    this.cueFile = file;
+                else if (name.endsWith('.cue') || name.endsWith('.ccd') || name.endsWith('.mds')) {
+                    this.metadataFile = file;
                     $('#cueReady').classList.remove('notready');
                     $('#cueReady').textContent = file.name;
                 }
@@ -461,9 +497,9 @@ var xsystem35;
                 else {
                     this.shell.addToast(name + ' は認識できない形式です。', 'warning');
                 }
-                if (this.imgFile && this.cueFile) {
+                if (this.imageFile && this.metadataFile) {
                     try {
-                        this.imageReader = yield CDImage.createReader(this.imgFile, this.cueFile);
+                        this.imageReader = yield CDImage.createReader(this.imageFile, this.metadataFile);
                         this.startLoad();
                     }
                     catch (err) {
@@ -517,7 +553,7 @@ var xsystem35;
                     FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
                     FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
                 }
-                ga('send', 'timing', 'Image load', this.imgFile.name, Math.round(performance.now() - startTime));
+                ga('send', 'timing', 'Image load', this.imageFile.name, Math.round(performance.now() - startTime));
                 this.shell.loaded();
             });
         }
