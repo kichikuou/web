@@ -878,18 +878,19 @@ var xsystem35;
             });
         }
         recalcAspectRatio() {
-            let container = $('#xsystem35');
+            let container = $('.contents');
+            let target = $('#xsystem35');
             let containerAspect = container.offsetWidth / container.offsetHeight;
             if (!containerAspect)
                 return;
             let canvasAspect = this.canvas.width / this.canvas.height;
             if (containerAspect < canvasAspect) {
-                container.classList.add('letterbox');
-                container.classList.remove('pillarbox');
+                target.classList.add('letterbox');
+                target.classList.remove('pillarbox');
             }
             else {
-                container.classList.remove('letterbox');
-                container.classList.add('pillarbox');
+                target.classList.remove('letterbox');
+                target.classList.add('pillarbox');
             }
         }
         handlePixelate() {
