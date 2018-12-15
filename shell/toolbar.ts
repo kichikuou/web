@@ -51,8 +51,8 @@ namespace xsystem35 {
             if (canvas.toBlob) {
                 let blob = await new Promise((resolve) => canvas.toBlob(resolve));
                 url = URL.createObjectURL(blob);
-            } else if (canvas.msToBlob) {  // Edge
-                let blob = canvas.msToBlob();
+            } else if ((canvas as any).msToBlob) {  // Edge
+                let blob = (canvas as any).msToBlob();
                 navigator.msSaveBlob(blob, getScreenshotFilename());
                 return;
             } else {  // Safari

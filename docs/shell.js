@@ -39,7 +39,7 @@ function SJISArrayToString(buffer) {
         else if (c < 0x80)
             out.push(c);
         else {
-            try {
+            try { // Emscripten module may not be loaded yet
                 out.push(_sjis2unicode(c, buffer.getUint8(++i)));
             }
             catch (err) { }
@@ -302,6 +302,7 @@ var CDImage;
                                 this.tracks[currentTrack].index[Number(fields[1])] = this.indexToSector(fields[2]);
                             break;
                         default:
+                        // Do nothing
                     }
                 }
             });
@@ -333,6 +334,7 @@ var CDImage;
                             this.tracks[currentTrack].index[1] = Number(keyval[1]);
                             break;
                         default:
+                        // Do nothing
                     }
                 }
             });
@@ -658,7 +660,7 @@ var xsystem35;
                 let zip = new JSZip();
                 storeZip(yield this.FSready, '/save', zip.folder('save'));
                 let blob = yield zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
-                if (navigator.msSaveBlob) {
+                if (navigator.msSaveBlob) { // Edge
                     navigator.msSaveBlob(blob, 'savedata.zip');
                 }
                 else {
@@ -768,7 +770,7 @@ var xsystem35;
             $('#settings-button').addEventListener('click', this.openModal.bind(this));
             $('#settings-close').addEventListener('click', this.closeModal.bind(this));
             this.keyDownHandler = (ev) => {
-                if (ev.keyCode === 27)
+                if (ev.keyCode === 27) // escape
                     this.closeModal();
             };
             $('.modal-overlay').addEventListener('click', this.closeModal.bind(this));
@@ -1033,7 +1035,7 @@ var xsystem35;
             if (p instanceof Promise) {
                 p.catch((err) => {
                     if (err.message.startsWith('The play() request was interrupted') || // Chrome
-                        err.name === 'AbortError') {
+                        err.name === 'AbortError') { // Safari
                         // These errors are harmless, do nothing
                     }
                     else if (err.name === 'NotAllowedError' || err.message.indexOf('gesture') >= 0) {
@@ -1397,12 +1399,12 @@ var xsystem35;
                     let blob = yield new Promise((resolve) => canvas.toBlob(resolve));
                     url = URL.createObjectURL(blob);
                 }
-                else if (canvas.msToBlob) {
+                else if (canvas.msToBlob) { // Edge
                     let blob = canvas.msToBlob();
                     navigator.msSaveBlob(blob, getScreenshotFilename());
                     return;
                 }
-                else {
+                else { // Safari
                     url = canvas.toDataURL();
                 }
                 let elem = document.createElement('a');
@@ -1651,7 +1653,7 @@ var xsystem35;
             function fileOf(entry) {
                 return new Promise((resolve, reject) => entry.file(resolve, reject));
             }
-            if (FS.readdir('/save').length > 2)
+            if (FS.readdir('/save').length > 2) // Are there any entries other than . and ..?
                 return;
             if (!window.webkitRequestFileSystem)
                 return;

@@ -180,7 +180,7 @@ namespace xsystem35 {
     }
 
     abstract class PCMSound {
-        protected context: AudioContext;
+        protected context: BaseAudioContext;
         protected gain: GainNode;
         protected startTime: number;
 

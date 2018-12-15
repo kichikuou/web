@@ -11,11 +11,10 @@
     "@types/emscripten": "0.0.31",
     "@types/filesystem": "0.0.28",
     "@types/google.analytics": "0.0.38",
-    "@types/jszip": "0.0.33",
-    "@types/text-encoding": "0.0.32"
+    "@types/jszip": "0.0.33"
   },
   "devDependencies": {
-    "typescript": "^2.7.2",
-    "sass": "^1.0.0-rc.1"
+    "sass": "^1.0.0-rc.1",
+    "typescript": "^3.2.2"
   }
 }

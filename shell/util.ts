@@ -6,7 +6,7 @@ let $: (selector: string) => HTMLElement = document.querySelector.bind(document)
 function readFileAsArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
     return new Promise((resolve, reject) => {
         let reader = new FileReader();
-        reader.onload = () => { resolve(reader.result); };
+        reader.onload = () => { resolve(reader.result as ArrayBuffer); };
         reader.onerror = () => { reject(reader.error); };
         reader.readAsArrayBuffer(blob);
     });
@@ -15,7 +15,7 @@ function readFileAsArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
 function readFileAsText(blob: Blob): Promise<string> {
     return new Promise((resolve, reject) => {
         let reader = new FileReader();
-        reader.onload = () => { resolve(reader.result); };
+        reader.onload = () => { resolve(reader.result as string); };
         reader.onerror = () => { reject(reader.error); };
         reader.readAsText(blob);
     });

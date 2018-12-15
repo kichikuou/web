@@ -4,10 +4,6 @@
 /// <reference path="util.ts" />
 /// <reference path="config.ts" />
 
-interface Screen {
-    orientation: {type: string} & EventTarget;
-}
-
 namespace xsystem35 {
     export class ZoomManager {
         private canvas = <HTMLCanvasElement>$('#canvas');
@@ -27,12 +23,12 @@ namespace xsystem35 {
             } else {
                 this.pixelateCheckbox.setAttribute('disabled', 'true');
             }
-            if (screen.orientation && document.webkitExitFullscreen) {
+            if (screen.orientation && (document as any).webkitExitFullscreen) {
                 screen.orientation.addEventListener('change', () => {
                     if (screen.orientation.type.startsWith('landscape'))
-                        document.documentElement.webkitRequestFullScreen();
+                        (document.documentElement as any).webkitRequestFullScreen();
                     else
-                        document.webkitExitFullscreen();
+                        (document as any).webkitExitFullscreen();
                 });
             }
             window.addEventListener('resize', this.onResize.bind(this));
