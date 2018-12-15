@@ -49,8 +49,10 @@ namespace xsystem35 {
                 src.start();
                 console.log('AudioContext unlocked');
                 window.removeEventListener('touchend', handler);
+                window.removeEventListener('mouseup', handler);
             };
             window.addEventListener('touchend', handler);
+            window.addEventListener('mouseup', handler);
         }
 
         private load(no: number): Promise<AudioBuffer> {
