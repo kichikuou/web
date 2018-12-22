@@ -356,7 +356,12 @@ var CDImage;
                     end = this.image.size;
                 }
                 let size = end - start;
-                return new Blob([createWaveHeader(size), this.image.slice(start, start + size)], { type: 'audio/wav' });
+                let pcm = this.image.slice(start, start + size);
+                if (navigator.userAgent.match(/Firefox\/6[234]/)) {
+                    console.log('Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1514581');
+                    pcm = yield readFileAsArrayBuffer(pcm);
+                }
+                return new Blob([createWaveHeader(size), pcm], { type: 'audio/wav' });
             });
         }
         indexToSector(index) {
