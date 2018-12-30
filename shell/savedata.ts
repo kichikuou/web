@@ -102,22 +102,7 @@ namespace xsystem35 {
     }
 
     function addSaveFile(fs: typeof FS, path: string, content: ArrayBuffer) {
-        if (path.toLowerCase().endsWith('.asd') && !isAsdFormat(content))
-            throw new Error('Not a valid asd file');
         fs.writeFile(path, new Uint8Array(content), { encoding: 'binary' });
-    }
-
-    function isAsdFormat(buf: ArrayBuffer) {
-        // Constants from xsystem35/src/savedata.h
-        const SAVE_DATAID = 'System3.5 SavaData(c)ALICE-SOFT\0';
-        const SAVE_DATAVERSION = 0x350200;
-
-        let view = new DataView(buf);
-        for (let i = 0; i < 32; i++) {
-            if (view.getUint8(i) !== SAVE_DATAID.charCodeAt(i))
-                return false;
-        }
-        return view.getUint32(32, true) === SAVE_DATAVERSION;
     }
 
     function decodeFileName(bytes: Uint8Array): string {
