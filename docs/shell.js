@@ -1537,11 +1537,12 @@ var xsystem35;
 /// <reference path="toolbar.ts" />
 var xsystem35;
 (function (xsystem35) {
-    const Font = { url: 'fonts/MTLc3m.ttf', fname: 'MTLc3m.ttf' };
+    const FontGothic = 'MTLc3m.ttf';
+    const FontMincho = 'mincho.otf';
     xsystem35.xsys35rc = [
         'font_device: ttf',
-        'ttfont_mincho: ' + Font.fname,
-        'ttfont_gothic: ' + Font.fname, '',
+        'ttfont_mincho: ' + FontMincho,
+        'ttfont_gothic: ' + FontGothic, '',
     ].join('\n');
     class System35Shell {
         constructor() {
@@ -1615,7 +1616,9 @@ var xsystem35;
                 () => { Module.addRunDependency('gameFiles'); },
                 fsReady,
                 function loadFont() {
-                    FS.createPreloadedFile('/', Font.fname, Font.url, true, false);
+                    for (let f of [FontGothic, FontMincho]) {
+                        FS.createPreloadedFile('/', f, 'fonts/' + f, true, false);
+                    }
                 },
                 function prepareSaveDir() {
                     FS.mkdir('/save');

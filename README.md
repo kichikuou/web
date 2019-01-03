@@ -28,10 +28,12 @@ https://kichikuou.github.io/web/ で公開されるディレクトリです。HT
 `system3.*` ファイルは [system3-sdl2](https://github.com/kichikuou/system3-sdl2)、`xsystem35.*` ファイルは [xsystem35-sdl2](https://github.com/kichikuou/xsystem35-sdl2) をビルドしたものです。
 
 ### ライセンス
-`shell/`, `fslib/` 以下のコードは [MIT ライセンス](https://github.com/kichikuou/web/blob/master/shell/LICENSE) です。
+`shell/`, `fslib/` 以下のコードは [MIT ライセンス](shell/LICENSE) です。
 
 `docs/xsystem35.*` ファイルは [xsystem35-sdl2](https://github.com/kichikuou/xsystem35-sdl2) からビルドされたもので、[GPL 2.0](https://github.com/kichikuou/xsystem35-sdl2/blob/emscripten/COPYING) に従います。
 
 `docs/system3.*` ファイルは [system3-sdl2](https://github.com/kichikuou/system3-sdl2) からビルドされたもので、 [GPL 2.0](https://github.com/kichikuou/system3-sdl2/blob/master/COPYING.txt) に従います。
 
-`docs/fonts/MTLc3m.ttf` は Android Open Source Project の "モトヤLシーダ3等幅" フォントであり、[Apache License 2.0](https://github.com/kichikuou/web/blob/master/docs/fonts/NOTICE) に従います。
+`docs/fonts/MTLc3m.ttf` は Android Open Source Project の "モトヤLシーダ3等幅" フォントであり、[Apache License 2.0](docs/fonts/NOTICE) に従います。
+
+`docs/fonts/mincho.otf` は [源ノ明朝](https://github.com/adobe-fonts/source-han-serif/) フォントのサブセットです。[SIL Open Font License 1.1](docs/fonts/LICENSE.txt) に従います。サブセット化に使用したスクリプトは [tools](tools) ディレクトリにあります。
