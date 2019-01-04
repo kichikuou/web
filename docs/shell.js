@@ -633,6 +633,89 @@ var xsystem35;
     }
     xsystem35.ImageLoader = ImageLoader;
 })(xsystem35 || (xsystem35 = {}));
+// Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
+// This source code is governed by the MIT License, see the LICENSE file.
+/// <reference path="loader.ts" />
+var xsystem35;
+(function (xsystem35) {
+    class FileLoader {
+        constructor() {
+            this.tracks = [];
+            $('#fileselect').addEventListener('change', this.handleFileSelect.bind(this), false);
+            document.body.ondragover = this.handleDragOver.bind(this);
+            document.body.ondrop = this.handleDrop.bind(this);
+        }
+        getCDDA(track) {
+            return Promise.resolve(this.tracks[track]);
+        }
+        reloadImage() {
+            return Promise.resolve();
+        }
+        handleFileSelect(evt) {
+            let input = evt.target;
+            this.startLoad(input.files);
+            input.value = '';
+        }
+        handleDragOver(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+            evt.dataTransfer.dropEffect = 'copy';
+        }
+        handleDrop(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+            this.startLoad(evt.dataTransfer.files);
+        }
+        extractFile(f, buf, offset) {
+            return __awaiter(this, void 0, void 0, function* () {
+                let content = yield readFileAsArrayBuffer(f);
+                buf.set(new Uint8Array(content), offset);
+            });
+        }
+        startLoad(files) {
+            return __awaiter(this, void 0, void 0, function* () {
+                $('#loader').classList.add('module-loading');
+                yield xsystem35.shell.loadModule('xsystem35');
+                let aldFiles = [];
+                for (let i = 0; i < files.length; i++) {
+                    let f = files[i];
+                    let match = /(\d+)\.(wav|mp3|ogg)$/.exec(f.name.toLowerCase());
+                    if (match) {
+                        this.tracks[Number(match[1])] = f;
+                        continue;
+                    }
+                    // Store contents in the emscripten heap, so that it can be mmap-ed without copying
+                    let ptr = Module.getMemory(f.size);
+                    yield this.extractFile(f, Module.HEAPU8, ptr);
+                    FS.writeFile(f.name, Module.HEAPU8.subarray(ptr, ptr + f.size), { encoding: 'binary', canOwn: true });
+                    aldFiles.push(f.name);
+                }
+                FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
+                FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
+                xsystem35.shell.loaded();
+            });
+        }
+        createGr(files) {
+            const resourceType = {
+                d: 'Data', g: 'Graphics', m: 'Midi', r: 'Resource', s: 'Scenario', w: 'Wave',
+            };
+            let basename;
+            let lines = [];
+            for (let name of files) {
+                let type = name.charAt(name.length - 6).toLowerCase();
+                let id = name.charAt(name.length - 5);
+                basename = name.slice(0, -6);
+                lines.push(resourceType[type] + id.toUpperCase() + ' ' + name);
+            }
+            for (let i = 0; i < 26; i++) {
+                let id = String.fromCharCode(65 + i);
+                lines.push('Save' + id + ' save/' + basename + 's' + id.toLowerCase() + '.asd');
+            }
+            return lines.join('\n') + '\n';
+        }
+    }
+    xsystem35.FileLoader = FileLoader;
+})(xsystem35 || (xsystem35 = {}));
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 var xsystem35;
@@ -966,8 +1049,8 @@ var xsystem35;
 var xsystem35;
 (function (xsystem35) {
     class CDPlayer {
-        constructor(imageLoader, volumeControl) {
-            this.imageLoader = imageLoader;
+        constructor(loader, volumeControl) {
+            this.loader = loader;
             this.audio = $('audio');
             // Volume control of <audio> is not supported in iOS
             this.audio.volume = 0.5;
@@ -995,7 +1078,7 @@ var xsystem35;
                 return;
             }
             this.audio.currentTime = 0;
-            this.imageLoader.getCDDA(track).then((blob) => {
+            this.loader.getCDDA(track).then((blob) => {
                 if (blob) {
                     this.blobCache[track] = blob;
                     this.startPlayback(blob, loop);
@@ -1070,7 +1153,7 @@ var xsystem35;
             let clone = document.importNode($('#cdda-error').content, true);
             let toast = xsystem35.shell.addToast(clone, 'error');
             toast.querySelector('.cdda-reload-button').addEventListener('click', () => {
-                this.imageLoader.reloadImage().then(() => {
+                this.loader.reloadImage().then(() => {
                     this.play(this.currentTrack, this.audio.loop ? 1 : 0);
                     toast.querySelector('.btn-clear').click();
                 });
@@ -1426,6 +1509,7 @@ var xsystem35;
 /// <reference path="util.ts" />
 /// <reference path="config.ts" />
 /// <reference path="loader.ts" />
+/// <reference path="fileloader.ts" />
 /// <reference path="settings.ts" />
 /// <reference path="zoom.ts" />
 /// <reference path="volume.ts" />
@@ -1459,9 +1543,12 @@ var xsystem35;
                 gaException({ type: 'rejection', message, stack }, true);
                 // this.addToast('エラーが発生しました。', 'error');
             });
-            this.imageLoader = new xsystem35.ImageLoader(this);
+            if (this.params.get('loader') === 'file')
+                this.loader = new xsystem35.FileLoader();
+            else
+                this.loader = new xsystem35.ImageLoader(this);
             this.volumeControl = new xsystem35.VolumeControl();
-            xsystem35.cdPlayer = new xsystem35.CDPlayer(this.imageLoader, this.volumeControl);
+            xsystem35.cdPlayer = new xsystem35.CDPlayer(this.loader, this.volumeControl);
             this.zoom = new xsystem35.ZoomManager();
             this.toolbar = new xsystem35.ToolBar();
             xsystem35.audio = new xsystem35.AudioManager(this.volumeControl);

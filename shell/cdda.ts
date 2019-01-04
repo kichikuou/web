@@ -12,7 +12,7 @@ namespace xsystem35 {
         private isVolumeSupported: boolean;
         private unmute: () => void;  // Non-null if emulating mute by pause
 
-        constructor(private imageLoader: ImageLoader, volumeControl: VolumeControl) {
+        constructor(private loader: Loader, volumeControl: VolumeControl) {
             // Volume control of <audio> is not supported in iOS
             this.audio.volume = 0.5;
             this.isVolumeSupported = this.audio.volume !== 1;
@@ -41,7 +41,7 @@ namespace xsystem35 {
                 return;
             }
             this.audio.currentTime = 0;
-            this.imageLoader.getCDDA(track).then((blob) => {
+            this.loader.getCDDA(track).then((blob) => {
                 if (blob) {
                     this.blobCache[track] = blob;
                     this.startPlayback(blob, loop);
@@ -118,7 +118,7 @@ namespace xsystem35 {
             let clone = document.importNode((<HTMLTemplateElement>$('#cdda-error')).content, true);
             let toast = xsystem35.shell.addToast(clone, 'error');
             toast.querySelector('.cdda-reload-button').addEventListener('click', () => {
-                this.imageLoader.reloadImage().then(() => {
+                this.loader.reloadImage().then(() => {
                     this.play(this.currentTrack, this.audio.loop ? 1 : 0);
                     (<HTMLElement>toast.querySelector('.btn-clear')).click();
                 });

@@ -5,7 +5,12 @@
 /// <reference path="cdimage.ts" />
 
 namespace xsystem35 {
-    export class ImageLoader {
+    export interface Loader {
+        getCDDA(track: number): Promise<Blob>;
+        reloadImage(): Promise<any>;
+    }
+
+    export class ImageLoader implements Loader {
         private imageFile: File;
         private metadataFile: File;
         private imageReader: CDImage.Reader;

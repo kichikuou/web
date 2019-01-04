@@ -4,6 +4,7 @@
 /// <reference path="util.ts" />
 /// <reference path="config.ts" />
 /// <reference path="loader.ts" />
+/// <reference path="fileloader.ts" />
 /// <reference path="settings.ts" />
 /// <reference path="zoom.ts" />
 /// <reference path="volume.ts" />
@@ -26,7 +27,7 @@ namespace xsystem35 {
 
     export class System35Shell {
         private params: URLSearchParams & Map<string, string>;
-        private imageLoader: ImageLoader;
+        private loader: Loader;
         status: HTMLElement = document.getElementById('status');
         private zoom: ZoomManager;
         private volumeControl: VolumeControl;
@@ -50,9 +51,12 @@ namespace xsystem35 {
                 // this.addToast('エラーが発生しました。', 'error');
             });
 
-            this.imageLoader = new ImageLoader(this);
+            if (this.params.get('loader') === 'file')
+                this.loader = new FileLoader();
+            else
+                this.loader = new ImageLoader(this);
             this.volumeControl = new VolumeControl();
-            xsystem35.cdPlayer = new CDPlayer(this.imageLoader, this.volumeControl);
+            xsystem35.cdPlayer = new CDPlayer(this.loader, this.volumeControl);
             this.zoom = new ZoomManager();
             this.toolbar = new ToolBar();
             xsystem35.audio = new AudioManager(this.volumeControl);
