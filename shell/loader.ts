@@ -3,6 +3,7 @@
 
 /// <reference path="util.ts" />
 /// <reference path="cdimage.ts" />
+/// <reference path="datafile.ts" />
 
 namespace xsystem35 {
     export interface Loader {
@@ -84,17 +85,6 @@ namespace xsystem35 {
             }
         }
 
-        private async extractFile(isofs: CDImage.ISO9660FileSystem, entry: CDImage.DirEnt,
-                                  buf: Uint8Array, offset: number) {
-            let ptr = 0;
-            for (let chunk of await isofs.readFile(entry)) {
-                buf.set(chunk, ptr + offset);
-                ptr += chunk.byteLength;
-            }
-            if (ptr !== entry.size)
-                throw new Error('expected ' + entry.size + ' bytes, but read ' + ptr + 'bytes');
-        }
-
         private async startLoad() {
             let isofs = await CDImage.ISO9660FileSystem.create(this.imageReader);
             // this.walk(isofs, isofs.rootDir(), '/');
@@ -114,10 +104,8 @@ namespace xsystem35 {
             for (let e of await isofs.readDir(gamedata)) {
                 if (!e.name.toLowerCase().endsWith(isSystem3 ? '.dat' : '.ald'))
                     continue;
-                // Store contents in the emscripten heap, so that it can be mmap-ed without copying
-                let ptr = Module.getMemory(e.size);
-                await this.extractFile(isofs, e, Module.HEAPU8, ptr);
-                FS.writeFile(e.name, Module.HEAPU8.subarray(ptr, ptr + e.size), { encoding: 'binary', canOwn: true });
+                let chunks = await isofs.readFile(e);
+                registerDataFile(e.name, e.size, chunks);
                 aldFiles.push(e.name);
             }
             if (isSystem3) {

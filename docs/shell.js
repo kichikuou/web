@@ -445,10 +445,49 @@ var CDImage;
         return buf;
     }
 })(CDImage || (CDImage = {}));
+var xsystem35;
+(function (xsystem35) {
+    const major = 240;
+    let entryCount = 0;
+    function registerDataFile(fname, size, chunks) {
+        let dev = FS.makedev(major, entryCount++);
+        FS.registerDevice(dev, new NodeOps(size, chunks));
+        FS.mkdev('/' + fname, dev);
+    }
+    xsystem35.registerDataFile = registerDataFile;
+    class NodeOps {
+        constructor(size, chunks) {
+            this.size = size;
+            let ptr = this.addr = Module.getMemory(size);
+            for (let c of chunks) {
+                Module.HEAPU8.set(c, ptr);
+                ptr += c.byteLength;
+            }
+        }
+        read(stream, buffer, offset, length, position) {
+            let src = this.addr + position;
+            length = Math.min(length, this.size - position);
+            buffer.set(Module.HEAPU8.subarray(src, src + length), offset);
+            return length;
+        }
+        llseek(stream, offset, whence) {
+            let position = offset;
+            if (whence === 1) // SEEK_CUR
+                position += stream.position;
+            else if (whence === 2) // SEEK_END
+                position += this.size;
+            return position;
+        }
+        mmap() {
+            return { ptr: this.addr, allocated: false };
+        }
+    }
+})(xsystem35 || (xsystem35 = {}));
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 /// <reference path="util.ts" />
 /// <reference path="cdimage.ts" />
+/// <reference path="datafile.ts" />
 var xsystem35;
 (function (xsystem35) {
     class ImageLoader {
@@ -521,17 +560,6 @@ var xsystem35;
                 }
             });
         }
-        extractFile(isofs, entry, buf, offset) {
-            return __awaiter(this, void 0, void 0, function* () {
-                let ptr = 0;
-                for (let chunk of yield isofs.readFile(entry)) {
-                    buf.set(chunk, ptr + offset);
-                    ptr += chunk.byteLength;
-                }
-                if (ptr !== entry.size)
-                    throw new Error('expected ' + entry.size + ' bytes, but read ' + ptr + 'bytes');
-            });
-        }
         startLoad() {
             return __awaiter(this, void 0, void 0, function* () {
                 let isofs = yield CDImage.ISO9660FileSystem.create(this.imageReader);
@@ -550,10 +578,8 @@ var xsystem35;
                 for (let e of yield isofs.readDir(gamedata)) {
                     if (!e.name.toLowerCase().endsWith(isSystem3 ? '.dat' : '.ald'))
                         continue;
-                    // Store contents in the emscripten heap, so that it can be mmap-ed without copying
-                    let ptr = Module.getMemory(e.size);
-                    yield this.extractFile(isofs, e, Module.HEAPU8, ptr);
-                    FS.writeFile(e.name, Module.HEAPU8.subarray(ptr, ptr + e.size), { encoding: 'binary', canOwn: true });
+                    let chunks = yield isofs.readFile(e);
+                    xsystem35.registerDataFile(e.name, e.size, chunks);
                     aldFiles.push(e.name);
                 }
                 if (isSystem3) {
@@ -636,6 +662,7 @@ var xsystem35;
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 /// <reference path="loader.ts" />
+/// <reference path="datafile.ts" />
 var xsystem35;
 (function (xsystem35) {
     class FileLoader {
@@ -666,12 +693,6 @@ var xsystem35;
             evt.preventDefault();
             this.startLoad(evt.dataTransfer.files);
         }
-        extractFile(f, buf, offset) {
-            return __awaiter(this, void 0, void 0, function* () {
-                let content = yield readFileAsArrayBuffer(f);
-                buf.set(new Uint8Array(content), offset);
-            });
-        }
         startLoad(files) {
             return __awaiter(this, void 0, void 0, function* () {
                 $('#loader').classList.add('module-loading');
@@ -684,10 +705,8 @@ var xsystem35;
                         this.tracks[Number(match[1])] = f;
                         continue;
                     }
-                    // Store contents in the emscripten heap, so that it can be mmap-ed without copying
-                    let ptr = Module.getMemory(f.size);
-                    yield this.extractFile(f, Module.HEAPU8, ptr);
-                    FS.writeFile(f.name, Module.HEAPU8.subarray(ptr, ptr + f.size), { encoding: 'binary', canOwn: true });
+                    let content = yield readFileAsArrayBuffer(f);
+                    xsystem35.registerDataFile(f.name, f.size, [new Uint8Array(content)]);
                     aldFiles.push(f.name);
                 }
                 FS.writeFile('xsystem35.gr', this.createGr(aldFiles));

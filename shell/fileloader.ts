@@ -2,6 +2,7 @@
 // This source code is governed by the MIT License, see the LICENSE file.
 
 /// <reference path="loader.ts" />
+/// <reference path="datafile.ts" />
 
 namespace xsystem35 {
     export class FileLoader implements Loader {
@@ -39,11 +40,6 @@ namespace xsystem35 {
             this.startLoad(evt.dataTransfer.files);
         }
 
-        private async extractFile(f: Blob, buf: Uint8Array, offset: number) {
-            let content = await readFileAsArrayBuffer(f);
-            buf.set(new Uint8Array(content), offset);
-        }
-
         private async startLoad(files: FileList) {
             $('#loader').classList.add('module-loading');
             await shell.loadModule('xsystem35');
@@ -55,10 +51,8 @@ namespace xsystem35 {
                     this.tracks[Number(match[1])] = f;
                     continue;
                 }
-                // Store contents in the emscripten heap, so that it can be mmap-ed without copying
-                let ptr = Module.getMemory(f.size);
-                await this.extractFile(f, Module.HEAPU8, ptr);
-                FS.writeFile(f.name, Module.HEAPU8.subarray(ptr, ptr + f.size), { encoding: 'binary', canOwn: true });
+                let content = await readFileAsArrayBuffer(f);
+                registerDataFile(f.name, f.size, [new Uint8Array(content)]);
                 aldFiles.push(f.name);
             }
             FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
