@@ -85,6 +85,19 @@ function gaException(description, exFatal = false) {
     });
     ga('send', 'exception', { exDescription, exFatal });
 }
+var xsystem35;
+(function (xsystem35) {
+    let Status;
+    (function (Status) {
+        Status[Status["OK"] = 0] = "OK";
+        Status[Status["NG"] = -1] = "NG";
+    })(Status = xsystem35.Status || (xsystem35.Status = {}));
+    let Bool;
+    (function (Bool) {
+        Bool[Bool["FALSE"] = 0] = "FALSE";
+        Bool[Bool["TRUE"] = 1] = "TRUE";
+    })(Bool = xsystem35.Bool || (xsystem35.Bool = {}));
+})(xsystem35 || (xsystem35 = {}));
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 var xsystem35;
@@ -1202,16 +1215,6 @@ var xsystem35;
 /// <reference path="volume.ts" />
 var xsystem35;
 (function (xsystem35) {
-    let Status;
-    (function (Status) {
-        Status[Status["OK"] = 0] = "OK";
-        Status[Status["NG"] = -1] = "NG";
-    })(Status || (Status = {}));
-    let Bool;
-    (function (Bool) {
-        Bool[Bool["FALSE"] = 0] = "FALSE";
-        Bool[Bool["TRUE"] = 1] = "TRUE";
-    })(Bool || (Bool = {}));
     class AudioManager {
         constructor(volumeControl) {
             this.volumeControl = volumeControl;
@@ -1278,14 +1281,14 @@ var xsystem35;
                 this.pcm_stop(slot);
                 if (this.bufCache[no]) {
                     this.slots[slot] = new PCMSoundSimple(this.masterGain, this.bufCache[no]);
-                    return resume(() => Status.OK);
+                    return resume(() => xsystem35.Status.OK);
                 }
                 this.load(no).then((audioBuf) => {
                     this.slots[slot] = new PCMSoundSimple(this.masterGain, audioBuf);
-                    resume(() => Status.OK);
+                    resume(() => xsystem35.Status.OK);
                 }).catch((err) => {
                     gaException({ type: 'PCM', err });
-                    resume(() => Status.NG);
+                    resume(() => xsystem35.Status.NG);
                 });
             });
         }
@@ -1294,7 +1297,7 @@ var xsystem35;
                 this.pcm_stop(slot);
                 if (this.bufCache[noL] && this.bufCache[noR]) {
                     this.slots[slot] = new PCMSoundMixLR(this.masterGain, this.bufCache[noL], this.bufCache[noR]);
-                    return resume(() => Status.OK);
+                    return resume(() => xsystem35.Status.OK);
                 }
                 let ps = [
                     this.bufCache[noL] ? Promise.resolve(this.bufCache[noL]) : this.load(noL),
@@ -1302,32 +1305,32 @@ var xsystem35;
                 ];
                 Promise.all(ps).then((bufs) => {
                     this.slots[slot] = new PCMSoundMixLR(this.masterGain, bufs[0], bufs[1]);
-                    resume(() => Status.OK);
+                    resume(() => xsystem35.Status.OK);
                 }).catch((err) => {
                     gaException({ type: 'PCM', err });
-                    resume(() => Status.NG);
+                    resume(() => xsystem35.Status.NG);
                 });
             });
         }
         pcm_start(slot, loop) {
             if (this.slots[slot]) {
                 this.slots[slot].start(loop);
-                return Status.OK;
+                return xsystem35.Status.OK;
             }
-            return Status.NG;
+            return xsystem35.Status.NG;
         }
         pcm_stop(slot) {
             if (!this.slots[slot])
-                return Status.NG;
+                return xsystem35.Status.NG;
             this.slots[slot].stop();
             this.slots[slot] = null;
-            return Status.OK;
+            return xsystem35.Status.OK;
         }
         pcm_fadeout(slot, msec) {
             if (!this.slots[slot])
-                return Status.NG;
+                return xsystem35.Status.NG;
             this.slots[slot].fadeout(msec);
-            return Status.OK;
+            return xsystem35.Status.OK;
         }
         pcm_getpos(slot) {
             if (!this.slots[slot])
@@ -1336,9 +1339,9 @@ var xsystem35;
         }
         pcm_setvol(slot, vol) {
             if (!this.slots[slot])
-                return Status.NG;
+                return xsystem35.Status.NG;
             this.slots[slot].setGain(vol / 100);
-            return Status.OK;
+            return xsystem35.Status.OK;
         }
         pcm_getwavelen(slot) {
             if (!this.slots[slot])
@@ -1347,8 +1350,8 @@ var xsystem35;
         }
         pcm_isplaying(slot) {
             if (!this.slots[slot])
-                return Bool.FALSE;
-            return this.slots[slot].isPlaying() ? Bool.TRUE : Bool.FALSE;
+                return xsystem35.Bool.FALSE;
+            return this.slots[slot].isPlaying() ? xsystem35.Bool.TRUE : xsystem35.Bool.FALSE;
         }
         onVisibilityChange() {
             if (document.hidden)
@@ -1616,9 +1619,7 @@ var xsystem35;
                 () => { Module.addRunDependency('gameFiles'); },
                 fsReady,
                 function loadFont() {
-                    for (let f of [FontGothic, FontMincho]) {
-                        FS.createPreloadedFile('/', f, 'fonts/' + f, true, false);
-                    }
+                    FS.createPreloadedFile('/', FontGothic, 'fonts/' + FontGothic, true, false);
                 },
                 function prepareSaveDir() {
                     FS.mkdir('/save');
@@ -1787,5 +1788,23 @@ var xsystem35;
         });
     }
     xsystem35.importSaveDataFromLocalFileSystem = importSaveDataFromLocalFileSystem;
+    let mincho_loaded = false;
+    function load_mincho_font() {
+        if (mincho_loaded)
+            return Promise.resolve(xsystem35.Status.OK);
+        mincho_loaded = true;
+        return new Promise((resolve) => {
+            console.log('loading mincho font');
+            let start = performance.now();
+            Module.readAsync('fonts/' + FontMincho, (buf) => {
+                ga('send', 'timing', 'Font load', FontMincho, Math.round(performance.now() - start));
+                FS.writeFile(FontMincho, new Uint8Array(buf), { encoding: 'binary' });
+                resolve(xsystem35.Status.OK);
+            }, () => {
+                resolve(xsystem35.Status.NG);
+            });
+        });
+    }
+    xsystem35.load_mincho_font = load_mincho_font;
     xsystem35.shell = new System35Shell();
 })(xsystem35 || (xsystem35 = {}));

@@ -108,9 +108,7 @@ namespace xsystem35 {
                 () => { Module.addRunDependency('gameFiles'); },
                 fsReady,
                 function loadFont() {
-                    for (let f of [FontGothic, FontMincho]) {
-                        FS.createPreloadedFile('/', f, 'fonts/' + f, true, false);
-                    }
+                    FS.createPreloadedFile('/', FontGothic, 'fonts/' + FontGothic, true, false);
                 },
                 function prepareSaveDir() {
                     FS.mkdir('/save');
@@ -284,6 +282,25 @@ namespace xsystem35 {
             }
         } catch (err) {
         }
+    }
+
+    let mincho_loaded = false;
+    export function load_mincho_font(): Promise<number> {
+        if (mincho_loaded)
+            return Promise.resolve(Status.OK);
+        mincho_loaded = true;
+
+        return new Promise((resolve) => {
+            console.log('loading mincho font');
+            let start = performance.now();
+            Module.readAsync('fonts/' + FontMincho, (buf: ArrayBuffer) => {
+                ga('send', 'timing', 'Font load', FontMincho, Math.round(performance.now() - start));
+                FS.writeFile(FontMincho, new Uint8Array(buf), { encoding: 'binary' });
+                resolve(Status.OK);
+            }, () => {
+                resolve(Status.NG);
+            });
+        });
     }
 
     export let shell = new System35Shell();

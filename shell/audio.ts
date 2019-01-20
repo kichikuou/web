@@ -5,15 +5,6 @@
 /// <reference path="volume.ts" />
 
 namespace xsystem35 {
-    enum Status {
-        OK = 0,
-        NG = -1,
-    }
-    enum Bool {
-        FALSE = 0,
-        TRUE = 1,
-    }
-
     declare var webkitAudioContext: any;
     export class AudioManager {
         private context: AudioContext;

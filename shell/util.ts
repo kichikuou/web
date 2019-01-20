@@ -86,6 +86,17 @@ function gaException(description: any, exFatal: boolean = false) {
     ga('send', 'exception', {exDescription, exFatal});
 }
 
+namespace xsystem35 {
+    export enum Status {
+        OK = 0,
+        NG = -1,
+    }
+    export enum Bool {
+        FALSE = 0,
+        TRUE = 1,
+    }
+}
+
 // xsystem35 exported functions
 declare function _ags_setAntialiasedStringMode(on: number): void;
 declare function _ald_getdata(type: number, no: number): number;
@@ -100,6 +111,7 @@ declare namespace Module {
     function setStatus(status: string): void;
     function setWindowTitle(title: string): void;
     function quit(status: number, toThrow: Error): void;
+    function readAsync(url: string, onload: (response: any) => void, onerror: () => void): void;
 }
 
 declare namespace FS {
