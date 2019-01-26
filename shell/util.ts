@@ -26,23 +26,7 @@ function ASCIIArrayToString(buffer: Uint8Array): string {
 }
 
 function SJISArrayToString(buffer: DataView): string {
-    if (typeof TextDecoder !== 'undefined')
-        return new TextDecoder('shift_jis').decode(buffer);
-
-    let out = [];
-    for (let i = 0; i < buffer.byteLength; i++) {
-        let c = buffer.getUint8(i);
-        if (c >= 0xa0 && c <= 0xdf)
-            out.push(0xff60 + c - 0xa0);
-        else if (c < 0x80)
-            out.push(c);
-        else {
-            try {  // Emscripten module may not be loaded yet
-                out.push(_sjis2unicode(c, buffer.getUint8(++i)));
-            } catch (err) {}
-        }
-    }
-    return String.fromCharCode.apply(null, out);
+    return new TextDecoder('shift_jis').decode(buffer);
 }
 
 function openFileInput(): Promise<File> {

@@ -29,23 +29,7 @@ function ASCIIArrayToString(buffer) {
     return String.fromCharCode.apply(null, buffer);
 }
 function SJISArrayToString(buffer) {
-    if (typeof TextDecoder !== 'undefined')
-        return new TextDecoder('shift_jis').decode(buffer);
-    let out = [];
-    for (let i = 0; i < buffer.byteLength; i++) {
-        let c = buffer.getUint8(i);
-        if (c >= 0xa0 && c <= 0xdf)
-            out.push(0xff60 + c - 0xa0);
-        else if (c < 0x80)
-            out.push(c);
-        else {
-            try { // Emscripten module may not be loaded yet
-                out.push(_sjis2unicode(c, buffer.getUint8(++i)));
-            }
-            catch (err) { }
-        }
-    }
-    return String.fromCharCode.apply(null, out);
+    return new TextDecoder('shift_jis').decode(buffer);
 }
 function openFileInput() {
     return new Promise((resolve) => {
@@ -1806,5 +1790,21 @@ var xsystem35;
         });
     }
     xsystem35.load_mincho_font = load_mincho_font;
+    function loadPolyfills() {
+        if (typeof TextDecoder === 'undefined') {
+            const scripts = [
+                'https://cdn.jsdelivr.net/gh/inexorabletash/text-encoding@3f330964/lib/encoding-indexes.js',
+                'https://cdn.jsdelivr.net/gh/inexorabletash/text-encoding@3f330964/lib/encoding.js'
+            ];
+            for (let src of scripts) {
+                let e = document.createElement('script');
+                e.src = src;
+                e.async = true;
+                document.body.appendChild(e);
+            }
+        }
+    }
+    xsystem35.loadPolyfills = loadPolyfills;
+    window.addEventListener('load', loadPolyfills);
     xsystem35.shell = new System35Shell();
 })(xsystem35 || (xsystem35 = {}));
