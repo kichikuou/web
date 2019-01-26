@@ -5,22 +5,39 @@
 
 namespace CDImage {
     export class ISO9660FileSystem {
+        private decoder: TextDecoder;
+
         static async create(sectorReader: Reader): Promise<ISO9660FileSystem> {
-            let pvd = new PVD(await sectorReader.readSector(0x10));
-            return new ISO9660FileSystem(sectorReader, pvd);
+            let best_vd: VolumeDescriptor = null;
+            for (let sector = 0x10;; sector++) {
+                let vd = new VolumeDescriptor(await sectorReader.readSector(sector));
+                switch (vd.type) {
+                case VDType.Primary:
+                    if (!best_vd)
+                        best_vd = vd;
+                    break;
+                case VDType.Supplementary:
+                    if (vd.encoding())
+                        best_vd = vd;
+                    break;
+                case VDType.Terminator:
+                    if (!best_vd)
+                        throw new Error('PVD not found');
+                    return new ISO9660FileSystem(sectorReader, best_vd);
+                }
+            }
         }
 
-        private constructor(private sectorReader: Reader, private pvd: PVD) {
-            if (this.pvd.type !== 1)
-                throw new Error('PVD not found');
+        private constructor(private sectorReader: Reader, private vd: VolumeDescriptor) {
+            this.decoder = new TextDecoder(vd.encoding());
         }
 
         volumeLabel(): string {
-            return this.pvd.volumeLabel();
+            return this.vd.volumeLabel(this.decoder);
         }
 
         rootDir(): DirEnt {
-            return this.pvd.rootDirEnt();
+            return this.vd.rootDirEnt(this.decoder);
         }
 
         async getDirEnt(name: string, parent: DirEnt): Promise<DirEnt> {
@@ -41,7 +58,7 @@ namespace CDImage {
             while (position < length) {
                 if (position === 0)
                     buf = await this.sectorReader.readSector(sector);
-                let child = new DirEnt(buf, position);
+                let child = new DirEnt(buf, position, this.decoder);
                 if (child.length === 0) {
                     // Padded end of sector
                     position = 2048;
@@ -65,25 +82,43 @@ namespace CDImage {
         }
     }
 
-    class PVD {
+    enum VDType {
+        Primary = 1,
+        Supplementary = 2,
+        Terminator = 255
+    }
+
+    class VolumeDescriptor {
         private view: DataView;
         constructor(private buf: ArrayBuffer) {
             this.view = new DataView(buf);
+            if (ASCIIArrayToString(new Uint8Array(this.buf, 1, 5)) !== 'CD001')
+                throw new Error('Not a valid CD image');
         }
         get type(): number {
             return this.view.getUint8(0);
         }
-        volumeLabel(): string {
-            return SJISArrayToString(new DataView(this.buf, 40, 32)).trim();
+        volumeLabel(decoder: TextDecoder): string {
+            return decoder.decode(new DataView(this.buf, 40, 32)).trim();
         }
-        rootDirEnt(): DirEnt {
-            return new DirEnt(this.buf, 156);
+        encoding(): string {
+            if (this.type === VDType.Primary)
+                return 'shift_jis';
+            if (this.escapeSequence().match(/%\/[@CE]/))
+                return 'utf-16be';  // Joliet
+            return null;
+        }
+        escapeSequence(): string {
+            return ASCIIArrayToString(new Uint8Array(this.buf, 88, 32)).trim();
+        }
+        rootDirEnt(decoder: TextDecoder): DirEnt {
+            return new DirEnt(this.buf, 156, decoder);
         }
     }
 
     export class DirEnt {
         private view: DataView;
-        constructor(private buf: ArrayBuffer, private offset: number) {
+        constructor(private buf: ArrayBuffer, private offset: number, private decoder: TextDecoder) {
             this.view = new DataView(buf, offset);
         }
         get length(): number {
@@ -100,7 +135,16 @@ namespace CDImage {
         }
         get name(): string {
             let len = this.view.getUint8(32);
-            return SJISArrayToString(new DataView(this.buf, this.offset + 33, len)).split(';')[0];
+            let name = new DataView(this.buf, this.offset + 33, len)
+            if (len === 1) {
+                switch (name.getUint8(0)) {
+                case 0:
+                    return '.';
+                case 1:
+                    return '..';
+                }
+            }
+            return this.decoder.decode(name).split(';')[0];
         }
     }
 

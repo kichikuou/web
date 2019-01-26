@@ -25,10 +25,6 @@ function ASCIIArrayToString(buffer: Uint8Array): string {
     return String.fromCharCode.apply(null, buffer);
 }
 
-function SJISArrayToString(buffer: DataView): string {
-    return new TextDecoder('shift_jis').decode(buffer);
-}
-
 function openFileInput(): Promise<File> {
     return new Promise((resolve) => {
         let input = document.createElement('input');

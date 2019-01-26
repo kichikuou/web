@@ -170,7 +170,7 @@ namespace xsystem35 {
         // For debug
         private async walk(isofs: CDImage.ISO9660FileSystem, dir: CDImage.DirEnt, dirname: string) {
             for (let e of await isofs.readDir(dir)) {
-                if (e.name !== '\0' && e.name !== '\x01') {
+                if (e.name !== '.' && e.name !== '..') {
                     console.log(dirname + e.name);
                     if (e.isDirectory)
                         this.walk(isofs, e, dirname + e.name + '/');

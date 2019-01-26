@@ -28,9 +28,6 @@ function readFileAsText(blob) {
 function ASCIIArrayToString(buffer) {
     return String.fromCharCode.apply(null, buffer);
 }
-function SJISArrayToString(buffer) {
-    return new TextDecoder('shift_jis').decode(buffer);
-}
 function openFileInput() {
     return new Promise((resolve) => {
         let input = document.createElement('input');
@@ -127,23 +124,38 @@ var xsystem35;
 var CDImage;
 (function (CDImage) {
     class ISO9660FileSystem {
-        constructor(sectorReader, pvd) {
+        constructor(sectorReader, vd) {
             this.sectorReader = sectorReader;
-            this.pvd = pvd;
-            if (this.pvd.type !== 1)
-                throw new Error('PVD not found');
+            this.vd = vd;
+            this.decoder = new TextDecoder(vd.encoding());
         }
         static create(sectorReader) {
             return __awaiter(this, void 0, void 0, function* () {
-                let pvd = new PVD(yield sectorReader.readSector(0x10));
-                return new ISO9660FileSystem(sectorReader, pvd);
+                let best_vd = null;
+                for (let sector = 0x10;; sector++) {
+                    let vd = new VolumeDescriptor(yield sectorReader.readSector(sector));
+                    switch (vd.type) {
+                        case VDType.Primary:
+                            if (!best_vd)
+                                best_vd = vd;
+                            break;
+                        case VDType.Supplementary:
+                            if (vd.encoding())
+                                best_vd = vd;
+                            break;
+                        case VDType.Terminator:
+                            if (!best_vd)
+                                throw new Error('PVD not found');
+                            return new ISO9660FileSystem(sectorReader, best_vd);
+                    }
+                }
             });
         }
         volumeLabel() {
-            return this.pvd.volumeLabel();
+            return this.vd.volumeLabel(this.decoder);
         }
         rootDir() {
-            return this.pvd.rootDirEnt();
+            return this.vd.rootDirEnt(this.decoder);
         }
         getDirEnt(name, parent) {
             return __awaiter(this, void 0, void 0, function* () {
@@ -165,7 +177,7 @@ var CDImage;
                 while (position < length) {
                     if (position === 0)
                         buf = yield this.sectorReader.readSector(sector);
-                    let child = new DirEnt(buf, position);
+                    let child = new DirEnt(buf, position, this.decoder);
                     if (child.length === 0) {
                         // Padded end of sector
                         position = 2048;
@@ -190,25 +202,44 @@ var CDImage;
         }
     }
     CDImage.ISO9660FileSystem = ISO9660FileSystem;
-    class PVD {
+    let VDType;
+    (function (VDType) {
+        VDType[VDType["Primary"] = 1] = "Primary";
+        VDType[VDType["Supplementary"] = 2] = "Supplementary";
+        VDType[VDType["Terminator"] = 255] = "Terminator";
+    })(VDType || (VDType = {}));
+    class VolumeDescriptor {
         constructor(buf) {
             this.buf = buf;
             this.view = new DataView(buf);
+            if (ASCIIArrayToString(new Uint8Array(this.buf, 1, 5)) !== 'CD001')
+                throw new Error('Not a valid CD image');
         }
         get type() {
             return this.view.getUint8(0);
         }
-        volumeLabel() {
-            return SJISArrayToString(new DataView(this.buf, 40, 32)).trim();
+        volumeLabel(decoder) {
+            return decoder.decode(new DataView(this.buf, 40, 32)).trim();
         }
-        rootDirEnt() {
-            return new DirEnt(this.buf, 156);
+        encoding() {
+            if (this.type === VDType.Primary)
+                return 'shift_jis';
+            if (this.escapeSequence().match(/%\/[@CE]/))
+                return 'utf-16be'; // Joliet
+            return null;
+        }
+        escapeSequence() {
+            return ASCIIArrayToString(new Uint8Array(this.buf, 88, 32)).trim();
+        }
+        rootDirEnt(decoder) {
+            return new DirEnt(this.buf, 156, decoder);
         }
     }
     class DirEnt {
-        constructor(buf, offset) {
+        constructor(buf, offset, decoder) {
             this.buf = buf;
             this.offset = offset;
+            this.decoder = decoder;
             this.view = new DataView(buf, offset);
         }
         get length() {
@@ -225,7 +256,16 @@ var CDImage;
         }
         get name() {
             let len = this.view.getUint8(32);
-            return SJISArrayToString(new DataView(this.buf, this.offset + 33, len)).split(';')[0];
+            let name = new DataView(this.buf, this.offset + 33, len);
+            if (len === 1) {
+                switch (name.getUint8(0)) {
+                    case 0:
+                        return '.';
+                    case 1:
+                        return '..';
+                }
+            }
+            return this.decoder.decode(name).split(';')[0];
         }
     }
     CDImage.DirEnt = DirEnt;
@@ -645,7 +685,7 @@ var xsystem35;
         walk(isofs, dir, dirname) {
             return __awaiter(this, void 0, void 0, function* () {
                 for (let e of yield isofs.readDir(dir)) {
-                    if (e.name !== '\0' && e.name !== '\x01') {
+                    if (e.name !== '.' && e.name !== '..') {
                         console.log(dirname + e.name);
                         if (e.isDirectory)
                             this.walk(isofs, e, dirname + e.name + '/');
