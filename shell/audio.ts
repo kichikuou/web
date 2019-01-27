@@ -114,11 +114,20 @@ namespace xsystem35 {
             });
         }
 
+        pcm_unload(slot: number): Status {
+            if (!this.slots[slot])
+                return Status.NG;
+            this.slots[slot].stop();
+            this.slots[slot] = null;
+            return Status.OK;
+        }
+
         pcm_start(slot: number, loop: number): Status {
             if (this.slots[slot]) {
                 this.slots[slot].start(loop);
                 return Status.OK;
             }
+            console.log('pcm_start: invalid slot', slot);
             return Status.NG;
         }
 
@@ -126,7 +135,8 @@ namespace xsystem35 {
             if (!this.slots[slot])
                 return Status.NG;
             this.slots[slot].stop();
-            this.slots[slot] = null;
+            if (slot === 0)  // slot 0 plays at most once
+                this.slots[slot] = null;
             return Status.OK;
         }
 
@@ -162,6 +172,14 @@ namespace xsystem35 {
             return this.slots[slot].isPlaying() ? Bool.TRUE : Bool.FALSE;
         }
 
+        pcm_waitend(slot: number) {
+            return EmterpreterAsync.handle((resume: (f: () => Status) => void) => {
+                if (!this.slots[slot] || !this.slots[slot].isPlaying())
+                    return resume(() => Status.OK);
+                this.slots[slot].end_callback = () => resume(() => Status.OK);
+            });
+        }
+
         private onVisibilityChange() {
             if (document.hidden)
                 this.bufCache = [];
@@ -173,6 +191,7 @@ namespace xsystem35 {
     }
 
     abstract class PCMSound {
+        end_callback: () => void;
         protected context: BaseAudioContext;
         protected gain: GainNode;
         protected startTime: number;
@@ -199,20 +218,28 @@ namespace xsystem35 {
             return !!this.startTime;
         }
         abstract get duration(): number;
+
+        protected ended() {
+            this.startTime = null;
+            if (this.end_callback) {
+                this.end_callback();
+                this.end_callback = null;
+            }
+        }
     }
 
     class PCMSoundSimple extends PCMSound {
         private node: AudioBufferSourceNode;
 
-        constructor(dst: AudioNode, buf: AudioBuffer) {
+        constructor(dst: AudioNode, private buf: AudioBuffer) {
             super(dst);
-            this.node = this.context.createBufferSource();
-            this.node.buffer = buf;
-            this.node.connect(this.gain);
-            this.node.onended = this.onended.bind(this);
         }
 
         start(loop: number) {
+            this.node = this.context.createBufferSource();
+            this.node.buffer = this.buf;
+            this.node.connect(this.gain);
+            this.node.onended = this.onended.bind(this);
             if (loop === 0)
                 this.node.loop = true;
             else if (loop !== 1)
@@ -229,11 +256,11 @@ namespace xsystem35 {
         }
 
         get duration() {
-            return this.node.buffer.duration;
+            return this.buf.duration;
         }
 
         private onended() {
-            this.startTime = null;
+            this.ended();
         }
     }
 
@@ -278,7 +305,7 @@ namespace xsystem35 {
         private onended() {
             this.endCount++;
             if (this.endCount === 2)
-                this.startTime = null;
+                this.ended();
         }
     }
 }

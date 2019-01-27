@@ -1336,18 +1336,27 @@ var xsystem35;
                 });
             });
         }
+        pcm_unload(slot) {
+            if (!this.slots[slot])
+                return xsystem35.Status.NG;
+            this.slots[slot].stop();
+            this.slots[slot] = null;
+            return xsystem35.Status.OK;
+        }
         pcm_start(slot, loop) {
             if (this.slots[slot]) {
                 this.slots[slot].start(loop);
                 return xsystem35.Status.OK;
             }
+            console.log('pcm_start: invalid slot', slot);
             return xsystem35.Status.NG;
         }
         pcm_stop(slot) {
             if (!this.slots[slot])
                 return xsystem35.Status.NG;
             this.slots[slot].stop();
-            this.slots[slot] = null;
+            if (slot === 0) // slot 0 plays at most once
+                this.slots[slot] = null;
             return xsystem35.Status.OK;
         }
         pcm_fadeout(slot, msec) {
@@ -1376,6 +1385,13 @@ var xsystem35;
             if (!this.slots[slot])
                 return xsystem35.Bool.FALSE;
             return this.slots[slot].isPlaying() ? xsystem35.Bool.TRUE : xsystem35.Bool.FALSE;
+        }
+        pcm_waitend(slot) {
+            return EmterpreterAsync.handle((resume) => {
+                if (!this.slots[slot] || !this.slots[slot].isPlaying())
+                    return resume(() => xsystem35.Status.OK);
+                this.slots[slot].end_callback = () => resume(() => xsystem35.Status.OK);
+            });
         }
         onVisibilityChange() {
             if (document.hidden)
@@ -1407,16 +1423,24 @@ var xsystem35;
         isPlaying() {
             return !!this.startTime;
         }
+        ended() {
+            this.startTime = null;
+            if (this.end_callback) {
+                this.end_callback();
+                this.end_callback = null;
+            }
+        }
     }
     class PCMSoundSimple extends PCMSound {
         constructor(dst, buf) {
             super(dst);
-            this.node = this.context.createBufferSource();
-            this.node.buffer = buf;
-            this.node.connect(this.gain);
-            this.node.onended = this.onended.bind(this);
+            this.buf = buf;
         }
         start(loop) {
+            this.node = this.context.createBufferSource();
+            this.node.buffer = this.buf;
+            this.node.connect(this.gain);
+            this.node.onended = this.onended.bind(this);
             if (loop === 0)
                 this.node.loop = true;
             else if (loop !== 1)
@@ -1431,10 +1455,10 @@ var xsystem35;
             }
         }
         get duration() {
-            return this.node.buffer.duration;
+            return this.buf.duration;
         }
         onended() {
-            this.startTime = null;
+            this.ended();
         }
     }
     class PCMSoundMixLR extends PCMSound {
@@ -1471,7 +1495,7 @@ var xsystem35;
         onended() {
             this.endCount++;
             if (this.endCount === 2)
-                this.startTime = null;
+                this.ended();
         }
     }
 })(xsystem35 || (xsystem35 = {}));
