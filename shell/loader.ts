@@ -102,11 +102,17 @@ namespace xsystem35 {
             let startTime = performance.now();
             let aldFiles = [];
             for (let e of await isofs.readDir(gamedata)) {
-                if (!e.name.toLowerCase().endsWith(isSystem3 ? '.dat' : '.ald'))
-                    continue;
+                if (isSystem3) {
+                    if (!e.name.toLowerCase().endsWith('.dat'))
+                        continue;
+                } else {
+                    if (e.name.match(/^\.|\.(exe|dll|txt|ini)$/i))
+                        continue;
+                    if (e.name.toLowerCase().endsWith('.ald'))
+                        aldFiles.push(e.name);
+                }
                 let chunks = await isofs.readFile(e);
                 registerDataFile(e.name, e.size, chunks);
-                aldFiles.push(e.name);
             }
             if (isSystem3) {
                 let savedir = await this.saveDir(isofs);
