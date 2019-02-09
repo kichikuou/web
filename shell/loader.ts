@@ -59,7 +59,7 @@ namespace xsystem35 {
             if (this.installing)
                 return;
             let name = file.name.toLowerCase();
-            if (name.endsWith('.img') || name.endsWith('.mdf')) {
+            if (name.endsWith('.img') || name.endsWith('.mdf') || name.endsWith('.iso')) {
                 this.imageFile = file;
                 $('#imgReady').classList.remove('notready');
                 $('#imgReady').textContent = file.name;
@@ -72,7 +72,7 @@ namespace xsystem35 {
             } else {
                 this.shell.addToast(name + ' は認識できない形式です。', 'warning');
             }
-            if (this.imageFile && this.metadataFile) {
+            if (this.imageFile && (this.metadataFile || this.imageFile.name.toLowerCase().endsWith('.iso'))) {
                 this.installing = true;
                 try {
                     this.imageReader = await CDImage.createReader(this.imageFile, this.metadataFile);

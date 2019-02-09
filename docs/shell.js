@@ -271,7 +271,10 @@ var CDImage;
     CDImage.DirEnt = DirEnt;
     function createReader(img, metadata) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (metadata.name.endsWith('.cue')) {
+            if (img.name.endsWith('.iso')) {
+                return new IsoReader(img);
+            }
+            else if (metadata.name.endsWith('.cue')) {
                 let reader = new ImgCueReader(img);
                 yield reader.parseCue(metadata);
                 return reader;
@@ -308,6 +311,24 @@ var CDImage;
         }
         resetImage(image) {
             this.image = image;
+        }
+    }
+    class IsoReader extends ImageReaderBase {
+        readSector(sector) {
+            return readFileAsArrayBuffer(this.image.slice(sector * 2048, (sector + 1) * 2048));
+        }
+        readSequentialSectors(startSector, length) {
+            return __awaiter(this, void 0, void 0, function* () {
+                let start = startSector * 2048;
+                let buf = yield readFileAsArrayBuffer(this.image.slice(start, start + length));
+                return [new Uint8Array(buf)];
+            });
+        }
+        maxTrack() {
+            return 1;
+        }
+        extractTrack(track) {
+            throw 'not implemented';
         }
     }
     class ImgCueReader extends ImageReaderBase {
@@ -567,7 +588,7 @@ var xsystem35;
                 if (this.installing)
                     return;
                 let name = file.name.toLowerCase();
-                if (name.endsWith('.img') || name.endsWith('.mdf')) {
+                if (name.endsWith('.img') || name.endsWith('.mdf') || name.endsWith('.iso')) {
                     this.imageFile = file;
                     $('#imgReady').classList.remove('notready');
                     $('#imgReady').textContent = file.name;
@@ -583,7 +604,7 @@ var xsystem35;
                 else {
                     this.shell.addToast(name + ' は認識できない形式です。', 'warning');
                 }
-                if (this.imageFile && this.metadataFile) {
+                if (this.imageFile && (this.metadataFile || this.imageFile.name.toLowerCase().endsWith('.iso'))) {
                     this.installing = true;
                     try {
                         this.imageReader = yield CDImage.createReader(this.imageFile, this.metadataFile);

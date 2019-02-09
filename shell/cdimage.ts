@@ -157,7 +157,9 @@ namespace CDImage {
     }
 
     export async function createReader(img: File, metadata: File) {
-        if (metadata.name.endsWith('.cue')) {
+        if (img.name.endsWith('.iso')) {
+            return new IsoReader(img);
+        } else if (metadata.name.endsWith('.cue')) {
             let reader = new ImgCueReader(img);
             await reader.parseCue(metadata);
             return reader;
@@ -193,6 +195,26 @@ namespace CDImage {
 
         resetImage(image: File) {
             this.image = image;
+        }
+    }
+
+    class IsoReader extends ImageReaderBase implements Reader {
+        readSector(sector: number): Promise<ArrayBuffer> {
+            return readFileAsArrayBuffer(this.image.slice(sector * 2048, (sector + 1) * 2048));
+        }
+
+        async readSequentialSectors(startSector: number, length: number): Promise<Uint8Array[]> {
+            let start = startSector * 2048;
+            let buf = await readFileAsArrayBuffer(this.image.slice(start, start + length));
+            return [new Uint8Array(buf)];
+        }
+
+        maxTrack(): number {
+            return 1;
+        }
+
+        extractTrack(track: number): Promise<Blob> {
+            throw 'not implemented';
         }
     }
 
