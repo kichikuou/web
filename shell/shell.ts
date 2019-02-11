@@ -9,6 +9,7 @@
 /// <reference path="zoom.ts" />
 /// <reference path="volume.ts" />
 /// <reference path="cdda.ts" />
+/// <reference path="midi.ts" />
 /// <reference path="audio.ts" />
 /// <reference path="toolbar.ts" />
 
@@ -23,6 +24,7 @@ namespace xsystem35 {
     export let fileSystemReady: Promise<any>;
     export let saveDirReady: Promise<typeof FS>;
     export let cdPlayer: CDPlayer;
+    export let midiPlayer: MIDIPlayer;
     export let audio: AudioManager;
     export let settings: Settings;
 
@@ -158,6 +160,8 @@ namespace xsystem35 {
         }
 
         loaded() {
+            if (this.loader.hasMidi)
+                xsystem35.midiPlayer = new MIDIPlayer();
             xsystem35.audio.init();
             $('#xsystem35').hidden = false;
             document.body.classList.add('game');

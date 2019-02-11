@@ -7,6 +7,7 @@
 namespace xsystem35 {
     export class FileLoader implements Loader {
         private tracks: File[] = [];
+        public hasMidi = false;
 
         constructor() {
             $('#fileselect').addEventListener('change', this.handleFileSelect.bind(this), false);
@@ -71,6 +72,8 @@ namespace xsystem35 {
                 let id = name.charAt(name.length - 5);
                 basename = name.slice(0, -6);
                 lines.push(resourceType[type] + id.toUpperCase() + ' ' + name);
+                if (type == 'm')
+                    this.hasMidi = true;
             }
             for (let i = 0; i < 26; i++) {
                 let id = String.fromCharCode(65 + i);

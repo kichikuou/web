@@ -552,6 +552,7 @@ var xsystem35;
         constructor(shell) {
             this.shell = shell;
             this.installing = false;
+            this.hasMidi = false;
             $('#fileselect').addEventListener('change', this.handleFileSelect.bind(this), false);
             document.body.ondragover = this.handleDragOver.bind(this);
             document.body.ondrop = this.handleDrop.bind(this);
@@ -702,6 +703,8 @@ var xsystem35;
                 let id = name.charAt(name.length - 5);
                 basename = name.slice(0, -6);
                 lines.push(resourceType[type] + id.toUpperCase() + ' ' + name);
+                if (type == 'm')
+                    this.hasMidi = true;
             }
             for (let i = 0; i < 26; i++) {
                 let id = String.fromCharCode(65 + i);
@@ -733,6 +736,7 @@ var xsystem35;
     class FileLoader {
         constructor() {
             this.tracks = [];
+            this.hasMidi = false;
             $('#fileselect').addEventListener('change', this.handleFileSelect.bind(this), false);
             document.body.ondragover = this.handleDragOver.bind(this);
             document.body.ondrop = this.handleDrop.bind(this);
@@ -790,6 +794,8 @@ var xsystem35;
                 let id = name.charAt(name.length - 5);
                 basename = name.slice(0, -6);
                 lines.push(resourceType[type] + id.toUpperCase() + ' ' + name);
+                if (type == 'm')
+                    this.hasMidi = true;
             }
             for (let i = 0; i < 26; i++) {
                 let id = String.fromCharCode(65 + i);
@@ -1261,6 +1267,60 @@ var xsystem35;
     }
     xsystem35.CDPlayer = CDPlayer;
 })(xsystem35 || (xsystem35 = {}));
+// Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
+// This source code is governed by the MIT License, see the LICENSE file.
+var xsystem35;
+(function (xsystem35) {
+    class MIDIPlayer {
+        constructor() {
+            Module.addRunDependency('timidity');
+            let script = document.createElement('script');
+            script.src = '/timidity/timidity.js';
+            script.onload = () => {
+                Module.removeRunDependency('timidity');
+                this.timidity = new Timidity('/timidity/');
+                this.timidity.on('error', this.onError.bind(this));
+                this.timidity.on('ended', this.onEnd.bind(this));
+            };
+            document.body.appendChild(script);
+        }
+        play(loop, data, datalen) {
+            this.timidity.load(Module.HEAPU8.subarray(data, data + datalen));
+            this.timidity.play();
+            this.loop = loop;
+        }
+        stop() {
+            this.loop = null;
+            this.timidity.pause();
+        }
+        pause() {
+            this.timidity.pause();
+        }
+        resume() {
+            this.timidity.play();
+        }
+        getPosition() {
+            return Math.round(this.timidity.currentTime * 1000);
+        }
+        setVolume(vol) {
+        }
+        getVolume() {
+            return 100;
+        }
+        onError() {
+            console.log('onError');
+        }
+        onEnd() {
+            if (this.loop !== null) {
+                if (--this.loop === 0)
+                    this.loop = null;
+                else
+                    this.timidity.play();
+            }
+        }
+    }
+    xsystem35.MIDIPlayer = MIDIPlayer;
+})(xsystem35 || (xsystem35 = {}));
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 /// <reference path="util.ts" />
@@ -1612,6 +1672,7 @@ var xsystem35;
 /// <reference path="zoom.ts" />
 /// <reference path="volume.ts" />
 /// <reference path="cdda.ts" />
+/// <reference path="midi.ts" />
 /// <reference path="audio.ts" />
 /// <reference path="toolbar.ts" />
 var xsystem35;
@@ -1742,6 +1803,8 @@ var xsystem35;
             return true;
         }
         loaded() {
+            if (this.loader.hasMidi)
+                xsystem35.midiPlayer = new xsystem35.MIDIPlayer();
             xsystem35.audio.init();
             $('#xsystem35').hidden = false;
             document.body.classList.add('game');

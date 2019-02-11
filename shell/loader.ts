@@ -8,6 +8,7 @@
 namespace xsystem35 {
     export interface Loader {
         getCDDA(track: number): Promise<Blob>;
+        hasMidi: boolean;
         reloadImage(): Promise<any>;
     }
 
@@ -16,6 +17,7 @@ namespace xsystem35 {
         private metadataFile: File;
         private imageReader: CDImage.Reader;
         private installing = false;
+        public hasMidi = false;
 
         constructor(private shell: System35Shell) {
             $('#fileselect').addEventListener('change', this.handleFileSelect.bind(this), false);
@@ -165,6 +167,8 @@ namespace xsystem35 {
                 let id = name.charAt(name.length - 5);
                 basename = name.slice(0, -6);
                 lines.push(resourceType[type] + id.toUpperCase() + ' ' + name);
+                if (type == 'm')
+                    this.hasMidi = true;
             }
             for (let i = 0; i < 26; i++) {
                 let id = String.fromCharCode(65 + i);
