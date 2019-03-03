@@ -1273,6 +1273,7 @@ var xsystem35;
 (function (xsystem35) {
     class MIDIPlayer {
         constructor() {
+            this.playing = false;
             Module.addRunDependency('timidity');
             let script = document.createElement('script');
             script.src = '/timidity/timidity.js';
@@ -1288,10 +1289,11 @@ var xsystem35;
         play(loop, data, datalen) {
             this.timidity.load(Module.HEAPU8.subarray(data, data + datalen));
             this.timidity.play();
-            this.loop = loop;
+            this.playing = true;
+            // NOTE: `loop` is ignored.
         }
         stop() {
-            this.loop = null;
+            this.playing = false;
             this.timidity.pause();
         }
         pause() {
@@ -1312,12 +1314,8 @@ var xsystem35;
             console.log('onError');
         }
         onEnd() {
-            if (this.loop !== null) {
-                if (--this.loop === 0)
-                    this.loop = null;
-                else
-                    this.timidity.play();
-            }
+            if (this.playing)
+                this.timidity.play();
         }
         removeSafariGestureRestriction() {
             if (typeof (webkitAudioContext) === 'undefined')

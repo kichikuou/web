@@ -15,7 +15,7 @@ namespace xsystem35 {
     declare var webkitAudioContext: any;
     export class MIDIPlayer {
         private timidity: Timidity;
-        private loop: number;
+        private playing = false;
 
         constructor() {
             Module.addRunDependency('timidity');
@@ -34,11 +34,12 @@ namespace xsystem35 {
         play(loop: number, data: number, datalen: number) {
             this.timidity.load(Module.HEAPU8.subarray(data, data + datalen));
             this.timidity.play();
-            this.loop = loop;
+            this.playing = true;
+            // NOTE: `loop` is ignored.
         }
 
         stop() {
-            this.loop = null;
+            this.playing = false;
             this.timidity.pause();
         }
 
@@ -67,12 +68,8 @@ namespace xsystem35 {
         }
 
         private onEnd() {
-            if (this.loop !== null) {
-                if (--this.loop === 0)
-                    this.loop = null;
-                else
-                    this.timidity.play();
-            }
+            if (this.playing)
+                this.timidity.play();
         }
 
         private removeSafariGestureRestriction() {
