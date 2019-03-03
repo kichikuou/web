@@ -8,9 +8,11 @@ declare class Timidity {
     pause(): void;
     on(event: string, callback: () => void): void;
     currentTime: number;
+    _audioContext: AudioContext;
 }
 
 namespace xsystem35 {
+    declare var webkitAudioContext: any;
     export class MIDIPlayer {
         private timidity: Timidity;
         private loop: number;
@@ -24,6 +26,7 @@ namespace xsystem35 {
                 this.timidity = new Timidity('/timidity/');
                 this.timidity.on('error', this.onError.bind(this));
                 this.timidity.on('ended', this.onEnd.bind(this));
+                this.removeSafariGestureRestriction();
             }
             document.body.appendChild(script);
         }
@@ -70,6 +73,23 @@ namespace xsystem35 {
                 else
                     this.timidity.play();
             }
+        }
+
+        private removeSafariGestureRestriction() {
+            if (typeof (webkitAudioContext) === 'undefined')
+                return;
+            let context = this.timidity._audioContext;
+            let handler = () => {
+                let src = context.createBufferSource();
+                src.buffer = context.createBuffer(1, 1, 22050);
+                src.connect(context.destination);
+                src.start();
+                console.log('MIDI AudioContext unlocked');
+                window.removeEventListener('touchend', handler);
+                window.removeEventListener('mouseup', handler);
+            };
+            window.addEventListener('touchend', handler);
+            window.addEventListener('mouseup', handler);
         }
     }
 }
