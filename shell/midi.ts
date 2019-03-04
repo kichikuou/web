@@ -2,7 +2,7 @@
 // This source code is governed by the MIT License, see the LICENSE file.
 
 declare class Timidity {
-    constructor(baseurl?: string);
+    constructor(dst: AudioNode, baseurl?: string);
     load(urlOrBuf: string | Uint8Array): void;
     play(): void;
     pause(): void;
@@ -14,6 +14,7 @@ declare class Timidity {
 namespace xsystem35 {
     declare var webkitAudioContext: any;
     export class MIDIPlayer {
+        private context: AudioContext;
         private timidity: Timidity;
         private playing = false;
 
@@ -23,10 +24,15 @@ namespace xsystem35 {
             script.src = '/timidity/timidity.js';
             script.onload = () => {
                 Module.removeRunDependency('timidity');
-                this.timidity = new Timidity('/timidity/');
+                if (typeof (webkitAudioContext) !== 'undefined') {
+                    this.context = new webkitAudioContext();
+                    this.removeSafariGestureRestriction();
+                } else {
+                    this.context = new AudioContext();
+                }
+                this.timidity = new Timidity(this.context.destination, '/timidity/');
                 this.timidity.on('error', this.onError.bind(this));
                 this.timidity.on('ended', this.onEnd.bind(this));
-                this.removeSafariGestureRestriction();
             }
             document.body.appendChild(script);
         }
@@ -73,13 +79,10 @@ namespace xsystem35 {
         }
 
         private removeSafariGestureRestriction() {
-            if (typeof (webkitAudioContext) === 'undefined')
-                return;
-            let context = this.timidity._audioContext;
             let handler = () => {
-                let src = context.createBufferSource();
-                src.buffer = context.createBuffer(1, 1, 22050);
-                src.connect(context.destination);
+                let src = this.context.createBufferSource();
+                src.buffer = this.context.createBuffer(1, 1, 22050);
+                src.connect(this.context.destination);
                 src.start();
                 console.log('MIDI AudioContext unlocked');
                 window.removeEventListener('touchend', handler);

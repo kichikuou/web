@@ -1279,10 +1279,16 @@ var xsystem35;
             script.src = '/timidity/timidity.js';
             script.onload = () => {
                 Module.removeRunDependency('timidity');
-                this.timidity = new Timidity('/timidity/');
+                if (typeof (webkitAudioContext) !== 'undefined') {
+                    this.context = new webkitAudioContext();
+                    this.removeSafariGestureRestriction();
+                }
+                else {
+                    this.context = new AudioContext();
+                }
+                this.timidity = new Timidity(this.context.destination, '/timidity/');
                 this.timidity.on('error', this.onError.bind(this));
                 this.timidity.on('ended', this.onEnd.bind(this));
-                this.removeSafariGestureRestriction();
             };
             document.body.appendChild(script);
         }
@@ -1318,13 +1324,10 @@ var xsystem35;
                 this.timidity.play();
         }
         removeSafariGestureRestriction() {
-            if (typeof (webkitAudioContext) === 'undefined')
-                return;
-            let context = this.timidity._audioContext;
             let handler = () => {
-                let src = context.createBufferSource();
-                src.buffer = context.createBuffer(1, 1, 22050);
-                src.connect(context.destination);
+                let src = this.context.createBufferSource();
+                src.buffer = this.context.createBuffer(1, 1, 22050);
+                src.connect(this.context.destination);
                 src.start();
                 console.log('MIDI AudioContext unlocked');
                 window.removeEventListener('touchend', handler);
