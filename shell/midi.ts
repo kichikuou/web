@@ -13,7 +13,10 @@ declare class Timidity {
 namespace xsystem35 {
     export class MIDIPlayer {
         private timidity: Timidity;
+        private gain: GainNode;
         private playing = false;
+        private fadeFinishTime = 0;
+        private stopTimer: number = null;
 
         constructor(destNode: AudioNode) {
             Module.addRunDependency('timidity');
@@ -22,7 +25,10 @@ namespace xsystem35 {
             script.onload = () => {
                 Module.removeRunDependency('timidity');
 
-                this.timidity = new Timidity(destNode, '/timidity/');
+                this.gain = destNode.context.createGain();
+                this.gain.connect(destNode);
+                this.timidity = new Timidity(this.gain, '/timidity/');
+                this.timidity.on('playing', this.onPlaying.bind(this));
                 this.timidity.on('error', this.onError.bind(this));
                 this.timidity.on('ended', this.onEnd.bind(this));
             }
@@ -54,11 +60,50 @@ namespace xsystem35 {
         }
 
         setVolume(vol: number) {
-
+            this.gain.gain.value = vol / 100;
         }
 
         getVolume(): number {
-            return 100;
+            return this.gain.gain.value * 100;
+        }
+
+        fadeStart(ms: number, vol: number, stop: number) {
+            // Cancel previous fade
+            this.gain.gain.cancelScheduledValues(this.gain.context.currentTime);
+            if (this.stopTimer !== null) {
+                clearTimeout(this.stopTimer);
+                this.stopTimer = null;
+            }
+
+            // Resetting the volume while not playing?
+            if (ms === 0 && vol === 100 && (this.stopTimer || !this.playing)) {
+                // No worries, playback always starts with volume 100%
+                return;
+            }
+
+            this.gain.gain.linearRampToValueAtTime(vol / 100, this.gain.context.currentTime + ms / 1000);
+            this.fadeFinishTime = performance.now() + ms;
+            if (stop) {
+                if (ms === 0)
+                    this.stop();
+                else {
+                    this.stopTimer = setTimeout(() => {
+                        this.stop();
+                        this.stopTimer = null;
+                    }, ms);
+                }
+            }
+        }
+
+        isFading(): number {
+            return performance.now() < this.fadeFinishTime ? 1 : 0;
+        }
+
+        private onPlaying(playbackTime: number) {
+            if (!playbackTime)
+                return;
+            // Reset volume to 100% at the start of playback
+            this.gain.gain.setValueAtTime(1, playbackTime);
         }
 
         private onError() {
