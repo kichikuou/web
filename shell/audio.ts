@@ -2,48 +2,17 @@
 // This source code is governed by the MIT License, see the LICENSE file.
 
 /// <reference path="util.ts" />
-/// <reference path="volume.ts" />
 
 namespace xsystem35 {
     declare var webkitAudioContext: any;
     export class AudioManager {
-        private context: AudioContext;
-        private masterGain: GainNode;
         private slots: PCMSound[];
         private bufCache: AudioBuffer[];
-        private isSafari: boolean;
 
-        constructor(private volumeControl: VolumeControl) {
+        constructor(private destNode: AudioNode) {
             this.slots = [];
             this.bufCache = [];
             document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this));
-            if (typeof (webkitAudioContext) !== 'undefined') {
-                this.context = new webkitAudioContext();
-                this.isSafari = true;
-                this.removeUserGestureRestriction();
-            }
-        }
-        init() {
-            if (!this.context)
-                this.context = new AudioContext();
-            this.masterGain = this.context.createGain();
-            this.masterGain.connect(this.context.destination);
-            this.volumeControl.addEventListener(this.onVolumeChanged.bind(this));
-            this.masterGain.gain.value = this.volumeControl.volume();
-        }
-
-        private removeUserGestureRestriction() {
-            let handler = () => {
-                let src = this.context.createBufferSource();
-                src.buffer = this.context.createBuffer(1, 1, 22050);
-                src.connect(this.context.destination);
-                src.start();
-                console.log('AudioContext unlocked');
-                window.removeEventListener('touchend', handler);
-                window.removeEventListener('mouseup', handler);
-            };
-            window.addEventListener('touchend', handler);
-            window.addEventListener('mouseup', handler);
         }
 
         private load(no: number): Promise<AudioBuffer> {
@@ -51,13 +20,17 @@ namespace xsystem35 {
             if (!buf)
                 return Promise.reject('Failed to open wave ' + no);
 
+            // If the AudioContext was not created inside a user-initiated event
+            // handler, then it will be suspended. Attempt to resume it.
+            this.destNode.context.resume();
+
             let decoded: Promise<AudioBuffer>;
-            if (this.isSafari) {
+            if (typeof (webkitAudioContext) !== 'undefined') {  // Safari
                 decoded = new Promise((resolve, reject) => {
-                    this.context.decodeAudioData(buf, resolve, reject);
+                    this.destNode.context.decodeAudioData(buf, resolve, reject);
                 });
             } else {
-                decoded = this.context.decodeAudioData(buf);
+                decoded = this.destNode.context.decodeAudioData(buf);
             }
             return decoded.then((audioBuf) => {
                 this.bufCache[no] = audioBuf;
@@ -80,11 +53,11 @@ namespace xsystem35 {
             return EmterpreterAsync.handle((resume: (f: () => Status) => void) => {
                 this.pcm_stop(slot);
                 if (this.bufCache[no]) {
-                    this.slots[slot] = new PCMSoundSimple(this.masterGain, this.bufCache[no]);
+                    this.slots[slot] = new PCMSoundSimple(this.destNode, this.bufCache[no]);
                     return resume(() => Status.OK);
                 }
                 this.load(no).then((audioBuf) => {
-                    this.slots[slot] = new PCMSoundSimple(this.masterGain, audioBuf);
+                    this.slots[slot] = new PCMSoundSimple(this.destNode, audioBuf);
                     resume(() => Status.OK);
                 }).catch((err) => {
                     gaException({type: 'PCM', err});
@@ -97,7 +70,7 @@ namespace xsystem35 {
             return EmterpreterAsync.handle((resume: (f: () => Status) => void) => {
                 this.pcm_stop(slot);
                 if (this.bufCache[noL] && this.bufCache[noR]) {
-                    this.slots[slot] = new PCMSoundMixLR(this.masterGain, this.bufCache[noL], this.bufCache[noR]);
+                    this.slots[slot] = new PCMSoundMixLR(this.destNode, this.bufCache[noL], this.bufCache[noR]);
                     return resume(() => Status.OK);
                 }
                 let ps: [Promise<AudioBuffer>, Promise<AudioBuffer>] = [
@@ -105,7 +78,7 @@ namespace xsystem35 {
                     this.bufCache[noR] ? Promise.resolve(this.bufCache[noR]) : this.load(noR),
                 ];
                 Promise.all(ps).then((bufs) => {
-                    this.slots[slot] = new PCMSoundMixLR(this.masterGain, bufs[0], bufs[1]);
+                    this.slots[slot] = new PCMSoundMixLR(this.destNode, bufs[0], bufs[1]);
                     resume(() => Status.OK);
                 }).catch((err) => {
                     gaException({type: 'PCM', err});
@@ -183,10 +156,6 @@ namespace xsystem35 {
         private onVisibilityChange() {
             if (document.hidden)
                 this.bufCache = [];
-        }
-
-        private onVolumeChanged(evt: CustomEvent) {
-            this.masterGain.gain.value = evt.detail;
         }
     }
 

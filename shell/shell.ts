@@ -62,7 +62,7 @@ namespace xsystem35 {
             xsystem35.cdPlayer = new CDPlayer(this.loader, this.volumeControl);
             this.zoom = new ZoomManager();
             this.toolbar = new ToolBar();
-            xsystem35.audio = new AudioManager(this.volumeControl);
+            xsystem35.audio = new AudioManager(this.volumeControl.audioNode());
             xsystem35.settings = new Settings();
         }
 
@@ -161,8 +161,7 @@ namespace xsystem35 {
 
         loaded() {
             if (this.loader.hasMidi)
-                xsystem35.midiPlayer = new MIDIPlayer(this.volumeControl);
-            xsystem35.audio.init();
+                xsystem35.midiPlayer = new MIDIPlayer(this.volumeControl.audioNode());
             $('#xsystem35').hidden = false;
             document.body.classList.add('game');
             $('#toolbar').classList.remove('before-game-start');

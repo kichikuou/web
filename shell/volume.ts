@@ -5,7 +5,12 @@
 /// <reference path="config.ts" />
 
 namespace xsystem35 {
+    declare var webkitAudioContext: any;
+
     export class VolumeControl {
+        private audioContext: AudioContext;
+        private masterGain: GainNode;
+
         private vol: number;  // 0.0 - 1.0
         private muted: boolean;
         private elem: HTMLElement;
@@ -24,6 +29,35 @@ namespace xsystem35 {
             this.icon.addEventListener('click', this.onIconClicked.bind(this));
             this.slider.addEventListener('input', this.onSliderValueChanged.bind(this));
             this.slider.addEventListener('change', this.onSliderValueSettled.bind(this));
+
+            if (typeof (webkitAudioContext) !== 'undefined') {
+                this.audioContext = new webkitAudioContext();
+                this.removeUserGestureRestriction();
+            } else {
+                this.audioContext = new AudioContext();
+            }
+            this.masterGain = this.audioContext.createGain();
+            this.masterGain.connect(this.audioContext.destination);
+            this.addEventListener(this.onVolumeChanged.bind(this));
+            this.masterGain.gain.value = this.volume();
+        }
+
+        audioNode(): AudioNode {
+            return this.masterGain;
+        }
+
+        private removeUserGestureRestriction() {
+            let handler = () => {
+                let src = this.audioContext.createBufferSource();
+                src.buffer = this.audioContext.createBuffer(1, 1, 22050);
+                src.connect(this.audioContext.destination);
+                src.start();
+                console.log('AudioContext unlocked');
+                window.removeEventListener('touchend', handler);
+                window.removeEventListener('mouseup', handler);
+            };
+            window.addEventListener('touchend', handler);
+            window.addEventListener('mouseup', handler);
         }
 
         volume(): number {
@@ -70,6 +104,10 @@ namespace xsystem35 {
         private dispatchEvent() {
             let event = new CustomEvent('volumechange', { detail: this.volume() });
             this.elem.dispatchEvent(event);
+        }
+
+        private onVolumeChanged(evt: CustomEvent) {
+            this.masterGain.gain.value = evt.detail;
         }
     }
 }

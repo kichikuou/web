@@ -1088,6 +1088,33 @@ var xsystem35;
             this.icon.addEventListener('click', this.onIconClicked.bind(this));
             this.slider.addEventListener('input', this.onSliderValueChanged.bind(this));
             this.slider.addEventListener('change', this.onSliderValueSettled.bind(this));
+            if (typeof (webkitAudioContext) !== 'undefined') {
+                this.audioContext = new webkitAudioContext();
+                this.removeUserGestureRestriction();
+            }
+            else {
+                this.audioContext = new AudioContext();
+            }
+            this.masterGain = this.audioContext.createGain();
+            this.masterGain.connect(this.audioContext.destination);
+            this.addEventListener(this.onVolumeChanged.bind(this));
+            this.masterGain.gain.value = this.volume();
+        }
+        audioNode() {
+            return this.masterGain;
+        }
+        removeUserGestureRestriction() {
+            let handler = () => {
+                let src = this.audioContext.createBufferSource();
+                src.buffer = this.audioContext.createBuffer(1, 1, 22050);
+                src.connect(this.audioContext.destination);
+                src.start();
+                console.log('AudioContext unlocked');
+                window.removeEventListener('touchend', handler);
+                window.removeEventListener('mouseup', handler);
+            };
+            window.addEventListener('touchend', handler);
+            window.addEventListener('mouseup', handler);
         }
         volume() {
             return this.muted ? 0 : parseInt(this.slider.value, 10) / 100;
@@ -1128,6 +1155,9 @@ var xsystem35;
         dispatchEvent() {
             let event = new CustomEvent('volumechange', { detail: this.volume() });
             this.elem.dispatchEvent(event);
+        }
+        onVolumeChanged(evt) {
+            this.masterGain.gain.value = evt.detail;
         }
     }
     xsystem35.VolumeControl = VolumeControl;
@@ -1272,26 +1302,14 @@ var xsystem35;
 var xsystem35;
 (function (xsystem35) {
     class MIDIPlayer {
-        constructor(volumeControl) {
-            this.volumeControl = volumeControl;
+        constructor(destNode) {
             this.playing = false;
             Module.addRunDependency('timidity');
             let script = document.createElement('script');
             script.src = '/timidity/timidity.js';
             script.onload = () => {
                 Module.removeRunDependency('timidity');
-                if (typeof (webkitAudioContext) !== 'undefined') {
-                    this.context = new webkitAudioContext();
-                    this.removeSafariGestureRestriction();
-                }
-                else {
-                    this.context = new AudioContext();
-                }
-                this.masterGain = this.context.createGain();
-                this.masterGain.connect(this.context.destination);
-                this.volumeControl.addEventListener(this.onVolumeChanged.bind(this));
-                this.masterGain.gain.value = this.volumeControl.volume();
-                this.timidity = new Timidity(this.masterGain, '/timidity/');
+                this.timidity = new Timidity(destNode, '/timidity/');
                 this.timidity.on('error', this.onError.bind(this));
                 this.timidity.on('ended', this.onEnd.bind(this));
             };
@@ -1328,76 +1346,36 @@ var xsystem35;
             if (this.playing)
                 this.timidity.play();
         }
-        onVolumeChanged(evt) {
-            this.masterGain.gain.value = evt.detail;
-        }
-        removeSafariGestureRestriction() {
-            let handler = () => {
-                let src = this.context.createBufferSource();
-                src.buffer = this.context.createBuffer(1, 1, 22050);
-                src.connect(this.context.destination);
-                src.start();
-                console.log('MIDI AudioContext unlocked');
-                window.removeEventListener('touchend', handler);
-                window.removeEventListener('mouseup', handler);
-            };
-            window.addEventListener('touchend', handler);
-            window.addEventListener('mouseup', handler);
-        }
     }
     xsystem35.MIDIPlayer = MIDIPlayer;
 })(xsystem35 || (xsystem35 = {}));
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 /// <reference path="util.ts" />
-/// <reference path="volume.ts" />
 var xsystem35;
 (function (xsystem35) {
     class AudioManager {
-        constructor(volumeControl) {
-            this.volumeControl = volumeControl;
+        constructor(destNode) {
+            this.destNode = destNode;
             this.slots = [];
             this.bufCache = [];
             document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this));
-            if (typeof (webkitAudioContext) !== 'undefined') {
-                this.context = new webkitAudioContext();
-                this.isSafari = true;
-                this.removeUserGestureRestriction();
-            }
-        }
-        init() {
-            if (!this.context)
-                this.context = new AudioContext();
-            this.masterGain = this.context.createGain();
-            this.masterGain.connect(this.context.destination);
-            this.volumeControl.addEventListener(this.onVolumeChanged.bind(this));
-            this.masterGain.gain.value = this.volumeControl.volume();
-        }
-        removeUserGestureRestriction() {
-            let handler = () => {
-                let src = this.context.createBufferSource();
-                src.buffer = this.context.createBuffer(1, 1, 22050);
-                src.connect(this.context.destination);
-                src.start();
-                console.log('AudioContext unlocked');
-                window.removeEventListener('touchend', handler);
-                window.removeEventListener('mouseup', handler);
-            };
-            window.addEventListener('touchend', handler);
-            window.addEventListener('mouseup', handler);
         }
         load(no) {
             let buf = this.getWave(no);
             if (!buf)
                 return Promise.reject('Failed to open wave ' + no);
+            // If the AudioContext was not created inside a user-initiated event
+            // handler, then it will be suspended. Attempt to resume it.
+            this.destNode.context.resume();
             let decoded;
-            if (this.isSafari) {
+            if (typeof (webkitAudioContext) !== 'undefined') { // Safari
                 decoded = new Promise((resolve, reject) => {
-                    this.context.decodeAudioData(buf, resolve, reject);
+                    this.destNode.context.decodeAudioData(buf, resolve, reject);
                 });
             }
             else {
-                decoded = this.context.decodeAudioData(buf);
+                decoded = this.destNode.context.decodeAudioData(buf);
             }
             return decoded.then((audioBuf) => {
                 this.bufCache[no] = audioBuf;
@@ -1418,11 +1396,11 @@ var xsystem35;
             return EmterpreterAsync.handle((resume) => {
                 this.pcm_stop(slot);
                 if (this.bufCache[no]) {
-                    this.slots[slot] = new PCMSoundSimple(this.masterGain, this.bufCache[no]);
+                    this.slots[slot] = new PCMSoundSimple(this.destNode, this.bufCache[no]);
                     return resume(() => xsystem35.Status.OK);
                 }
                 this.load(no).then((audioBuf) => {
-                    this.slots[slot] = new PCMSoundSimple(this.masterGain, audioBuf);
+                    this.slots[slot] = new PCMSoundSimple(this.destNode, audioBuf);
                     resume(() => xsystem35.Status.OK);
                 }).catch((err) => {
                     gaException({ type: 'PCM', err });
@@ -1434,7 +1412,7 @@ var xsystem35;
             return EmterpreterAsync.handle((resume) => {
                 this.pcm_stop(slot);
                 if (this.bufCache[noL] && this.bufCache[noR]) {
-                    this.slots[slot] = new PCMSoundMixLR(this.masterGain, this.bufCache[noL], this.bufCache[noR]);
+                    this.slots[slot] = new PCMSoundMixLR(this.destNode, this.bufCache[noL], this.bufCache[noR]);
                     return resume(() => xsystem35.Status.OK);
                 }
                 let ps = [
@@ -1442,7 +1420,7 @@ var xsystem35;
                     this.bufCache[noR] ? Promise.resolve(this.bufCache[noR]) : this.load(noR),
                 ];
                 Promise.all(ps).then((bufs) => {
-                    this.slots[slot] = new PCMSoundMixLR(this.masterGain, bufs[0], bufs[1]);
+                    this.slots[slot] = new PCMSoundMixLR(this.destNode, bufs[0], bufs[1]);
                     resume(() => xsystem35.Status.OK);
                 }).catch((err) => {
                     gaException({ type: 'PCM', err });
@@ -1510,9 +1488,6 @@ var xsystem35;
         onVisibilityChange() {
             if (document.hidden)
                 this.bufCache = [];
-        }
-        onVolumeChanged(evt) {
-            this.masterGain.gain.value = evt.detail;
         }
     }
     xsystem35.AudioManager = AudioManager;
@@ -1737,7 +1712,7 @@ var xsystem35;
             xsystem35.cdPlayer = new xsystem35.CDPlayer(this.loader, this.volumeControl);
             this.zoom = new xsystem35.ZoomManager();
             this.toolbar = new xsystem35.ToolBar();
-            xsystem35.audio = new xsystem35.AudioManager(this.volumeControl);
+            xsystem35.audio = new xsystem35.AudioManager(this.volumeControl.audioNode());
             xsystem35.settings = new xsystem35.Settings();
         }
         parseParams(searchParams) {
@@ -1830,8 +1805,7 @@ var xsystem35;
         }
         loaded() {
             if (this.loader.hasMidi)
-                xsystem35.midiPlayer = new xsystem35.MIDIPlayer(this.volumeControl);
-            xsystem35.audio.init();
+                xsystem35.midiPlayer = new xsystem35.MIDIPlayer(this.volumeControl.audioNode());
             $('#xsystem35').hidden = false;
             document.body.classList.add('game');
             $('#toolbar').classList.remove('before-game-start');
