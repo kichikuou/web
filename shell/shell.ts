@@ -161,7 +161,7 @@ namespace xsystem35 {
 
         loaded() {
             if (this.loader.hasMidi)
-                xsystem35.midiPlayer = new MIDIPlayer();
+                xsystem35.midiPlayer = new MIDIPlayer(this.volumeControl);
             xsystem35.audio.init();
             $('#xsystem35').hidden = false;
             document.body.classList.add('game');

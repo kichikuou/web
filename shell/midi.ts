@@ -8,29 +8,35 @@ declare class Timidity {
     pause(): void;
     on(event: string, callback: () => void): void;
     currentTime: number;
-    _audioContext: AudioContext;
 }
 
 namespace xsystem35 {
     declare var webkitAudioContext: any;
     export class MIDIPlayer {
         private context: AudioContext;
+        private masterGain: GainNode;
         private timidity: Timidity;
         private playing = false;
 
-        constructor() {
+        constructor(private volumeControl: VolumeControl) {
             Module.addRunDependency('timidity');
             let script = document.createElement('script');
             script.src = '/timidity/timidity.js';
             script.onload = () => {
                 Module.removeRunDependency('timidity');
+
                 if (typeof (webkitAudioContext) !== 'undefined') {
                     this.context = new webkitAudioContext();
                     this.removeSafariGestureRestriction();
                 } else {
                     this.context = new AudioContext();
                 }
-                this.timidity = new Timidity(this.context.destination, '/timidity/');
+                this.masterGain = this.context.createGain();
+                this.masterGain.connect(this.context.destination);
+                this.volumeControl.addEventListener(this.onVolumeChanged.bind(this));
+                this.masterGain.gain.value = this.volumeControl.volume();
+
+                this.timidity = new Timidity(this.masterGain, '/timidity/');
                 this.timidity.on('error', this.onError.bind(this));
                 this.timidity.on('ended', this.onEnd.bind(this));
             }
@@ -76,6 +82,10 @@ namespace xsystem35 {
         private onEnd() {
             if (this.playing)
                 this.timidity.play();
+        }
+
+        private onVolumeChanged(evt: CustomEvent) {
+            this.masterGain.gain.value = evt.detail;
         }
 
         private removeSafariGestureRestriction() {

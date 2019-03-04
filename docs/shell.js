@@ -1272,7 +1272,8 @@ var xsystem35;
 var xsystem35;
 (function (xsystem35) {
     class MIDIPlayer {
-        constructor() {
+        constructor(volumeControl) {
+            this.volumeControl = volumeControl;
             this.playing = false;
             Module.addRunDependency('timidity');
             let script = document.createElement('script');
@@ -1286,7 +1287,11 @@ var xsystem35;
                 else {
                     this.context = new AudioContext();
                 }
-                this.timidity = new Timidity(this.context.destination, '/timidity/');
+                this.masterGain = this.context.createGain();
+                this.masterGain.connect(this.context.destination);
+                this.volumeControl.addEventListener(this.onVolumeChanged.bind(this));
+                this.masterGain.gain.value = this.volumeControl.volume();
+                this.timidity = new Timidity(this.masterGain, '/timidity/');
                 this.timidity.on('error', this.onError.bind(this));
                 this.timidity.on('ended', this.onEnd.bind(this));
             };
@@ -1322,6 +1327,9 @@ var xsystem35;
         onEnd() {
             if (this.playing)
                 this.timidity.play();
+        }
+        onVolumeChanged(evt) {
+            this.masterGain.gain.value = evt.detail;
         }
         removeSafariGestureRestriction() {
             let handler = () => {
@@ -1822,7 +1830,7 @@ var xsystem35;
         }
         loaded() {
             if (this.loader.hasMidi)
-                xsystem35.midiPlayer = new xsystem35.MIDIPlayer();
+                xsystem35.midiPlayer = new xsystem35.MIDIPlayer(this.volumeControl);
             xsystem35.audio.init();
             $('#xsystem35').hidden = false;
             document.body.classList.add('game');
