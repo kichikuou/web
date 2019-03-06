@@ -1302,10 +1302,12 @@ var xsystem35;
 var xsystem35;
 (function (xsystem35) {
     class MIDIPlayer {
-        constructor(destNode) {
+        constructor() {
             this.playing = false;
             this.fadeFinishTime = 0;
             this.stopTimer = null;
+        }
+        init(destNode) {
             Module.addRunDependency('timidity');
             let script = document.createElement('script');
             script.src = '/timidity/timidity.js';
@@ -1321,31 +1323,47 @@ var xsystem35;
             document.body.appendChild(script);
         }
         play(loop, data, datalen) {
+            if (!this.timidity)
+                return;
             this.timidity.load(Module.HEAPU8.subarray(data, data + datalen));
             this.timidity.play();
             this.playing = true;
             // NOTE: `loop` is ignored.
         }
         stop() {
+            if (!this.timidity)
+                return;
             this.playing = false;
             this.timidity.pause();
         }
         pause() {
+            if (!this.timidity)
+                return;
             this.timidity.pause();
         }
         resume() {
+            if (!this.timidity)
+                return;
             this.timidity.play();
         }
         getPosition() {
+            if (!this.timidity)
+                return 0;
             return Math.round(this.timidity.currentTime * 1000);
         }
         setVolume(vol) {
+            if (!this.timidity)
+                return;
             this.gain.gain.value = vol / 100;
         }
         getVolume() {
+            if (!this.timidity)
+                return 100;
             return this.gain.gain.value * 100;
         }
         fadeStart(ms, vol, stop) {
+            if (!this.timidity)
+                return;
             // Cancel previous fade
             this.gain.gain.cancelScheduledValues(this.gain.context.currentTime);
             if (this.stopTimer !== null) {
@@ -1371,6 +1389,8 @@ var xsystem35;
             }
         }
         isFading() {
+            if (!this.timidity)
+                return 0;
             return performance.now() < this.fadeFinishTime ? 1 : 0;
         }
         onPlaying(playbackTime) {
@@ -1750,6 +1770,7 @@ var xsystem35;
                 this.loader = new xsystem35.ImageLoader(this);
             this.volumeControl = new xsystem35.VolumeControl();
             xsystem35.cdPlayer = new xsystem35.CDPlayer(this.loader, this.volumeControl);
+            xsystem35.midiPlayer = new xsystem35.MIDIPlayer();
             this.zoom = new xsystem35.ZoomManager();
             this.toolbar = new xsystem35.ToolBar();
             xsystem35.audio = new xsystem35.AudioManager(this.volumeControl.audioNode());
@@ -1845,7 +1866,7 @@ var xsystem35;
         }
         loaded() {
             if (this.loader.hasMidi)
-                xsystem35.midiPlayer = new xsystem35.MIDIPlayer(this.volumeControl.audioNode());
+                xsystem35.midiPlayer.init(this.volumeControl.audioNode());
             $('#xsystem35').hidden = false;
             document.body.classList.add('game');
             $('#toolbar').classList.remove('before-game-start');

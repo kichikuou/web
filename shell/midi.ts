@@ -18,7 +18,7 @@ namespace xsystem35 {
         private fadeFinishTime = 0;
         private stopTimer: number = null;
 
-        constructor(destNode: AudioNode) {
+        init(destNode: AudioNode) {
             Module.addRunDependency('timidity');
             let script = document.createElement('script');
             script.src = '/timidity/timidity.js';
@@ -36,6 +36,8 @@ namespace xsystem35 {
         }
 
         play(loop: number, data: number, datalen: number) {
+            if (!this.timidity)
+                return;
             this.timidity.load(Module.HEAPU8.subarray(data, data + datalen));
             this.timidity.play();
             this.playing = true;
@@ -43,31 +45,45 @@ namespace xsystem35 {
         }
 
         stop() {
+            if (!this.timidity)
+                return;
             this.playing = false;
             this.timidity.pause();
         }
 
         pause() {
+            if (!this.timidity)
+                return;
             this.timidity.pause();
         }
 
         resume() {
+            if (!this.timidity)
+                return;
             this.timidity.play();
         }
 
         getPosition(): number {
+            if (!this.timidity)
+                return 0;
             return Math.round(this.timidity.currentTime * 1000);
         }
 
         setVolume(vol: number) {
+            if (!this.timidity)
+                return;
             this.gain.gain.value = vol / 100;
         }
 
         getVolume(): number {
+            if (!this.timidity)
+                return 100;
             return this.gain.gain.value * 100;
         }
 
         fadeStart(ms: number, vol: number, stop: number) {
+            if (!this.timidity)
+                return;
             // Cancel previous fade
             this.gain.gain.cancelScheduledValues(this.gain.context.currentTime);
             if (this.stopTimer !== null) {
@@ -96,6 +112,8 @@ namespace xsystem35 {
         }
 
         isFading(): number {
+            if (!this.timidity)
+                return 0;
             return performance.now() < this.fadeFinishTime ? 1 : 0;
         }
 
