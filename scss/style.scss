@@ -67,8 +67,21 @@ canvas.emscripten {
 	image-rendering: -moz-crisp-edges;
 }
 
-.settings section > div {
-	padding-left: 2rem;
+.modal-container {
+    width: initial;
+}
+
+.modal.active .modal-overlay {
+    background-color: rgba(69,77,93,.5);
+}
+
+.settings {
+    section > div {
+        padding-left: 1rem;
+    }
+    select {
+        width: initial;
+    }
 }
 
 .toast-container {

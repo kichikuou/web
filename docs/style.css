@@ -44,13 +44,13 @@ header {
     background-color: rgba(69, 77, 93, 0.7);
   }
   header.closeable.closed .navbar {
-    top: -42px;
+    top: -44px;
   }
 }
 .navbar {
   max-width: 640px;
   margin: 0 auto;
-  padding: 0.5rem 0;
+  padding: 0.2rem 0;
   flex-wrap: nowrap;
 }
 .navbar .navbar-center {
@@ -66,6 +66,8 @@ header {
 .navbar .btn-link {
   font-size: large;
   color: #ccc;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
 }
 .navbar .btn.btn-link:focus,
 .navbar .btn.btn-link:hover,
@@ -97,8 +99,8 @@ header {
   margin: 2ex auto 0;
 }
 #loader h1 {
-  margin: 2rem auto;
-  font-size: 3.2rem;
+  margin: 1rem auto;
+  font-size: 1.6rem;
 }
 #loader ul {
   list-style-type: none;
@@ -199,8 +201,19 @@ canvas.emscripten {
   image-rendering: -moz-crisp-edges;
 }
 
+.modal-container {
+  width: initial;
+}
+
+.modal.active .modal-overlay {
+  background-color: rgba(69, 77, 93, 0.5);
+}
+
 .settings section > div {
-  padding-left: 2rem;
+  padding-left: 1rem;
+}
+.settings select {
+  width: initial;
 }
 
 .toast-container {

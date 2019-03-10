@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>鬼畜王 on Web</title>
     <meta name="description" content="アリスソフトの18禁ゲーム「鬼畜王ランス」等をWebブラウザ上で遊べるようにしたものです。">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spectre.css/0.2.14/spectre.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spectre.css/0.5.8/spectre.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="preload" as="font" type="font/woff2" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/fonts/fontawesome-webfont.woff2?v=4.3.0" crossorigin>
@@ -25,17 +25,17 @@
     </div>
     <div class="navbar">
       <section class="navbar-center">
-        <span class="navbar-brand text-ellipsis ml-5">鬼畜王 on Web</span>
+        <span class="navbar-brand text-ellipsis ml-2">鬼畜王 on Web</span>
       </section>
       <section class="navbar-section">
-        <div id="volume-control" class="mr-10 hidden-until-game-start">
+        <div id="volume-control" class="mr-2 hidden-until-game-start">
           <i id="volume-control-icon" class="fa fa-volume-up tooltip tooltip-bottom" data-tooltip="ミュート"></i>
           <input id="volume-control-slider" type="range" class="tooltip tooltip-bottom" data-tooltip="音量">
         </div>
 
-        <button id="screenshot-button" class="btn btn-link tooltip tooltip-bottom mr-10 hidden-until-game-start" data-tooltip="スクリーンショット"><i class="fa fa-camera"></i></button>
-        <button id="settings-button" class="btn btn-link tooltip tooltip-bottom mr-10" data-tooltip="設定"><i class="fa fa-cog"></i></button>
-        <a class="btn btn-link tooltip tooltip-bottom" target="_blank" href="help.html" data-tooltip="ヘルプ"><i class="fa fa-question-circle mr-10"></i></a>
+        <button id="screenshot-button" class="btn btn-link tooltip tooltip-bottom mr-2 hidden-until-game-start" data-tooltip="スクリーンショット"><i class="fa fa-camera"></i></button>
+        <button id="settings-button" class="btn btn-link tooltip tooltip-bottom mr-2" data-tooltip="設定"><i class="fa fa-cog"></i></button>
+        <a class="btn btn-link tooltip tooltip-bottom" target="_blank" href="help.html" data-tooltip="ヘルプ"><i class="fa fa-question-circle mr-2"></i></a>
         <button id="toolbar-close-button" class="btn btn-link"><i class="fa fa-angle-up"></i></button>
       </section>
     </div>
@@ -84,7 +84,7 @@
         <section>
           <h5>表示</h5>
           <div class="form-group">
-            <span class="mr-5">拡大率:</span>
+            <span class="mr-2">拡大率:</span>
             <select id="zoom" class="form-select">
               <option value="1">100%</option>
               <option value="1.25">125%</option>
@@ -121,7 +121,7 @@
         <section>
           <h5>セーブデータ</h5>
           <div>
-            <button id="downloadSaveData" class="btn mr-10" disabled>ZIPに保存</button>
+            <button id="downloadSaveData" class="btn mr-2" disabled>ZIPに保存</button>
             <button id="uploadSaveData" class="btn">ZIPから復元</button>
           </div>
         </section>

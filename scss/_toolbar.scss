@@ -46,7 +46,7 @@ header {
             background-color: rgba(69,77,93,0.7);
         }
         .navbar {
-            top: -42px;
+            top: -44px;
         }
     }
 }
@@ -54,7 +54,7 @@ header {
 .navbar {
     max-width: 640px;
     margin: 0 auto;
-    padding: 0.5rem 0;
+    padding: 0.2rem 0;
     flex-wrap: nowrap;
 
     .navbar-center {
@@ -73,6 +73,8 @@ header {
     .btn-link {
         font-size: large;
         color: #ccc;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
     }
 
     .btn.btn-link:focus,
