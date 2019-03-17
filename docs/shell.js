@@ -2024,3 +2024,8 @@ var xsystem35;
     window.addEventListener('load', loadPolyfills);
     xsystem35.shell = new System35Shell();
 })(xsystem35 || (xsystem35 = {}));
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js');
+    });
+}

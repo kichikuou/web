@@ -325,3 +325,9 @@ namespace xsystem35 {
 
     export let shell = new System35Shell();
 }
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js');
+    });
+}
