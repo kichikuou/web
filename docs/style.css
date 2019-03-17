@@ -119,10 +119,6 @@ header {
 #loader li.notready:after {
   content: " (未選択)";
 }
-#loader .social-buttons {
-  margin: 1em 0;
-  float: right;
-}
 #loader #unsupported {
   max-width: 640px;
   margin: 2ex auto 0;
