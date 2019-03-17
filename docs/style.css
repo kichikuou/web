@@ -130,7 +130,6 @@ header {
 }
 #loader.module-loading .show-while-loading {
   display: block;
-  color: #5764c6;
 }
 
 body {
