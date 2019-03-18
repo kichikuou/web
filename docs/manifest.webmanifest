@@ -1,0 +1,15 @@
+{
+  "name": "鬼畜王 on Web",
+  "short_name": "鬼畜王 on Web",
+  "description": "Browser-based runtime for AliceSoft Sytem3.x",
+  "start_url": "./?utm_source=web_app_manifest",
+  "display": "standalone",
+  "theme_color": "#697793",
+  "icons": [
+    {
+      "src": "icon.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ]
+}
