@@ -331,3 +331,9 @@ if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('service-worker.js');
     });
 }
+
+window.addEventListener('beforeinstallprompt', (e: any) => {
+    e.userChoice.then((choiceResult: any) => {
+        ga('send', 'event', 'App', 'InstallPrompt', choiceResult.outcome);
+    });
+});
