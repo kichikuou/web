@@ -20,9 +20,7 @@ namespace xsystem35 {
 
         init(destNode: AudioNode) {
             Module.addRunDependency('timidity');
-            let script = document.createElement('script');
-            script.src = '/timidity/timidity.js';
-            script.onload = () => {
+            loadScript('/timidity/timidity.js').then(() => {
                 Module.removeRunDependency('timidity');
 
                 this.gain = destNode.context.createGain();
@@ -31,8 +29,7 @@ namespace xsystem35 {
                 this.timidity.on('playing', this.onPlaying.bind(this));
                 this.timidity.on('error', this.onError.bind(this));
                 this.timidity.on('ended', this.onEnd.bind(this));
-            }
-            document.body.appendChild(script);
+            });
         }
 
         play(loop: number, data: number, datalen: number) {

@@ -313,12 +313,8 @@ namespace xsystem35 {
                 'https://cdn.jsdelivr.net/gh/inexorabletash/text-encoding@3f330964/lib/encoding-indexes.js',
                 'https://cdn.jsdelivr.net/gh/inexorabletash/text-encoding@3f330964/lib/encoding.js'
             ];
-            for (let src of scripts) {
-                let e = document.createElement('script');
-                e.src = src;
-                e.async = true;
-                document.body.appendChild(e);
-            }
+            for (let src of scripts)
+                loadScript(src);
         }
     }
     window.addEventListener('load', loadPolyfills);

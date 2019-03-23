@@ -3,6 +3,17 @@
 
 let $: (selector: string) => HTMLElement = document.querySelector.bind(document);
 
+function loadScript(src: string): Promise<any> {
+    let e = document.createElement('script');
+    e.src = src;
+    let p = new Promise((resolve, reject) => {
+        e.addEventListener('load', resolve, {once: true});
+        e.addEventListener('error', reject, {once: true});
+    });
+    document.body.appendChild(e);
+    return p;
+}
+
 function readFileAsArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
     return new Promise((resolve, reject) => {
         let reader = new FileReader();

@@ -4,14 +4,22 @@
 declare function FSLib(): {saveDirReady: Promise<typeof FS>};
 
 namespace xsystem35 {
+    let FSLibLoaded: Promise<any>;
+    let JSZipLoaded: Promise<any>;
+
     export class SaveDataManager {
         private FSready: Promise<typeof FS>;
 
         constructor() {
             if ((<any>window).FS)
                 this.FSready = xsystem35.saveDirReady;
-            if (!this.FSready)
-                this.FSready = FSLib().saveDirReady;
+            if (!this.FSready) {
+                if (!FSLibLoaded)
+                    FSLibLoaded = loadScript('fslib.js');
+                this.FSready = FSLibLoaded.then(() => FSLib().saveDirReady);
+            }
+            if (!JSZipLoaded)
+                JSZipLoaded = loadScript('lib/jszip.3.1.3.min.js');
         }
 
         public hasSaveData(): Promise<boolean> {
@@ -32,6 +40,7 @@ namespace xsystem35 {
         }
 
         public async download() {
+            await JSZipLoaded;
             let zip = new JSZip();
             storeZip(await this.FSready, '/save', zip.folder('save'));
             let blob = await zip.generateAsync({type: 'blob', compression: 'DEFLATE'});
@@ -54,6 +63,7 @@ namespace xsystem35 {
                 if (file.name.toLowerCase().endsWith('.asd')) {
                     addSaveFile(fs, '/save/' + file.name, await readFileAsArrayBuffer(file));
                 } else {
+                    await JSZipLoaded;
                     let zip = new JSZip();
                     let opts: JSZipLoadOptions = {};
                     if (typeof TextDecoder !== 'undefined')

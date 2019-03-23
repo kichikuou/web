@@ -9,6 +9,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 let $ = document.querySelector.bind(document);
+function loadScript(src) {
+    let e = document.createElement('script');
+    e.src = src;
+    let p = new Promise((resolve, reject) => {
+        e.addEventListener('load', resolve, { once: true });
+        e.addEventListener('error', reject, { once: true });
+    });
+    document.body.appendChild(e);
+    return p;
+}
 function readFileAsArrayBuffer(blob) {
     return new Promise((resolve, reject) => {
         let reader = new FileReader();
@@ -810,12 +820,19 @@ var xsystem35;
 // This source code is governed by the MIT License, see the LICENSE file.
 var xsystem35;
 (function (xsystem35) {
+    let FSLibLoaded;
+    let JSZipLoaded;
     class SaveDataManager {
         constructor() {
             if (window.FS)
                 this.FSready = xsystem35.saveDirReady;
-            if (!this.FSready)
-                this.FSready = FSLib().saveDirReady;
+            if (!this.FSready) {
+                if (!FSLibLoaded)
+                    FSLibLoaded = loadScript('fslib.js');
+                this.FSready = FSLibLoaded.then(() => FSLib().saveDirReady);
+            }
+            if (!JSZipLoaded)
+                JSZipLoaded = loadScript('lib/jszip.3.1.3.min.js');
         }
         hasSaveData() {
             function find(fs, dir) {
@@ -835,6 +852,7 @@ var xsystem35;
         }
         download() {
             return __awaiter(this, void 0, void 0, function* () {
+                yield JSZipLoaded;
                 let zip = new JSZip();
                 storeZip(yield this.FSready, '/save', zip.folder('save'));
                 let blob = yield zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
@@ -860,6 +878,7 @@ var xsystem35;
                         addSaveFile(fs, '/save/' + file.name, yield readFileAsArrayBuffer(file));
                     }
                     else {
+                        yield JSZipLoaded;
                         let zip = new JSZip();
                         let opts = {};
                         if (typeof TextDecoder !== 'undefined')
@@ -1326,9 +1345,7 @@ var xsystem35;
         }
         init(destNode) {
             Module.addRunDependency('timidity');
-            let script = document.createElement('script');
-            script.src = '/timidity/timidity.js';
-            script.onload = () => {
+            loadScript('/timidity/timidity.js').then(() => {
                 Module.removeRunDependency('timidity');
                 this.gain = destNode.context.createGain();
                 this.gain.connect(destNode);
@@ -1336,8 +1353,7 @@ var xsystem35;
                 this.timidity.on('playing', this.onPlaying.bind(this));
                 this.timidity.on('error', this.onError.bind(this));
                 this.timidity.on('ended', this.onEnd.bind(this));
-            };
-            document.body.appendChild(script);
+            });
         }
         play(loop, data, datalen) {
             if (!this.timidity)
@@ -2029,12 +2045,8 @@ var xsystem35;
                 'https://cdn.jsdelivr.net/gh/inexorabletash/text-encoding@3f330964/lib/encoding-indexes.js',
                 'https://cdn.jsdelivr.net/gh/inexorabletash/text-encoding@3f330964/lib/encoding.js'
             ];
-            for (let src of scripts) {
-                let e = document.createElement('script');
-                e.src = src;
-                e.async = true;
-                document.body.appendChild(e);
-            }
+            for (let src of scripts)
+                loadScript(src);
         }
     }
     xsystem35.loadPolyfills = loadPolyfills;
