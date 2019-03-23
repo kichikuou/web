@@ -23,12 +23,12 @@ namespace xsystem35 {
             } else {
                 this.pixelateCheckbox.setAttribute('disabled', 'true');
             }
-            if (screen.orientation && (document as any).webkitExitFullscreen) {
+            if (screen.orientation) {
                 screen.orientation.addEventListener('change', () => {
                     if (screen.orientation.type.startsWith('landscape'))
-                        (document.documentElement as any).webkitRequestFullScreen();
+                        this.requestFullscreen();
                     else
-                        (document as any).webkitExitFullscreen();
+                        this.exitFullscreen();
                 });
             }
             window.addEventListener('resize', this.onResize.bind(this));
@@ -83,6 +83,24 @@ namespace xsystem35 {
                 this.canvas.classList.add('pixelated');
             else
                 this.canvas.classList.remove('pixelated');
+        }
+
+        private requestFullscreen() {
+            let e = document.documentElement;
+            if (e.requestFullscreen)
+                e.requestFullscreen();
+            else if ((e as any).webkitRequestFullScreen)
+                (e as any).webkitRequestFullScreen();
+        }
+
+        private exitFullscreen() {
+            if (document.exitFullscreen) {
+                if ((document as any).fullscreenElement)
+                    document.exitFullscreen();
+            } else if ((document as any).webkitExitFullscreen) {
+                if ((document as any).webkitFullscreenElement)
+                    (document as any).webkitExitFullscreen();
+            }
         }
     }
 }

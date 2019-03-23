@@ -1009,12 +1009,12 @@ var xsystem35;
             else {
                 this.pixelateCheckbox.setAttribute('disabled', 'true');
             }
-            if (screen.orientation && document.webkitExitFullscreen) {
+            if (screen.orientation) {
                 screen.orientation.addEventListener('change', () => {
                     if (screen.orientation.type.startsWith('landscape'))
-                        document.documentElement.webkitRequestFullScreen();
+                        this.requestFullscreen();
                     else
-                        document.webkitExitFullscreen();
+                        this.exitFullscreen();
                 });
             }
             window.addEventListener('resize', this.onResize.bind(this));
@@ -1067,6 +1067,23 @@ var xsystem35;
                 this.canvas.classList.add('pixelated');
             else
                 this.canvas.classList.remove('pixelated');
+        }
+        requestFullscreen() {
+            let e = document.documentElement;
+            if (e.requestFullscreen)
+                e.requestFullscreen();
+            else if (e.webkitRequestFullScreen)
+                e.webkitRequestFullScreen();
+        }
+        exitFullscreen() {
+            if (document.exitFullscreen) {
+                if (document.fullscreenElement)
+                    document.exitFullscreen();
+            }
+            else if (document.webkitExitFullscreen) {
+                if (document.webkitFullscreenElement)
+                    document.webkitExitFullscreen();
+            }
         }
     }
     xsystem35.ZoomManager = ZoomManager;
