@@ -10,8 +10,8 @@ let cacheOptions = {
     ],
 };
 
-// Cache-first for fonts and versioned libraries
-workbox.routing.registerRoute(/\/(fonts|lib)\//, new workbox.strategies.CacheFirst(cacheOptions));
+// Cache-first for fonts, versioned libraries, and sound patches
+workbox.routing.registerRoute(/\/(fonts|lib|Tone_000|Drum_000)\//, new workbox.strategies.CacheFirst(cacheOptions));
 
 // Network-first for other same-origin resources
 workbox.routing.registerRoute(/\//, new workbox.strategies.NetworkFirst(cacheOptions));
