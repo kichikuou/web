@@ -27,9 +27,9 @@ namespace xsystem35 {
     export let midiPlayer: MIDIPlayer;
     export let audio: AudioManager;
     export let settings: Settings;
+    export let urlParams = new URLSearchParams(location.search.slice(1));
 
     export class System35Shell {
-        private params: URLSearchParams & Map<string, string>;
         private loader: Loader;
         status: HTMLElement = document.getElementById('status');
         private zoom: ZoomManager;
@@ -37,7 +37,6 @@ namespace xsystem35 {
         private toolbar: ToolBar;
 
         constructor() {
-            this.parseParams(location.search.slice(1));
             this.initModule();
 
             window.onerror = (message, url, line, column, error) => {
@@ -54,7 +53,7 @@ namespace xsystem35 {
                 // this.addToast('エラーが発生しました。', 'error');
             });
 
-            if (this.params.get('loader') === 'file')
+            if (urlParams.get('loader') === 'file')
                 this.loader = new FileLoader();
             else
                 this.loader = new ImageLoader(this);
@@ -67,21 +66,6 @@ namespace xsystem35 {
             xsystem35.settings = new Settings();
         }
 
-        private parseParams(searchParams: string) {
-            if (typeof URLSearchParams !== 'undefined') {
-                this.params = <URLSearchParams & Map<string, string>>new URLSearchParams(searchParams);
-                return;
-            }
-            // For Edge
-            this.params = <URLSearchParams & Map<string, string>>new Map();
-            if (window.location.search.length > 1) {
-                for (let item of searchParams.split('&')) {
-                    let [key, value] = item.split('=');
-                    this.params.set(key, value);
-                }
-            }
-        }
-
         private initModule() {
             let fsReady: () => void;
             fileSystemReady = new Promise((resolve) => { fsReady = resolve; });
@@ -89,7 +73,7 @@ namespace xsystem35 {
             saveDirReady = new Promise((resolve) => { idbfsReady = resolve; });
 
             Module.arguments = [];
-            for (let [name, val] of this.params) {
+            for (let [name, val] of urlParams) {
                 if (name.startsWith('-')) {
                     Module.arguments.push(name);
                     if (val)
@@ -148,7 +132,7 @@ namespace xsystem35 {
         private shouldUseWasm(): boolean {
             if (typeof WebAssembly !== 'object')
                 return false;
-            let param = this.params.get('wasm');
+            let param = urlParams.get('wasm');
             if (param)
                 return param !== '0';
             if (isIOSVersionBetween('11.2.2', '11.3')) {

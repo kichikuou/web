@@ -517,10 +517,31 @@ var xsystem35;
 (function (xsystem35) {
     const major = 240;
     let entryCount = 0;
+    // See xsystem35-sdl2/patch/README.TXT
+    const PastelChimePatch = [
+        [0x1c68, 0x54, 0x47]
+    ];
+    const TADAModePatch = [
+        [0x0087b, 0x40, 0x41],
+        [0x01b79, 0x40, 0x41],
+        [0x16e5f, 0x24, 0x40],
+        [0x16e60, 0xae, 0x92],
+        [0x16e61, 0x06, 0x05]
+    ];
     function registerDataFile(fname, size, chunks) {
         let dev = FS.makedev(major, entryCount++);
-        FS.registerDevice(dev, new NodeOps(size, chunks));
+        let ops = new NodeOps(size, chunks);
+        FS.registerDevice(dev, ops);
         FS.mkdev('/' + fname, dev);
+        switch (fname.toUpperCase()) {
+            case 'ぱすてるSA.ALD':
+                ops.patch(PastelChimePatch);
+                break;
+            case '鬼畜王SA.ALD':
+                if (xsystem35.urlParams.get('tada') === '1')
+                    ops.patch(TADAModePatch);
+                break;
+        }
     }
     xsystem35.registerDataFile = registerDataFile;
     class NodeOps {
@@ -548,6 +569,17 @@ var xsystem35;
         }
         mmap() {
             return { ptr: this.addr, allocated: false };
+        }
+        patch(table) {
+            for (let a of table) {
+                if (Module.HEAPU8[this.addr + a[0]] !== a[1]) {
+                    console.log('Patch failed');
+                    return;
+                }
+            }
+            for (let a of table)
+                Module.HEAPU8[this.addr + a[0]] = a[2];
+            console.log('Patch applied');
         }
     }
 })(xsystem35 || (xsystem35 = {}));
@@ -1778,11 +1810,11 @@ var xsystem35;
         'ttfont_mincho: ' + FontMincho,
         'ttfont_gothic: ' + FontGothic, '',
     ].join('\n');
+    xsystem35.urlParams = new URLSearchParams(location.search.slice(1));
     class System35Shell {
         constructor() {
             this.status = document.getElementById('status');
             this.persistRequested = false;
-            this.parseParams(location.search.slice(1));
             this.initModule();
             window.onerror = (message, url, line, column, error) => {
                 gaException({ type: 'onerror', message, url, line, column }, true);
@@ -1797,7 +1829,7 @@ var xsystem35;
                 gaException({ type: 'rejection', message, stack }, true);
                 // this.addToast('エラーが発生しました。', 'error');
             });
-            if (this.params.get('loader') === 'file')
+            if (xsystem35.urlParams.get('loader') === 'file')
                 this.loader = new xsystem35.FileLoader();
             else
                 this.loader = new xsystem35.ImageLoader(this);
@@ -1809,27 +1841,13 @@ var xsystem35;
             xsystem35.audio = new xsystem35.AudioManager(this.volumeControl.audioNode());
             xsystem35.settings = new xsystem35.Settings();
         }
-        parseParams(searchParams) {
-            if (typeof URLSearchParams !== 'undefined') {
-                this.params = new URLSearchParams(searchParams);
-                return;
-            }
-            // For Edge
-            this.params = new Map();
-            if (window.location.search.length > 1) {
-                for (let item of searchParams.split('&')) {
-                    let [key, value] = item.split('=');
-                    this.params.set(key, value);
-                }
-            }
-        }
         initModule() {
             let fsReady;
             xsystem35.fileSystemReady = new Promise((resolve) => { fsReady = resolve; });
             let idbfsReady;
             xsystem35.saveDirReady = new Promise((resolve) => { idbfsReady = resolve; });
             Module.arguments = [];
-            for (let [name, val] of this.params) {
+            for (let [name, val] of xsystem35.urlParams) {
                 if (name.startsWith('-')) {
                     Module.arguments.push(name);
                     if (val)
@@ -1886,7 +1904,7 @@ var xsystem35;
         shouldUseWasm() {
             if (typeof WebAssembly !== 'object')
                 return false;
-            let param = this.params.get('wasm');
+            let param = xsystem35.urlParams.get('wasm');
             if (param)
                 return param !== '0';
             if (isIOSVersionBetween('11.2.2', '11.3')) {
