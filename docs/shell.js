@@ -1230,20 +1230,45 @@ var xsystem35;
     }
     xsystem35.VolumeControl = VolumeControl;
 })(xsystem35 || (xsystem35 = {}));
+var xsystem35;
+(function (xsystem35) {
+    class BasicCDDACache {
+        constructor(loader) {
+            this.loader = loader;
+            this.blobCache = [];
+            document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this));
+        }
+        getCDDA(track) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (this.blobCache[track])
+                    return this.blobCache[track];
+                let blob = yield this.loader.getCDDA(track);
+                this.blobCache[track] = blob;
+                return blob;
+            });
+        }
+        onVisibilityChange() {
+            if (document.hidden)
+                this.blobCache = [];
+        }
+    }
+    xsystem35.BasicCDDACache = BasicCDDACache;
+})(xsystem35 || (xsystem35 = {}));
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 /// <reference path="util.ts" />
 /// <reference path="volume.ts" />
+/// <reference path="cddacache.ts" />
 var xsystem35;
 (function (xsystem35) {
     class CDPlayer {
         constructor(loader, volumeControl) {
             this.loader = loader;
             this.audio = $('audio');
+            this.cddaCache = new xsystem35.BasicCDDACache(loader);
             // Volume control of <audio> is not supported in iOS
             this.audio.volume = 0.5;
             this.isVolumeSupported = this.audio.volume !== 1;
-            this.blobCache = [];
             volumeControl.addEventListener(this.onVolumeChanged.bind(this));
             this.audio.volume = volumeControl.volume();
             this.audio.addEventListener('error', this.onAudioError.bind(this));
@@ -1253,7 +1278,6 @@ var xsystem35;
                 if (this.audio.volume === 0)
                     this.unmute = () => { };
             }
-            document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this));
         }
         play(track, loop) {
             this.currentTrack = track;
@@ -1261,14 +1285,9 @@ var xsystem35;
                 this.unmute = () => { this.play(track, loop); };
                 return;
             }
-            if (this.blobCache[track]) {
-                this.startPlayback(this.blobCache[track], loop);
-                return;
-            }
             this.audio.currentTime = 0;
-            this.loader.getCDDA(track).then((blob) => {
+            this.cddaCache.getCDDA(track).then((blob) => {
                 if (blob) {
-                    this.blobCache[track] = blob;
                     this.startPlayback(blob, loop);
                 }
                 else {
@@ -1312,10 +1331,6 @@ var xsystem35;
                     }
                 });
             }
-        }
-        onVisibilityChange() {
-            if (document.hidden)
-                this.blobCache = [];
         }
         onVolumeChanged(evt) {
             if (this.isVolumeSupported) {

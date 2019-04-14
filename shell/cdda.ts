@@ -3,21 +3,22 @@
 
 /// <reference path="util.ts" />
 /// <reference path="volume.ts" />
+/// <reference path="cddacache.ts" />
 
 namespace xsystem35 {
     export class CDPlayer {
+        private cddaCache: CDDACache;
         private audio = <HTMLAudioElement>$('audio');
-        private blobCache: Blob[];
         private currentTrack: number;
         private isVolumeSupported: boolean;
         private unmute: () => void;  // Non-null if emulating mute by pause
 
         constructor(private loader: Loader, volumeControl: VolumeControl) {
+            this.cddaCache = new BasicCDDACache(loader);
             // Volume control of <audio> is not supported in iOS
             this.audio.volume = 0.5;
             this.isVolumeSupported = this.audio.volume !== 1;
 
-            this.blobCache = [];
             volumeControl.addEventListener(this.onVolumeChanged.bind(this));
             this.audio.volume = volumeControl.volume();
             this.audio.addEventListener('error', this.onAudioError.bind(this));
@@ -27,7 +28,6 @@ namespace xsystem35 {
                 if (this.audio.volume === 0)
                     this.unmute = () => {};
             }
-            document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this));
         }
 
         play(track: number, loop: number) {
@@ -36,14 +36,9 @@ namespace xsystem35 {
                 this.unmute = () => { this.play(track, loop); };
                 return;
             }
-            if (this.blobCache[track]) {
-                this.startPlayback(this.blobCache[track], loop);
-                return;
-            }
             this.audio.currentTime = 0;
-            this.loader.getCDDA(track).then((blob) => {
+            this.cddaCache.getCDDA(track).then((blob) => {
                 if (blob) {
-                    this.blobCache[track] = blob;
                     this.startPlayback(blob, loop);
                 } else {
                     ga('send', 'event', 'CDDA', 'InvalidTrack');
@@ -87,11 +82,6 @@ namespace xsystem35 {
                     }
                 });
             }
-        }
-
-        private onVisibilityChange() {
-            if (document.hidden)
-                this.blobCache = [];
         }
 
         private onVolumeChanged(evt: CustomEvent) {
@@ -140,9 +130,4 @@ namespace xsystem35 {
             window.addEventListener('mouseup', hanlder);
         }
     }
-}
-
-// TODO: remove this once lib.es6.d.ts supports it
-interface MediaError {
-    readonly message: string;
 }
