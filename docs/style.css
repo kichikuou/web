@@ -142,6 +142,7 @@ body.game {
   right: 0;
   top: 0;
   bottom: 0;
+  min-height: initial;
   display: flex;
   flex-direction: column;
 }
