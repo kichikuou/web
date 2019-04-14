@@ -27,6 +27,7 @@ namespace xsystem35 {
 
     export class IOSCDDACache implements CDDACache {
         private cache: {track: number, data: Blob, time: number}[];
+        private reloadToast: HTMLElement;
 
         constructor(private loader: Loader) {
             this.cache = [];
@@ -50,11 +51,13 @@ namespace xsystem35 {
             } catch (e) {
                 gaException({type: 'CDDAload', name: e.constructor.name, code: e.code});
                 let clone = document.importNode((<HTMLTemplateElement>$('#cdda-error')).content, true);
-                let toast = xsystem35.shell.addToast(clone, 'error');
+                if (this.reloadToast && this.reloadToast.parentElement)
+                    (<HTMLElement>this.reloadToast.querySelector('.btn-clear')).click();
+                this.reloadToast = xsystem35.shell.addToast(clone, 'error');
                 return new Promise(resolve => {
-                    toast.querySelector('.cdda-reload-button').addEventListener('click', () => {
+                    this.reloadToast.querySelector('.cdda-reload-button').addEventListener('click', () => {
                         this.loader.reloadImage().then(() => {
-                            (<HTMLElement>toast.querySelector('.btn-clear')).click();
+                            (<HTMLElement>this.reloadToast.querySelector('.btn-clear')).click();
                             resolve(this.getCDDA(track));
                         });
                     });

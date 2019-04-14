@@ -1278,11 +1278,13 @@ var xsystem35;
                 catch (e) {
                     gaException({ type: 'CDDAload', name: e.constructor.name, code: e.code });
                     let clone = document.importNode($('#cdda-error').content, true);
-                    let toast = xsystem35.shell.addToast(clone, 'error');
+                    if (this.reloadToast && this.reloadToast.parentElement)
+                        this.reloadToast.querySelector('.btn-clear').click();
+                    this.reloadToast = xsystem35.shell.addToast(clone, 'error');
                     return new Promise(resolve => {
-                        toast.querySelector('.cdda-reload-button').addEventListener('click', () => {
+                        this.reloadToast.querySelector('.cdda-reload-button').addEventListener('click', () => {
                             this.loader.reloadImage().then(() => {
-                                toast.querySelector('.btn-clear').click();
+                                this.reloadToast.querySelector('.btn-clear').click();
                                 resolve(this.getCDDA(track));
                             });
                         });
