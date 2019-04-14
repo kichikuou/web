@@ -1230,6 +1230,7 @@ var xsystem35;
     }
     xsystem35.VolumeControl = VolumeControl;
 })(xsystem35 || (xsystem35 = {}));
+/// <reference path="util.ts" />
 var xsystem35;
 (function (xsystem35) {
     class BasicCDDACache {

@@ -1,3 +1,5 @@
+/// <reference path="util.ts" />
+
 namespace xsystem35 {
     export interface CDDACache {
         getCDDA(track: number): Promise<Blob>;
