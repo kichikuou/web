@@ -1253,6 +1253,55 @@ var xsystem35;
         }
     }
     xsystem35.BasicCDDACache = BasicCDDACache;
+    class IOSCDDACache {
+        constructor(loader) {
+            this.loader = loader;
+            this.cache = [];
+            document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this));
+        }
+        getCDDA(track) {
+            return __awaiter(this, void 0, void 0, function* () {
+                for (let entry of this.cache) {
+                    if (entry.track === track) {
+                        entry.time = performance.now();
+                        return entry.data;
+                    }
+                }
+                this.shrink(2);
+                let blob = yield this.loader.getCDDA(track);
+                try {
+                    let buf = yield readFileAsArrayBuffer(blob);
+                    blob = new Blob([buf], { type: 'audio/wav' });
+                    this.cache.unshift({ track, data: blob, time: performance.now() });
+                    return blob;
+                }
+                catch (e) {
+                    gaException({ type: 'CDDAload', name: e.constructor.name, code: e.code });
+                    let clone = document.importNode($('#cdda-error').content, true);
+                    let toast = xsystem35.shell.addToast(clone, 'error');
+                    return new Promise(resolve => {
+                        toast.querySelector('.cdda-reload-button').addEventListener('click', () => {
+                            this.loader.reloadImage().then(() => {
+                                toast.querySelector('.btn-clear').click();
+                                resolve(this.getCDDA(track));
+                            });
+                        });
+                    });
+                }
+            });
+        }
+        shrink(size) {
+            if (this.cache.length <= size)
+                return;
+            this.cache.sort((a, b) => b.time - a.time);
+            this.cache.length = size;
+        }
+        onVisibilityChange() {
+            if (document.hidden)
+                this.shrink(1);
+        }
+    }
+    xsystem35.IOSCDDACache = IOSCDDACache;
 })(xsystem35 || (xsystem35 = {}));
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
@@ -1263,12 +1312,11 @@ var xsystem35;
 (function (xsystem35) {
     class CDPlayer {
         constructor(loader, volumeControl) {
-            this.loader = loader;
             this.audio = $('audio');
-            this.cddaCache = new xsystem35.BasicCDDACache(loader);
             // Volume control of <audio> is not supported in iOS
             this.audio.volume = 0.5;
             this.isVolumeSupported = this.audio.volume !== 1;
+            this.cddaCache = this.isVolumeSupported ? new xsystem35.BasicCDDACache(loader) : new xsystem35.IOSCDDACache(loader);
             volumeControl.addEventListener(this.onVolumeChanged.bind(this));
             this.audio.volume = volumeControl.volume();
             this.audio.addEventListener('error', this.onAudioError.bind(this));
@@ -1353,14 +1401,6 @@ var xsystem35;
         onAudioError(err) {
             let { code, message } = this.audio.error;
             gaException({ type: 'Audio', code, message });
-            let clone = document.importNode($('#cdda-error').content, true);
-            let toast = xsystem35.shell.addToast(clone, 'error');
-            toast.querySelector('.cdda-reload-button').addEventListener('click', () => {
-                this.loader.reloadImage().then(() => {
-                    this.play(this.currentTrack, this.audio.loop ? 1 : 0);
-                    toast.querySelector('.btn-clear').click();
-                });
-            });
         }
         removeUserGestureRestriction(firstTime) {
             let hanlder = () => {

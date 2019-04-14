@@ -13,11 +13,12 @@ namespace xsystem35 {
         private isVolumeSupported: boolean;
         private unmute: () => void;  // Non-null if emulating mute by pause
 
-        constructor(private loader: Loader, volumeControl: VolumeControl) {
-            this.cddaCache = new BasicCDDACache(loader);
+        constructor(loader: Loader, volumeControl: VolumeControl) {
             // Volume control of <audio> is not supported in iOS
             this.audio.volume = 0.5;
             this.isVolumeSupported = this.audio.volume !== 1;
+
+            this.cddaCache = this.isVolumeSupported ? new BasicCDDACache(loader) : new IOSCDDACache(loader);
 
             volumeControl.addEventListener(this.onVolumeChanged.bind(this));
             this.audio.volume = volumeControl.volume();
@@ -105,14 +106,6 @@ namespace xsystem35 {
         private onAudioError(err: ErrorEvent) {
             let {code, message} = this.audio.error;
             gaException({type: 'Audio', code, message});
-            let clone = document.importNode((<HTMLTemplateElement>$('#cdda-error')).content, true);
-            let toast = xsystem35.shell.addToast(clone, 'error');
-            toast.querySelector('.cdda-reload-button').addEventListener('click', () => {
-                this.loader.reloadImage().then(() => {
-                    this.play(this.currentTrack, this.audio.loop ? 1 : 0);
-                    (<HTMLElement>toast.querySelector('.btn-clear')).click();
-                });
-            });
         }
 
         private removeUserGestureRestriction(firstTime: boolean) {
