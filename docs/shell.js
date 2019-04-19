@@ -1277,7 +1277,10 @@ var xsystem35;
                     return blob;
                 }
                 catch (e) {
-                    gaException({ type: 'CDDAload', name: e.constructor.name, code: e.code });
+                    if (e.constructor.name === 'FileError' && e.code === 1)
+                        ga('send', 'event', 'CDDAload', 'NOT_FOUND_ERR');
+                    else
+                        gaException({ type: 'CDDAload', name: e.constructor.name, code: e.code });
                     let clone = document.importNode($('#cdda-error').content, true);
                     if (this.reloadToast && this.reloadToast.parentElement)
                         this.reloadToast.querySelector('.btn-clear').click();

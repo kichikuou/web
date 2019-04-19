@@ -51,7 +51,10 @@ namespace xsystem35 {
                 this.cache.unshift({track, data: blob, time: performance.now()});
                 return blob;
             } catch (e) {
-                gaException({type: 'CDDAload', name: e.constructor.name, code: e.code});
+                if (e.constructor.name === 'FileError' && e.code === 1)
+                    ga('send', 'event', 'CDDAload', 'NOT_FOUND_ERR');
+                else
+                    gaException({type: 'CDDAload', name: e.constructor.name, code: e.code});
                 let clone = document.importNode((<HTMLTemplateElement>$('#cdda-error')).content, true);
                 if (this.reloadToast && this.reloadToast.parentElement)
                     (<HTMLElement>this.reloadToast.querySelector('.btn-clear')).click();
