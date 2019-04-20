@@ -1288,6 +1288,7 @@ var xsystem35;
                     return new Promise(resolve => {
                         this.reloadToast.querySelector('.cdda-reload-button').addEventListener('click', () => {
                             this.loader.reloadImage().then(() => {
+                                ga('send', 'event', 'CDDAload', 'reloaded');
                                 this.reloadToast.querySelector('.btn-clear').click();
                                 resolve(this.getCDDA(track));
                             });
