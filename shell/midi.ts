@@ -3,7 +3,7 @@
 
 declare class Timidity {
     constructor(dst: AudioNode, baseurl?: string);
-    load(urlOrBuf: string | Uint8Array): void;
+    load(urlOrBuf: string | Uint8Array): Promise<void>;
     play(): void;
     pause(): void;
     on(event: string, callback: () => void): void;
@@ -35,7 +35,7 @@ namespace xsystem35 {
         play(loop: number, data: number, datalen: number) {
             if (!this.timidity)
                 return;
-            this.timidity.load(Module.HEAPU8.subarray(data, data + datalen));
+            this.timidity.load(Module.HEAPU8.slice(data, data + datalen));
             this.timidity.play();
             this.playing = true;
             // NOTE: `loop` is ignored.

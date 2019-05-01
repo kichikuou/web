@@ -1452,7 +1452,7 @@ var xsystem35;
         play(loop, data, datalen) {
             if (!this.timidity)
                 return;
-            this.timidity.load(Module.HEAPU8.subarray(data, data + datalen));
+            this.timidity.load(Module.HEAPU8.slice(data, data + datalen));
             this.timidity.play();
             this.playing = true;
             // NOTE: `loop` is ignored.
