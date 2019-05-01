@@ -159,8 +159,10 @@ namespace xsystem35 {
         }
 
         onBeforeUnload(e: BeforeUnloadEvent) {
-            if (config.unloadConfirmation)
+            if (config.unloadConfirmation) {
                 e.returnValue = 'セーブしていないデータは失われます。';
+                this.volumeControl.suspendForModalDialog();
+            }
         }
 
         windowSizeChanged() {

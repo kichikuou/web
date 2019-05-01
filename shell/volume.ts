@@ -72,6 +72,11 @@ namespace xsystem35 {
             this.slider.hidden = true;
         }
 
+        suspendForModalDialog() {
+            this.audioContext.suspend();
+            setTimeout(() => this.audioContext.resume(), 0);
+        }
+
         private onIconClicked(e: Event) {
             this.muted = !this.muted;
             if (this.muted) {

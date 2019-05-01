@@ -1193,6 +1193,10 @@ var xsystem35;
         hideSlider() {
             this.slider.hidden = true;
         }
+        suspendForModalDialog() {
+            this.audioContext.suspend();
+            setTimeout(() => this.audioContext.resume(), 0);
+        }
         onIconClicked(e) {
             this.muted = !this.muted;
             if (this.muted) {
@@ -1991,8 +1995,10 @@ var xsystem35;
             }, 0);
         }
         onBeforeUnload(e) {
-            if (xsystem35.config.unloadConfirmation)
+            if (xsystem35.config.unloadConfirmation) {
                 e.returnValue = 'セーブしていないデータは失われます。';
+                this.volumeControl.suspendForModalDialog();
+            }
         }
         windowSizeChanged() {
             this.zoom.handleZoom();
