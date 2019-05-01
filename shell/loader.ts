@@ -2,22 +2,14 @@
 // This source code is governed by the MIT License, see the LICENSE file.
 
 /// <reference path="util.ts" />
-/// <reference path="cdimage.ts" />
-/// <reference path="datafile.ts" />
+/// <reference path="loadersource.ts" />
 
 namespace xsystem35 {
-    export interface Loader {
-        getCDDA(track: number): Promise<Blob>;
-        hasMidi: boolean;
-        reloadImage(): Promise<any>;
-    }
-
-    export class ImageLoader implements Loader {
+    export class Loader {
         private imageFile: File;
         private metadataFile: File;
-        private imageReader: CDImage.Reader;
+        private source: LoaderSource;
         private installing = false;
-        public hasMidi = false;
 
         constructor(private shell: System35Shell) {
             $('#fileselect').addEventListener('change', this.handleFileSelect.bind(this), false);
@@ -26,20 +18,16 @@ namespace xsystem35 {
         }
 
         getCDDA(track: number): Promise<Blob> {
-            return this.imageReader.extractTrack(track);
+            return this.source.getCDDA(track);
         }
 
         reloadImage(): Promise<any> {
-            return openFileInput().then((file) => {
-                this.imageReader.resetImage(file);
-            });
+            return this.source.reloadImage();
         }
 
         private handleFileSelect(evt: Event) {
             let input = <HTMLInputElement>evt.target;
-            let files = input.files;
-            for (let i = 0; i < files.length; i++)
-                this.setFile(files[i]);
+            this.handleFiles(input.files);
             input.value = '';
         }
 
@@ -52,140 +40,75 @@ namespace xsystem35 {
         private handleDrop(evt: DragEvent) {
             evt.stopPropagation();
             evt.preventDefault();
-            let files = evt.dataTransfer.files;
-            for (let i = 0; i < files.length; i++)
-                this.setFile(files[i]);
+            this.handleFiles(evt.dataTransfer.files);
         }
 
-        private async setFile(file: File) {
+        private async handleFiles(files: FileList) {
             if (this.installing)
                 return;
-            let name = file.name.toLowerCase();
-            if (name.endsWith('.img') || name.endsWith('.mdf') || name.endsWith('.iso')) {
-                this.imageFile = file;
-                $('#imgReady').classList.remove('notready');
-                $('#imgReady').textContent = file.name;
-            } else if (name.endsWith('.cue') || name.endsWith('.ccd') || name.endsWith('.mds')) {
-                this.metadataFile = file;
-                $('#cueReady').classList.remove('notready');
-                $('#cueReady').textContent = file.name;
-            } else if (name.endsWith('.rar')) {
-                this.shell.addToast('展開前のrarファイルは読み込めません。', 'warning');
-            } else {
-                this.shell.addToast(name + ' は認識できない形式です。', 'warning');
-            }
-            if (this.imageFile && (this.metadataFile || this.imageFile.name.toLowerCase().endsWith('.iso'))) {
-                this.installing = true;
-                try {
-                    this.imageReader = await CDImage.createReader(this.imageFile, this.metadataFile);
-                    await this.startLoad();
-                } catch (err) {
-                    ga('send', 'event', 'Loader', 'LoadFailed', err.message);
-                    this.shell.addToast('インストールできません。認識できない形式です。', 'error');
-                }
-                this.installing = false;
-            }
-        }
 
-        private async startLoad() {
-            let isofs = await CDImage.ISO9660FileSystem.create(this.imageReader);
-            // this.walk(isofs, isofs.rootDir(), '/');
-            let gamedata = await this.findGameDir(isofs);
-            if (!gamedata) {
-                ga('send', 'event', 'Loader', 'NoGamedataDir');
-                this.shell.addToast('インストールできません。イメージ内にGAMEDATAフォルダが見つかりません。', 'error');
+            let hasALD = false;
+            let recognized = false;
+            for (let file of files) {
+                if (this.isImageFile(file)) {
+                    this.imageFile = file;
+                    $('#imgReady').classList.remove('notready');
+                    $('#imgReady').textContent = file.name;
+                    recognized = true;
+                } else if (this.isMetadataFile(file)) {
+                    this.metadataFile = file;
+                    $('#cueReady').classList.remove('notready');
+                    $('#cueReady').textContent = file.name;
+                    recognized = true;
+                } else if (file.name.toLowerCase().endsWith('.ald')) {
+                    hasALD = true;
+                } else if (file.name.toLowerCase().endsWith('.rar')) {
+                    this.shell.addToast('展開前のrarファイルは読み込めません。', 'warning');
+                    recognized = true;
+                }
+            }
+
+            if (this.imageFile && (this.metadataFile || this.imageFile.name.toLowerCase().endsWith('.iso'))) {
+                this.source = new CDImageSource(this.imageFile, this.metadataFile);
+            } else if (!this.imageFile && !this.metadataFile) {
+                if (files.length == 1 && files[0].name.toLowerCase().endsWith('.zip')) {
+                    this.source = new ZipSource(files[0]);
+                } else if (hasALD) {
+                    this.source = new FileSource(files);
+                }
+            }
+
+            if (!this.source) {
+                if (!recognized)
+                    this.shell.addToast(files[0].name + ' は認識できない形式です。', 'warning');
                 return;
             }
 
-            let isSystem3 = !!await isofs.getDirEnt('system3.exe', gamedata);
-            $('#loader').classList.add('module-loading');
-            await shell.loadModule(isSystem3 ? 'system3' : 'xsystem35');
-
-            let startTime = performance.now();
-            let aldFiles = [];
-            for (let e of await isofs.readDir(gamedata)) {
-                if (isSystem3) {
-                    if (!e.name.toLowerCase().endsWith('.dat'))
-                        continue;
+            this.installing = true;
+            try {
+                await this.source.startLoad();
+                this.shell.loaded(this.source.hasMidi);
+            } catch (err) {
+                if (err instanceof NoGamedataError) {
+                    ga('send', 'event', 'Loader', 'NoGamedata', err.message);
+                    this.shell.addToast('インストールできません。' + err.message, 'warning');
                 } else {
-                    if (e.name.match(/^\.|\.(exe|dll|txt|ini)$/i))
-                        continue;
-                    if (e.name.toLowerCase().endsWith('.ald'))
-                        aldFiles.push(e.name);
+                    ga('send', 'event', 'Loader', 'LoadFailed', err.message);
+                    this.shell.addToast('インストールできません。認識できない形式です。', 'warning');
                 }
-                let chunks = await isofs.readFile(e);
-                registerDataFile(e.name, e.size, chunks);
+                this.source = null;
             }
-            if (isSystem3) {
-                let savedir = await this.saveDir(isofs);
-                Module.arguments.push('-savedir', savedir + '/');
-                xsystem35.saveDirReady.then(() => { mkdirIfNotExist(savedir); });
-            } else {
-                FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
-                FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
-            }
-            ga('send', 'timing', 'Image load', this.imageFile.name, Math.round(performance.now() - startTime));
-
-            this.shell.loaded();
+            this.installing = false;
         }
 
-        private async findGameDir(isofs: CDImage.ISO9660FileSystem): Promise<CDImage.DirEnt> {
-            for (let e of await isofs.readDir(isofs.rootDir())) {
-                if (e.isDirectory) {
-                    if (e.name.toLowerCase() === 'gamedata' || await isofs.getDirEnt('system3.exe', e))
-                        return e;
-                }
-                if (e.name.toLowerCase() === 'system3.exe')
-                    return isofs.rootDir();
-            }
-            return null;
+        private isImageFile(file: File): boolean {
+            let name = file.name.toLowerCase();
+            return name.endsWith('.img') || name.endsWith('.mdf') || name.endsWith('.iso');
         }
 
-        private async saveDir(isofs: CDImage.ISO9660FileSystem): Promise<string> {
-            let dirname = isofs.volumeLabel();
-            if (!dirname) {
-                if (await isofs.getDirEnt('prog.bat', isofs.rootDir())) {
-                    dirname = 'ProG';
-                } else if (await isofs.getDirEnt('dps_all.bat', isofs.rootDir())) {
-                    dirname = 'DPS_all';
-                } else {
-                    dirname = 'untitled';
-                    ga('send', 'event', 'Loader', 'NoVolumeLabel');
-                }
-            }
-            return '/save/' + dirname;
-        }
-
-        private createGr(files: string[]): string {
-            const resourceType: { [ch: string]: string } = {
-                d: 'Data', g: 'Graphics', m: 'Midi', r: 'Resource', s: 'Scenario', w: 'Wave',
-            };
-            let basename: string;
-            let lines: string[] = [];
-            for (let name of files) {
-                let type = name.charAt(name.length - 6).toLowerCase();
-                let id = name.charAt(name.length - 5);
-                basename = name.slice(0, -6);
-                lines.push(resourceType[type] + id.toUpperCase() + ' ' + name);
-                if (type == 'm')
-                    this.hasMidi = true;
-            }
-            for (let i = 0; i < 26; i++) {
-                let id = String.fromCharCode(65 + i);
-                lines.push('Save' + id + ' save/' + basename + 's' + id.toLowerCase() + '.asd');
-            }
-            return lines.join('\n') + '\n';
-        }
-
-        // For debug
-        private async walk(isofs: CDImage.ISO9660FileSystem, dir: CDImage.DirEnt, dirname: string) {
-            for (let e of await isofs.readDir(dir)) {
-                if (e.name !== '.' && e.name !== '..') {
-                    console.log(dirname + e.name);
-                    if (e.isDirectory)
-                        this.walk(isofs, e, dirname + e.name + '/');
-                }
-            }
+        private isMetadataFile(file: File): boolean {
+            let name = file.name.toLowerCase();
+            return name.endsWith('.cue') || name.endsWith('.ccd') || name.endsWith('.mds');
         }
     }
 }

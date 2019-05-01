@@ -1,16 +1,23 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 
-let $: (selector: string) => HTMLElement = document.querySelector.bind(document);
+const $: (selector: string) => HTMLElement = document.querySelector.bind(document);
 
+const JSZIP_SCRIPT = 'lib/jszip.3.1.3.min.js';
+
+const scriptPromises: Map<string, Promise<any>> = new Map();
 function loadScript(src: string): Promise<any> {
-    let e = document.createElement('script');
-    e.src = src;
-    let p = new Promise((resolve, reject) => {
-        e.addEventListener('load', resolve, {once: true});
-        e.addEventListener('error', reject, {once: true});
-    });
-    document.body.appendChild(e);
+    let p = scriptPromises.get(src);
+    if (!p) {
+        let e = document.createElement('script');
+        e.src = src;
+        p = new Promise((resolve, reject) => {
+            e.addEventListener('load', resolve, {once: true});
+            e.addEventListener('error', reject, {once: true});
+        });
+        document.body.appendChild(e);
+        scriptPromises.set(src, p);
+    }
     return p;
 }
 
@@ -65,6 +72,21 @@ function isIOSVersionBetween(from: string, to: string): boolean {
         return false;
     let ver = match[1].replace(/_/g, '.');
     return from <= ver && ver < to;
+}
+
+function JSZipOptions(): JSZipLoadOptions {
+    let opts: JSZipLoadOptions = {};
+    if (typeof TextDecoder !== 'undefined')
+        opts = {decodeFileName} as JSZipLoadOptions;
+    return opts;
+
+    function decodeFileName(bytes: Uint8Array): string {
+        try {
+            return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+        } catch (err) {
+            return new TextDecoder('shift_jis', { fatal: true }).decode(bytes);
+        }
+    }
 }
 
 function gaException(description: any, exFatal: boolean = false) {

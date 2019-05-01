@@ -4,7 +4,6 @@
 /// <reference path="util.ts" />
 /// <reference path="config.ts" />
 /// <reference path="loader.ts" />
-/// <reference path="fileloader.ts" />
 /// <reference path="settings.ts" />
 /// <reference path="zoom.ts" />
 /// <reference path="volume.ts" />
@@ -53,10 +52,7 @@ namespace xsystem35 {
                 // this.addToast('エラーが発生しました。', 'error');
             });
 
-            if (urlParams.get('loader') === 'file')
-                this.loader = new FileLoader();
-            else
-                this.loader = new ImageLoader(this);
+            this.loader = new Loader(this);
             this.volumeControl = new VolumeControl();
             xsystem35.cdPlayer = new CDPlayer(this.loader, this.volumeControl);
             xsystem35.midiPlayer = new MIDIPlayer();
@@ -144,8 +140,8 @@ namespace xsystem35 {
             return true;
         }
 
-        loaded() {
-            if (this.loader.hasMidi)
+        loaded(hasMidi: boolean) {
+            if (hasMidi)
                 xsystem35.midiPlayer.init(this.volumeControl.audioNode());
             $('#xsystem35').hidden = false;
             document.body.classList.add('game');

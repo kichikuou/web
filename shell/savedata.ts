@@ -4,9 +4,6 @@
 declare function FSLib(): {saveDirReady: Promise<typeof FS>};
 
 namespace xsystem35 {
-    let FSLibLoaded: Promise<any>;
-    let JSZipLoaded: Promise<any>;
-
     export class SaveDataManager {
         private FSready: Promise<typeof FS>;
 
@@ -14,12 +11,9 @@ namespace xsystem35 {
             if ((<any>window).FS)
                 this.FSready = xsystem35.saveDirReady;
             if (!this.FSready) {
-                if (!FSLibLoaded)
-                    FSLibLoaded = loadScript('fslib.js');
-                this.FSready = FSLibLoaded.then(() => FSLib().saveDirReady);
+                this.FSready = loadScript('fslib.js').then(() => FSLib().saveDirReady);
             }
-            if (!JSZipLoaded)
-                JSZipLoaded = loadScript('lib/jszip.3.1.3.min.js');
+            loadScript(JSZIP_SCRIPT);
         }
 
         public hasSaveData(): Promise<boolean> {
@@ -40,7 +34,7 @@ namespace xsystem35 {
         }
 
         public async download() {
-            await JSZipLoaded;
+            await loadScript(JSZIP_SCRIPT);
             let zip = new JSZip();
             storeZip(await this.FSready, '/save', zip.folder('save'));
             let blob = await zip.generateAsync({type: 'blob', compression: 'DEFLATE'});
@@ -63,12 +57,9 @@ namespace xsystem35 {
                 if (file.name.toLowerCase().endsWith('.asd')) {
                     addSaveFile(fs, '/save/' + file.name, await readFileAsArrayBuffer(file));
                 } else {
-                    await JSZipLoaded;
+                    await loadScript(JSZIP_SCRIPT);
                     let zip = new JSZip();
-                    let opts: JSZipLoadOptions = {};
-                    if (typeof TextDecoder !== 'undefined')
-                        opts = {decodeFileName} as JSZipLoadOptions;
-                    await zip.loadAsync(await readFileAsArrayBuffer(file), opts);
+                    await zip.loadAsync(await readFileAsArrayBuffer(file), JSZipOptions());
                     let entries: JSZipObject[] = [];
                     zip.folder('save').forEach((path, z) => { entries.push(z); });
                     for (let z of entries) {
@@ -113,13 +104,5 @@ namespace xsystem35 {
 
     function addSaveFile(fs: typeof FS, path: string, content: ArrayBuffer) {
         fs.writeFile(path, new Uint8Array(content), { encoding: 'binary' });
-    }
-
-    function decodeFileName(bytes: Uint8Array): string {
-        try {
-            return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
-        } catch (err) {
-            return new TextDecoder('shift_jis', { fatal: true }).decode(bytes);
-        }
     }
 }

@@ -8,15 +8,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-let $ = document.querySelector.bind(document);
+const $ = document.querySelector.bind(document);
+const JSZIP_SCRIPT = 'lib/jszip.3.1.3.min.js';
+const scriptPromises = new Map();
 function loadScript(src) {
-    let e = document.createElement('script');
-    e.src = src;
-    let p = new Promise((resolve, reject) => {
-        e.addEventListener('load', resolve, { once: true });
-        e.addEventListener('error', reject, { once: true });
-    });
-    document.body.appendChild(e);
+    let p = scriptPromises.get(src);
+    if (!p) {
+        let e = document.createElement('script');
+        e.src = src;
+        p = new Promise((resolve, reject) => {
+            e.addEventListener('load', resolve, { once: true });
+            e.addEventListener('error', reject, { once: true });
+        });
+        document.body.appendChild(e);
+        scriptPromises.set(src, p);
+    }
     return p;
 }
 function readFileAsArrayBuffer(blob) {
@@ -66,6 +72,20 @@ function isIOSVersionBetween(from, to) {
         return false;
     let ver = match[1].replace(/_/g, '.');
     return from <= ver && ver < to;
+}
+function JSZipOptions() {
+    let opts = {};
+    if (typeof TextDecoder !== 'undefined')
+        opts = { decodeFileName };
+    return opts;
+    function decodeFileName(bytes) {
+        try {
+            return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+        }
+        catch (err) {
+            return new TextDecoder('shift_jis', { fatal: true }).decode(bytes);
+        }
+    }
 }
 function gaException(description, exFatal = false) {
     let exDescription = JSON.stringify(description, (_, value) => {
@@ -583,97 +603,73 @@ var xsystem35;
         }
     }
 })(xsystem35 || (xsystem35 = {}));
-// Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
+// Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-/// <reference path="util.ts" />
 /// <reference path="cdimage.ts" />
 /// <reference path="datafile.ts" />
 var xsystem35;
 (function (xsystem35) {
-    class ImageLoader {
-        constructor(shell) {
-            this.shell = shell;
-            this.installing = false;
-            this.hasMidi = false;
-            $('#fileselect').addEventListener('change', this.handleFileSelect.bind(this), false);
-            document.body.ondragover = this.handleDragOver.bind(this);
-            document.body.ondrop = this.handleDrop.bind(this);
+    class NoGamedataError {
+        constructor(message) {
+            this.message = message;
+            this.name = 'NoGamedataError';
         }
-        getCDDA(track) {
-            return this.imageReader.extractTrack(track);
+        toString() {
+            return this.name + ': ' + this.message;
+        }
+    }
+    xsystem35.NoGamedataError = NoGamedataError;
+    class LoaderSource {
+        constructor() {
+            this.hasMidi = false;
         }
         reloadImage() {
-            return openFileInput().then((file) => {
-                this.imageReader.resetImage(file);
-            });
+            return Promise.resolve();
         }
-        handleFileSelect(evt) {
-            let input = evt.target;
-            let files = input.files;
-            for (let i = 0; i < files.length; i++)
-                this.setFile(files[i]);
-            input.value = '';
-        }
-        handleDragOver(evt) {
-            evt.stopPropagation();
-            evt.preventDefault();
-            evt.dataTransfer.dropEffect = 'copy';
-        }
-        handleDrop(evt) {
-            evt.stopPropagation();
-            evt.preventDefault();
-            let files = evt.dataTransfer.files;
-            for (let i = 0; i < files.length; i++)
-                this.setFile(files[i]);
-        }
-        setFile(file) {
+        loadModule(name) {
             return __awaiter(this, void 0, void 0, function* () {
-                if (this.installing)
-                    return;
-                let name = file.name.toLowerCase();
-                if (name.endsWith('.img') || name.endsWith('.mdf') || name.endsWith('.iso')) {
-                    this.imageFile = file;
-                    $('#imgReady').classList.remove('notready');
-                    $('#imgReady').textContent = file.name;
-                }
-                else if (name.endsWith('.cue') || name.endsWith('.ccd') || name.endsWith('.mds')) {
-                    this.metadataFile = file;
-                    $('#cueReady').classList.remove('notready');
-                    $('#cueReady').textContent = file.name;
-                }
-                else if (name.endsWith('.rar')) {
-                    this.shell.addToast('展開前のrarファイルは読み込めません。', 'warning');
-                }
-                else {
-                    this.shell.addToast(name + ' は認識できない形式です。', 'warning');
-                }
-                if (this.imageFile && (this.metadataFile || this.imageFile.name.toLowerCase().endsWith('.iso'))) {
-                    this.installing = true;
-                    try {
-                        this.imageReader = yield CDImage.createReader(this.imageFile, this.metadataFile);
-                        yield this.startLoad();
-                    }
-                    catch (err) {
-                        ga('send', 'event', 'Loader', 'LoadFailed', err.message);
-                        this.shell.addToast('インストールできません。認識できない形式です。', 'error');
-                    }
-                    this.installing = false;
-                }
+                $('#loader').classList.add('module-loading');
+                yield xsystem35.shell.loadModule(name);
             });
+        }
+        createGr(files) {
+            const resourceType = {
+                d: 'Data', g: 'Graphics', m: 'Midi', r: 'Resource', s: 'Scenario', w: 'Wave',
+            };
+            let basename;
+            let lines = [];
+            for (let name of files) {
+                let type = name.charAt(name.length - 6).toLowerCase();
+                let id = name.charAt(name.length - 5);
+                basename = name.slice(0, -6);
+                lines.push(resourceType[type] + id.toUpperCase() + ' ' + name);
+                if (type == 'm')
+                    this.hasMidi = true;
+            }
+            for (let i = 0; i < 26; i++) {
+                let id = String.fromCharCode(65 + i);
+                lines.push('Save' + id + ' save/' + basename + 's' + id.toLowerCase() + '.asd');
+            }
+            return lines.join('\n') + '\n';
+        }
+    }
+    xsystem35.LoaderSource = LoaderSource;
+    class CDImageSource extends LoaderSource {
+        constructor(imageFile, metadataFile) {
+            super();
+            this.imageFile = imageFile;
+            this.metadataFile = metadataFile;
         }
         startLoad() {
             return __awaiter(this, void 0, void 0, function* () {
+                this.imageReader = yield CDImage.createReader(this.imageFile, this.metadataFile);
                 let isofs = yield CDImage.ISO9660FileSystem.create(this.imageReader);
                 // this.walk(isofs, isofs.rootDir(), '/');
                 let gamedata = yield this.findGameDir(isofs);
-                if (!gamedata) {
-                    ga('send', 'event', 'Loader', 'NoGamedataDir');
-                    this.shell.addToast('インストールできません。イメージ内にGAMEDATAフォルダが見つかりません。', 'error');
-                    return;
-                }
+                if (!gamedata)
+                    throw new NoGamedataError('イメージ内にGAMEDATAフォルダが見つかりません。');
                 let isSystem3 = !!(yield isofs.getDirEnt('system3.exe', gamedata));
-                $('#loader').classList.add('module-loading');
-                yield xsystem35.shell.loadModule(isSystem3 ? 'system3' : 'xsystem35');
+                yield this.loadModule(isSystem3 ? 'system3' : 'xsystem35');
                 let startTime = performance.now();
                 let aldFiles = [];
                 for (let e of yield isofs.readDir(gamedata)) {
@@ -700,7 +696,14 @@ var xsystem35;
                     FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
                 }
                 ga('send', 'timing', 'Image load', this.imageFile.name, Math.round(performance.now() - startTime));
-                this.shell.loaded();
+            });
+        }
+        getCDDA(track) {
+            return this.imageReader.extractTrack(track);
+        }
+        reloadImage() {
+            return openFileInput().then((file) => {
+                this.imageReader.resetImage(file);
             });
         }
         findGameDir(isofs) {
@@ -734,26 +737,6 @@ var xsystem35;
                 return '/save/' + dirname;
             });
         }
-        createGr(files) {
-            const resourceType = {
-                d: 'Data', g: 'Graphics', m: 'Midi', r: 'Resource', s: 'Scenario', w: 'Wave',
-            };
-            let basename;
-            let lines = [];
-            for (let name of files) {
-                let type = name.charAt(name.length - 6).toLowerCase();
-                let id = name.charAt(name.length - 5);
-                basename = name.slice(0, -6);
-                lines.push(resourceType[type] + id.toUpperCase() + ' ' + name);
-                if (type == 'm')
-                    this.hasMidi = true;
-            }
-            for (let i = 0; i < 26; i++) {
-                let id = String.fromCharCode(65 + i);
-                lines.push('Save' + id + ' save/' + basename + 's' + id.toLowerCase() + '.asd');
-            }
-            return lines.join('\n') + '\n';
-        }
         // For debug
         walk(isofs, dir, dirname) {
             return __awaiter(this, void 0, void 0, function* () {
@@ -767,50 +750,19 @@ var xsystem35;
             });
         }
     }
-    xsystem35.ImageLoader = ImageLoader;
-})(xsystem35 || (xsystem35 = {}));
-// Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
-// This source code is governed by the MIT License, see the LICENSE file.
-/// <reference path="loader.ts" />
-/// <reference path="datafile.ts" />
-var xsystem35;
-(function (xsystem35) {
-    class FileLoader {
-        constructor() {
+    xsystem35.CDImageSource = CDImageSource;
+    class FileSource extends LoaderSource {
+        constructor(files) {
+            super();
+            this.files = files;
             this.tracks = [];
-            this.hasMidi = false;
-            $('#fileselect').addEventListener('change', this.handleFileSelect.bind(this), false);
-            document.body.ondragover = this.handleDragOver.bind(this);
-            document.body.ondrop = this.handleDrop.bind(this);
         }
-        getCDDA(track) {
-            return Promise.resolve(this.tracks[track]);
-        }
-        reloadImage() {
-            return Promise.resolve();
-        }
-        handleFileSelect(evt) {
-            let input = evt.target;
-            this.startLoad(input.files);
-            input.value = '';
-        }
-        handleDragOver(evt) {
-            evt.stopPropagation();
-            evt.preventDefault();
-            evt.dataTransfer.dropEffect = 'copy';
-        }
-        handleDrop(evt) {
-            evt.stopPropagation();
-            evt.preventDefault();
-            this.startLoad(evt.dataTransfer.files);
-        }
-        startLoad(files) {
+        startLoad() {
             return __awaiter(this, void 0, void 0, function* () {
-                $('#loader').classList.add('module-loading');
-                yield xsystem35.shell.loadModule('xsystem35');
+                yield this.loadModule('xsystem35');
                 let aldFiles = [];
-                for (let i = 0; i < files.length; i++) {
-                    let f = files[i];
+                for (let i = 0; i < this.files.length; i++) {
+                    let f = this.files[i];
                     let match = /(\d+)\.(wav|mp3|ogg)$/.exec(f.name.toLowerCase());
                     if (match) {
                         this.tracks[Number(match[1])] = f;
@@ -822,49 +774,166 @@ var xsystem35;
                 }
                 FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
                 FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
-                xsystem35.shell.loaded();
             });
         }
-        createGr(files) {
-            const resourceType = {
-                d: 'Data', g: 'Graphics', m: 'Midi', r: 'Resource', s: 'Scenario', w: 'Wave',
-            };
-            let basename;
-            let lines = [];
-            for (let name of files) {
-                let type = name.charAt(name.length - 6).toLowerCase();
-                let id = name.charAt(name.length - 5);
-                basename = name.slice(0, -6);
-                lines.push(resourceType[type] + id.toUpperCase() + ' ' + name);
-                if (type == 'm')
-                    this.hasMidi = true;
-            }
-            for (let i = 0; i < 26; i++) {
-                let id = String.fromCharCode(65 + i);
-                lines.push('Save' + id + ' save/' + basename + 's' + id.toLowerCase() + '.asd');
-            }
-            return lines.join('\n') + '\n';
+        getCDDA(track) {
+            return Promise.resolve(this.tracks[track]);
         }
     }
-    xsystem35.FileLoader = FileLoader;
+    xsystem35.FileSource = FileSource;
+    class ZipSource extends LoaderSource {
+        constructor(zipFile) {
+            super();
+            this.zipFile = zipFile;
+        }
+        startLoad() {
+            return __awaiter(this, void 0, void 0, function* () {
+                yield loadScript(JSZIP_SCRIPT);
+                let zip = new JSZip();
+                yield zip.loadAsync(yield readFileAsArrayBuffer(this.zipFile), JSZipOptions());
+                let aldFiles = [];
+                for (let name in zip.files) {
+                    if (!name.toLowerCase().endsWith('.ald'))
+                        continue;
+                    if (aldFiles.length === 0)
+                        yield this.loadModule('xsystem35');
+                    let content = yield zip.files[name].async('arraybuffer');
+                    let basename = name.split('/').pop();
+                    xsystem35.registerDataFile(basename, content.byteLength, [new Uint8Array(content)]);
+                    aldFiles.push(basename);
+                }
+                if (aldFiles.length === 0)
+                    throw new NoGamedataError('ZIP内にゲームデータ (*.ALDファイル) が見つかりません。');
+                FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
+                FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
+            });
+        }
+        getCDDA(track) {
+            return Promise.reject(new Error('ZipSource#getCDDA: not supported'));
+        }
+    }
+    xsystem35.ZipSource = ZipSource;
+})(xsystem35 || (xsystem35 = {}));
+// Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
+// This source code is governed by the MIT License, see the LICENSE file.
+/// <reference path="util.ts" />
+/// <reference path="loadersource.ts" />
+var xsystem35;
+(function (xsystem35) {
+    class Loader {
+        constructor(shell) {
+            this.shell = shell;
+            this.installing = false;
+            $('#fileselect').addEventListener('change', this.handleFileSelect.bind(this), false);
+            document.body.ondragover = this.handleDragOver.bind(this);
+            document.body.ondrop = this.handleDrop.bind(this);
+        }
+        getCDDA(track) {
+            return this.source.getCDDA(track);
+        }
+        reloadImage() {
+            return this.source.reloadImage();
+        }
+        handleFileSelect(evt) {
+            let input = evt.target;
+            this.handleFiles(input.files);
+            input.value = '';
+        }
+        handleDragOver(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+            evt.dataTransfer.dropEffect = 'copy';
+        }
+        handleDrop(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+            this.handleFiles(evt.dataTransfer.files);
+        }
+        handleFiles(files) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (this.installing)
+                    return;
+                let hasALD = false;
+                let recognized = false;
+                for (let file of files) {
+                    if (this.isImageFile(file)) {
+                        this.imageFile = file;
+                        $('#imgReady').classList.remove('notready');
+                        $('#imgReady').textContent = file.name;
+                        recognized = true;
+                    }
+                    else if (this.isMetadataFile(file)) {
+                        this.metadataFile = file;
+                        $('#cueReady').classList.remove('notready');
+                        $('#cueReady').textContent = file.name;
+                        recognized = true;
+                    }
+                    else if (file.name.toLowerCase().endsWith('.ald')) {
+                        hasALD = true;
+                    }
+                    else if (file.name.toLowerCase().endsWith('.rar')) {
+                        this.shell.addToast('展開前のrarファイルは読み込めません。', 'warning');
+                        recognized = true;
+                    }
+                }
+                if (this.imageFile && (this.metadataFile || this.imageFile.name.toLowerCase().endsWith('.iso'))) {
+                    this.source = new xsystem35.CDImageSource(this.imageFile, this.metadataFile);
+                }
+                else if (!this.imageFile && !this.metadataFile) {
+                    if (files.length == 1 && files[0].name.toLowerCase().endsWith('.zip')) {
+                        this.source = new xsystem35.ZipSource(files[0]);
+                    }
+                    else if (hasALD) {
+                        this.source = new xsystem35.FileSource(files);
+                    }
+                }
+                if (!this.source) {
+                    if (!recognized)
+                        this.shell.addToast(files[0].name + ' は認識できない形式です。', 'warning');
+                    return;
+                }
+                this.installing = true;
+                try {
+                    yield this.source.startLoad();
+                    this.shell.loaded(this.source.hasMidi);
+                }
+                catch (err) {
+                    if (err instanceof xsystem35.NoGamedataError) {
+                        ga('send', 'event', 'Loader', 'NoGamedata', err.message);
+                        this.shell.addToast('インストールできません。' + err.message, 'warning');
+                    }
+                    else {
+                        ga('send', 'event', 'Loader', 'LoadFailed', err.message);
+                        this.shell.addToast('インストールできません。認識できない形式です。', 'warning');
+                    }
+                    this.source = null;
+                }
+                this.installing = false;
+            });
+        }
+        isImageFile(file) {
+            let name = file.name.toLowerCase();
+            return name.endsWith('.img') || name.endsWith('.mdf') || name.endsWith('.iso');
+        }
+        isMetadataFile(file) {
+            let name = file.name.toLowerCase();
+            return name.endsWith('.cue') || name.endsWith('.ccd') || name.endsWith('.mds');
+        }
+    }
+    xsystem35.Loader = Loader;
 })(xsystem35 || (xsystem35 = {}));
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 var xsystem35;
 (function (xsystem35) {
-    let FSLibLoaded;
-    let JSZipLoaded;
     class SaveDataManager {
         constructor() {
             if (window.FS)
                 this.FSready = xsystem35.saveDirReady;
             if (!this.FSready) {
-                if (!FSLibLoaded)
-                    FSLibLoaded = loadScript('fslib.js');
-                this.FSready = FSLibLoaded.then(() => FSLib().saveDirReady);
+                this.FSready = loadScript('fslib.js').then(() => FSLib().saveDirReady);
             }
-            if (!JSZipLoaded)
-                JSZipLoaded = loadScript('lib/jszip.3.1.3.min.js');
+            loadScript(JSZIP_SCRIPT);
         }
         hasSaveData() {
             function find(fs, dir) {
@@ -884,7 +953,7 @@ var xsystem35;
         }
         download() {
             return __awaiter(this, void 0, void 0, function* () {
-                yield JSZipLoaded;
+                yield loadScript(JSZIP_SCRIPT);
                 let zip = new JSZip();
                 storeZip(yield this.FSready, '/save', zip.folder('save'));
                 let blob = yield zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
@@ -910,12 +979,9 @@ var xsystem35;
                         addSaveFile(fs, '/save/' + file.name, yield readFileAsArrayBuffer(file));
                     }
                     else {
-                        yield JSZipLoaded;
+                        yield loadScript(JSZIP_SCRIPT);
                         let zip = new JSZip();
-                        let opts = {};
-                        if (typeof TextDecoder !== 'undefined')
-                            opts = { decodeFileName };
-                        yield zip.loadAsync(yield readFileAsArrayBuffer(file), opts);
+                        yield zip.loadAsync(yield readFileAsArrayBuffer(file), JSZipOptions());
                         let entries = [];
                         zip.folder('save').forEach((path, z) => { entries.push(z); });
                         for (let z of entries) {
@@ -963,14 +1029,6 @@ var xsystem35;
     }
     function addSaveFile(fs, path, content) {
         fs.writeFile(path, new Uint8Array(content), { encoding: 'binary' });
-    }
-    function decodeFileName(bytes) {
-        try {
-            return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
-        }
-        catch (err) {
-            return new TextDecoder('shift_jis', { fatal: true }).decode(bytes);
-        }
     }
 })(xsystem35 || (xsystem35 = {}));
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
@@ -1859,7 +1917,6 @@ var xsystem35;
 /// <reference path="util.ts" />
 /// <reference path="config.ts" />
 /// <reference path="loader.ts" />
-/// <reference path="fileloader.ts" />
 /// <reference path="settings.ts" />
 /// <reference path="zoom.ts" />
 /// <reference path="volume.ts" />
@@ -1895,10 +1952,7 @@ var xsystem35;
                 gaException({ type: 'rejection', message, stack }, true);
                 // this.addToast('エラーが発生しました。', 'error');
             });
-            if (xsystem35.urlParams.get('loader') === 'file')
-                this.loader = new xsystem35.FileLoader();
-            else
-                this.loader = new xsystem35.ImageLoader(this);
+            this.loader = new xsystem35.Loader(this);
             this.volumeControl = new xsystem35.VolumeControl();
             xsystem35.cdPlayer = new xsystem35.CDPlayer(this.loader, this.volumeControl);
             xsystem35.midiPlayer = new xsystem35.MIDIPlayer();
@@ -1981,8 +2035,8 @@ var xsystem35;
             }
             return true;
         }
-        loaded() {
-            if (this.loader.hasMidi)
+        loaded(hasMidi) {
+            if (hasMidi)
                 xsystem35.midiPlayer.init(this.volumeControl.audioNode());
             $('#xsystem35').hidden = false;
             document.body.classList.add('game');
