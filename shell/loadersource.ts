@@ -24,11 +24,6 @@ namespace xsystem35 {
             return Promise.resolve();
         }
 
-        protected async loadModule(name: 'system3' | 'xsystem35') {
-            $('#loader').classList.add('module-loading');
-            await shell.loadModule(name);
-        }
-
         protected createGr(files: string[]): string {
             const resourceType: { [ch: string]: string } = {
                 d: 'Data', g: 'Graphics', m: 'Midi', r: 'Resource', s: 'Scenario', w: 'Wave',
@@ -67,9 +62,9 @@ namespace xsystem35 {
                 throw new NoGamedataError('イメージ内にGAMEDATAフォルダが見つかりません。');
 
             let isSystem3 = !!await isofs.getDirEnt('system3.exe', gamedata);
-            await this.loadModule(isSystem3 ? 'system3' : 'xsystem35');
+            await shell.loadModule(isSystem3 ? 'system3' : 'xsystem35');
 
-            let startTime = performance.now();
+            let endMeasure = startMeasure('ImageLoad', 'Image load', this.imageFile.name);
             let aldFiles = [];
             for (let e of await isofs.readDir(gamedata)) {
                 if (isSystem3) {
@@ -81,7 +76,9 @@ namespace xsystem35 {
                     if (e.name.toLowerCase().endsWith('.ald'))
                         aldFiles.push(e.name);
                 }
+                let em = startMeasure(e.name);
                 let chunks = await isofs.readFile(e);
+                em();
                 registerDataFile(e.name, e.size, chunks);
             }
             if (isSystem3) {
@@ -92,7 +89,7 @@ namespace xsystem35 {
                 FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
                 FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
             }
-            ga('send', 'timing', 'Image load', this.imageFile.name, Math.round(performance.now() - startTime));
+            endMeasure();
         }
 
         getCDDA(track: number): Promise<Blob> {
@@ -152,7 +149,7 @@ namespace xsystem35 {
         }
 
         async startLoad() {
-            await this.loadModule('xsystem35');
+            await shell.loadModule('xsystem35');
             let aldFiles = [];
             for (let i = 0; i < this.files.length; i++) {
                 let f = this.files[i];
@@ -188,7 +185,7 @@ namespace xsystem35 {
                 if (!name.toLowerCase().endsWith('.ald'))
                     continue;
                 if (aldFiles.length === 0)
-                    await this.loadModule('xsystem35');
+                    await shell.loadModule('xsystem35');
                 let content: ArrayBuffer = await zip.files[name].async('arraybuffer');
                 let basename = name.split('/').pop();
                 registerDataFile(basename, content.byteLength, [new Uint8Array(content)]);

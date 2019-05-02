@@ -87,6 +87,19 @@ function JSZipOptions() {
         }
     }
 }
+function startMeasure(name, gaName, gaParam) {
+    let startMark = name + '-start';
+    let endMark = name + '-end';
+    performance.mark(startMark);
+    return () => {
+        performance.mark(endMark);
+        performance.measure(name, startMark, endMark);
+        if (gaName) {
+            let duration = performance.getEntriesByName(name)[0].duration;
+            ga('send', 'timing', gaName, gaParam, Math.round(duration));
+        }
+    };
+}
 function gaException(description, exFatal = false) {
     let exDescription = JSON.stringify(description, (_, value) => {
         if (value instanceof DOMException) {
@@ -626,12 +639,6 @@ var xsystem35;
         reloadImage() {
             return Promise.resolve();
         }
-        loadModule(name) {
-            return __awaiter(this, void 0, void 0, function* () {
-                $('#loader').classList.add('module-loading');
-                yield xsystem35.shell.loadModule(name);
-            });
-        }
         createGr(files) {
             const resourceType = {
                 d: 'Data', g: 'Graphics', m: 'Midi', r: 'Resource', s: 'Scenario', w: 'Wave',
@@ -669,8 +676,8 @@ var xsystem35;
                 if (!gamedata)
                     throw new NoGamedataError('イメージ内にGAMEDATAフォルダが見つかりません。');
                 let isSystem3 = !!(yield isofs.getDirEnt('system3.exe', gamedata));
-                yield this.loadModule(isSystem3 ? 'system3' : 'xsystem35');
-                let startTime = performance.now();
+                yield xsystem35.shell.loadModule(isSystem3 ? 'system3' : 'xsystem35');
+                let endMeasure = startMeasure('ImageLoad', 'Image load', this.imageFile.name);
                 let aldFiles = [];
                 for (let e of yield isofs.readDir(gamedata)) {
                     if (isSystem3) {
@@ -683,7 +690,9 @@ var xsystem35;
                         if (e.name.toLowerCase().endsWith('.ald'))
                             aldFiles.push(e.name);
                     }
+                    let em = startMeasure(e.name);
                     let chunks = yield isofs.readFile(e);
+                    em();
                     xsystem35.registerDataFile(e.name, e.size, chunks);
                 }
                 if (isSystem3) {
@@ -695,7 +704,7 @@ var xsystem35;
                     FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
                     FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
                 }
-                ga('send', 'timing', 'Image load', this.imageFile.name, Math.round(performance.now() - startTime));
+                endMeasure();
             });
         }
         getCDDA(track) {
@@ -759,7 +768,7 @@ var xsystem35;
         }
         startLoad() {
             return __awaiter(this, void 0, void 0, function* () {
-                yield this.loadModule('xsystem35');
+                yield xsystem35.shell.loadModule('xsystem35');
                 let aldFiles = [];
                 for (let i = 0; i < this.files.length; i++) {
                     let f = this.files[i];
@@ -796,7 +805,7 @@ var xsystem35;
                     if (!name.toLowerCase().endsWith('.ald'))
                         continue;
                     if (aldFiles.length === 0)
-                        yield this.loadModule('xsystem35');
+                        yield xsystem35.shell.loadModule('xsystem35');
                     let content = yield zip.files[name].async('arraybuffer');
                     let basename = name.split('/').pop();
                     xsystem35.registerDataFile(basename, content.byteLength, [new Uint8Array(content)]);
@@ -2005,6 +2014,7 @@ var xsystem35;
             ];
         }
         loadModule(name) {
+            $('#loader').classList.add('module-loading');
             let src = name + (this.shouldUseWasm() ? '.js' : '.asm.js');
             let script = document.createElement('script');
             script.src = src;
@@ -2013,9 +2023,9 @@ var xsystem35;
                 this.addToast(src + 'の読み込みに失敗しました。リロードしてください。', 'error');
             };
             document.body.appendChild(script);
-            let start = performance.now();
+            let endMeasure = startMeasure('ModuleLoad', 'Module load', src);
             return xsystem35.fileSystemReady.then(() => {
-                ga('send', 'timing', 'Module load', src, Math.round(performance.now() - start));
+                endMeasure();
                 $('#loader').hidden = true;
                 document.body.classList.add('bgblack-fade');
                 this.toolbar.setCloseable();
@@ -2168,9 +2178,9 @@ var xsystem35;
         mincho_loaded = true;
         return new Promise((resolve) => {
             console.log('loading mincho font');
-            let start = performance.now();
+            let endMeasure = startMeasure('FontLoad', 'Font load', FontMincho);
             Module.readAsync('fonts/' + FontMincho, (buf) => {
-                ga('send', 'timing', 'Font load', FontMincho, Math.round(performance.now() - start));
+                endMeasure();
                 FS.writeFile(FontMincho, new Uint8Array(buf), { encoding: 'binary' });
                 resolve(xsystem35.Status.OK);
             }, () => {

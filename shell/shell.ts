@@ -108,6 +108,7 @@ namespace xsystem35 {
         }
 
         loadModule(name: 'system3' | 'xsystem35'): Promise<any> {
+            $('#loader').classList.add('module-loading');
             let src = name + (this.shouldUseWasm() ? '.js' : '.asm.js');
             let script = document.createElement('script');
             script.src = src;
@@ -116,9 +117,9 @@ namespace xsystem35 {
                 this.addToast(src + 'の読み込みに失敗しました。リロードしてください。', 'error');
             };
             document.body.appendChild(script);
-            let start = performance.now();
+            let endMeasure = startMeasure('ModuleLoad', 'Module load', src);
             return xsystem35.fileSystemReady.then(() => {
-                ga('send', 'timing', 'Module load', src, Math.round(performance.now() - start));
+                endMeasure();
                 $('#loader').hidden = true;
                 document.body.classList.add('bgblack-fade');
                 this.toolbar.setCloseable();
@@ -278,9 +279,9 @@ namespace xsystem35 {
 
         return new Promise((resolve) => {
             console.log('loading mincho font');
-            let start = performance.now();
+            let endMeasure = startMeasure('FontLoad', 'Font load', FontMincho);
             Module.readAsync('fonts/' + FontMincho, (buf: ArrayBuffer) => {
-                ga('send', 'timing', 'Font load', FontMincho, Math.round(performance.now() - start));
+                endMeasure();
                 FS.writeFile(FontMincho, new Uint8Array(buf), { encoding: 'binary' });
                 resolve(Status.OK);
             }, () => {

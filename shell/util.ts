@@ -89,6 +89,20 @@ function JSZipOptions(): JSZipLoadOptions {
     }
 }
 
+function startMeasure(name: string, gaName?: string, gaParam?: string): () => void {
+    let startMark = name + '-start';
+    let endMark = name + '-end';
+    performance.mark(startMark);
+    return () => {
+        performance.mark(endMark);
+        performance.measure(name, startMark, endMark);
+        if (gaName) {
+            let duration = performance.getEntriesByName(name)[0].duration;
+            ga('send', 'timing', gaName, gaParam, Math.round(duration));
+        }
+    };
+}
+
 function gaException(description: any, exFatal: boolean = false) {
     let exDescription = JSON.stringify(description, (_, value) => {
         if (value instanceof DOMException) {
