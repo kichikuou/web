@@ -37,3 +37,9 @@ https://kichikuou.github.io/web/ で公開されるディレクトリです。HT
 `docs/fonts/MTLc3m.ttf` は Android Open Source Project の "モトヤLシーダ3等幅" フォントであり、[Apache License 2.0](docs/fonts/NOTICE) に従います。
 
 `docs/fonts/mincho.otf` は [源ノ明朝](https://github.com/adobe-fonts/source-han-serif/) フォントのサブセットです。[SIL Open Font License 1.1](docs/fonts/LICENSE.txt) に従います。サブセット化に使用したスクリプトは [tools](tools) ディレクトリにあります。
+
+また、鬼畜王 on Web では以下のオープンソースソフトウェアを使用しています。
+- [Font Awesome](https://fontawesome.com/v4.7.0/) by Dave Gandy ([License](https://fontawesome.com/v4.7.0/license/))
+- [JSZip](https://stuk.github.io/jszip/) by Stuart Knightley ([License](https://github.com/Stuk/jszip/blob/v3.1.3/LICENSE.markdown))
+- [Spectre.css](https://picturepan2.github.io/spectre/) by Yan Zhu ([License](https://github.com/picturepan2/spectre/blob/v0.5.8/LICENSE))
+- [WebAssembly port of libTiMidity](https://github.com/feross/timidity) (part of [BitMidi](https://bitmidi.com/)) by Feross Aboukhadijeh, used with permission.
