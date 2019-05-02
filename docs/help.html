@@ -179,20 +179,28 @@ img {
 
   <details class="section">
     <summary>ゲームを起動する</summary>
-    <p>このサイト自体は実行環境のみ提供するもので、ゲームのCDイメージを読み込んで動作します。</p>
+    <p>このサイト自体は実行環境のみ提供するもので、CD-ROMイメージやZIPファイルからゲームを読み込んで動作します。</p>
     <p>iOSでの起動方法は<a href="#iOS" onclick="iOS.parentElement.open = true;">こちら</a>を参照下さい。</p>
     <ol>
     <li>起動したいゲームのディスクイメージをダウンロードします。入手先は上の「対応ゲーム」の項を参照してください。</li>
-    <li>ダウンロードしたファイルはRAR形式の圧縮ファイルなので、展開してCD-ROMイメージを取り出します。Windowsなら <a href="http://www.forest.impress.co.jp/library/software/lhaplus/">LhaPlus</a>、Macなら <a href="https://itunes.apple.com/jp/app/the-unarchiver/id425424353">The Unarchiver</a>、Androidなら <a href="https://play.google.com/store/apps/details?id=ru.zdevs.zarchiver&amp;hl=ja">ZArchiver</a> で展開できます。</li>
-    <li>展開したフォルダにある拡張子 <code>.img</code>（または <code>.mdf</code>）のファイルと、 <code>.cue</code> (または <code>.ccd</code>, <code>.mds</code>) のファイルを、鬼畜王 on Web のページにドラッグ＆ドロップするか、ページにある「ファイルを選択」ボタンを押して選択します。よくわからない場合はフォルダ内のすべてのファイルをドロップしても構いません。</li>
+    <li>RARファイル（CDイメージ）をダウンロードした場合、
+      <ol>
+	<li>RAR圧縮ファイルを展開してCD-ROMイメージを取り出します。Windowsなら <a href="http://www.forest.impress.co.jp/library/software/lhaplus/">LhaPlus</a>、Macなら <a href="https://itunes.apple.com/jp/app/the-unarchiver/id425424353">The Unarchiver</a>、Androidなら <a href="https://play.google.com/store/apps/details?id=ru.zdevs.zarchiver&amp;hl=ja">ZArchiver</a> で展開できます。</li>
+	<li>展開したフォルダにある拡張子 <code>.img</code>（または <code>.mdf</code>）のファイルと、 <code>.cue</code> (または <code>.ccd</code>, <code>.mds</code>) のファイルを、鬼畜王 on Web のページにドラッグ＆ドロップするか、ページにある「ファイルを選択」ボタンを押して選択します。よくわからない場合はフォルダ内のすべてのファイルをドロップしても構いません。</li>
+      </ol>
+    </li>
+    <li>ZIPファイル（Windows版アーカイブ）をダウンロードした場合、
+      <ol><li>ダウンロードしたファイルをそのまま鬼畜王 on Web のページにドラッグ＆ドロップ（または、ページにある「ファイルを選択」ボタンを押して選択）してください。</li></ol>
+    </li>
     <li>ゲームが始まります。セーブデータはブラウザ内に保存されるので、次回ページを開いたときは再度CDイメージを読み込ませればセーブしたところから再開できます。</li>
     </ol>
   </details>
 
   <details class="section">
-    <summary id="iOS">iOSでのプレイ方法</summary>
+    <summary id="iOS">iOSでの起動方法</summary>
     <p><span class="label label-error">注意</span> <strong>iOS 12で、ディスクイメージを読み込ませるとブラウザクラッシュする問題が報告されています。作者の環境では再現せず、またSafari側のバグと思われるため対応は難しい状況です。ご不便をおかけしますが、ディスクの読み込みに失敗する場合は当面は他の環境でご利用ください。</strong></p>
-    <p>iOS 11以降での起動方法です。スクリーンショットは iPad のものですが、iPhone でも手順は同様です。</p>
+    <p>iOS 11以降で、RARファイルからCD-ROMイメージを取り出して起動する方法です。ZIPファイルから起動する場合（ランス1〜3、闘神都市1など）は、ダウンロードしたファイルをそのまま読み込ませるだけなので、上の「ゲームを起動する」の項の手順に従ってください。</p>
+    <p>スクリーンショットは iPad のものですが、iPhone でも手順は同様です。</p>
     <ol>
     <li>「設定」→「一般」→「iPhoneストレージ」から、ストレージの空きを確認しておきます。1.4GB以上の空き容量が必要です。</li>
     <li>Rar圧縮ファイル解凍のため、<a href="https://itunes.apple.com/jp/app/izip-zip%E5%9C%A7%E7%B8%AE-zip%E8%A7%A3%E5%87%8D-rar%E8%A7%A3%E5%87%8D%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AE%E3%83%84%E3%83%BC%E3%83%AB/id413971331?mt=8">iZip</a> をインストールします。</li>
