@@ -209,11 +209,12 @@ namespace xsystem35 {
             this.node.buffer = this.buf;
             this.node.connect(this.gain);
             this.node.onended = this.onended.bind(this);
-            if (loop === 0)
+            if (loop !== 1)
                 this.node.loop = true;
-            else if (loop !== 1)
-                console.warn('Unsupported PCM loop count ' + loop);
-            this.node.start();
+            if (loop <= 1)
+                this.node.start();
+            else
+                this.node.start(0, 0, this.buf.duration * loop);
             this.startTime = this.context.currentTime;
         }
 
