@@ -4,7 +4,7 @@ let cacheOptions = {
     cacheName: 'kichikuou',
     plugins: [
         new workbox.expiration.Plugin({
-            maxEntries: 50,
+            maxEntries: 100,
             purgeOnQuotaError: true,
         })
     ],
