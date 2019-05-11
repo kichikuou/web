@@ -44,7 +44,7 @@ namespace xsystem35 {
         }
 
         private async handleFiles(files: FileList) {
-            if (this.installing)
+            if (this.installing || files.length === 0)
                 return;
 
             let hasALD = false;

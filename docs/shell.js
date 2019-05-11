@@ -860,7 +860,7 @@ var xsystem35;
         }
         handleFiles(files) {
             return __awaiter(this, void 0, void 0, function* () {
-                if (this.installing)
+                if (this.installing || files.length === 0)
                     return;
                 let hasALD = false;
                 let recognized = false;
