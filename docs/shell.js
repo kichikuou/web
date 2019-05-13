@@ -1,11 +1,3 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 const $ = document.querySelector.bind(document);
@@ -172,27 +164,25 @@ var CDImage;
             this.vd = vd;
             this.decoder = new TextDecoder(vd.encoding());
         }
-        static create(sectorReader) {
-            return __awaiter(this, void 0, void 0, function* () {
-                let best_vd = null;
-                for (let sector = 0x10;; sector++) {
-                    let vd = new VolumeDescriptor(yield sectorReader.readSector(sector));
-                    switch (vd.type) {
-                        case VDType.Primary:
-                            if (!best_vd)
-                                best_vd = vd;
-                            break;
-                        case VDType.Supplementary:
-                            if (vd.encoding())
-                                best_vd = vd;
-                            break;
-                        case VDType.Terminator:
-                            if (!best_vd)
-                                throw new Error('PVD not found');
-                            return new ISO9660FileSystem(sectorReader, best_vd);
-                    }
+        static async create(sectorReader) {
+            let best_vd = null;
+            for (let sector = 0x10;; sector++) {
+                let vd = new VolumeDescriptor(await sectorReader.readSector(sector));
+                switch (vd.type) {
+                    case VDType.Primary:
+                        if (!best_vd)
+                            best_vd = vd;
+                        break;
+                    case VDType.Supplementary:
+                        if (vd.encoding())
+                            best_vd = vd;
+                        break;
+                    case VDType.Terminator:
+                        if (!best_vd)
+                            throw new Error('PVD not found');
+                        return new ISO9660FileSystem(sectorReader, best_vd);
                 }
-            });
+            }
         }
         volumeLabel() {
             return this.vd.volumeLabel(this.decoder);
@@ -200,45 +190,41 @@ var CDImage;
         rootDir() {
             return this.vd.rootDirEnt(this.decoder);
         }
-        getDirEnt(name, parent) {
-            return __awaiter(this, void 0, void 0, function* () {
-                name = name.toLowerCase();
-                for (let e of yield this.readDir(parent)) {
-                    if (e.name.toLowerCase() === name)
-                        return e;
-                }
-                return null;
-            });
+        async getDirEnt(name, parent) {
+            name = name.toLowerCase();
+            for (let e of await this.readDir(parent)) {
+                if (e.name.toLowerCase() === name)
+                    return e;
+            }
+            return null;
         }
-        readDir(dirent) {
-            return __awaiter(this, void 0, void 0, function* () {
-                let sector = dirent.sector;
-                let position = 0;
-                let length = dirent.size;
-                let entries = [];
-                let buf;
-                while (position < length) {
-                    if (position === 0)
-                        buf = yield this.sectorReader.readSector(sector);
-                    let child = new DirEnt(buf, position, this.decoder);
-                    if (child.length === 0) {
-                        // Padded end of sector
-                        position = 2048;
-                    }
-                    else {
-                        entries.push(child);
-                        position += child.length;
-                    }
-                    if (position > 2048)
-                        throw new Error('dirent across sector boundary');
-                    if (position === 2048) {
-                        sector++;
-                        position = 0;
-                        length -= 2048;
-                    }
+        async readDir(dirent) {
+            let sector = dirent.sector;
+            let position = 0;
+            let length = dirent.size;
+            let entries = [];
+            let buf;
+            while (position < length) {
+                if (position === 0)
+                    buf = await this.sectorReader.readSector(sector);
+                let child = new DirEnt(buf, position, this.decoder);
+                if (child.length === 0) {
+                    // Padded end of sector
+                    position = 2048;
                 }
-                return entries;
-            });
+                else {
+                    entries.push(child);
+                    position += child.length;
+                }
+                if (position > 2048)
+                    throw new Error('dirent across sector boundary');
+                if (position === 2048) {
+                    sector++;
+                    position = 0;
+                    length -= 2048;
+                }
+            }
+            return entries;
         }
         readFile(dirent) {
             return this.sectorReader.readSequentialSectors(dirent.sector, dirent.size);
@@ -312,45 +298,41 @@ var CDImage;
         }
     }
     CDImage.DirEnt = DirEnt;
-    function createReader(img, metadata) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (img.name.endsWith('.iso')) {
-                return new IsoReader(img);
-            }
-            else if (metadata.name.endsWith('.cue')) {
-                let reader = new ImgCueReader(img);
-                yield reader.parseCue(metadata);
-                return reader;
-            }
-            else if (metadata.name.endsWith('.ccd')) {
-                let reader = new ImgCueReader(img);
-                yield reader.parseCcd(metadata);
-                return reader;
-            }
-            else {
-                let reader = new MdfMdsReader(img);
-                yield reader.parseMds(metadata);
-                return reader;
-            }
-        });
+    async function createReader(img, metadata) {
+        if (img.name.endsWith('.iso')) {
+            return new IsoReader(img);
+        }
+        else if (metadata.name.endsWith('.cue')) {
+            let reader = new ImgCueReader(img);
+            await reader.parseCue(metadata);
+            return reader;
+        }
+        else if (metadata.name.endsWith('.ccd')) {
+            let reader = new ImgCueReader(img);
+            await reader.parseCcd(metadata);
+            return reader;
+        }
+        else {
+            let reader = new MdfMdsReader(img);
+            await reader.parseMds(metadata);
+            return reader;
+        }
     }
     CDImage.createReader = createReader;
     class ImageReaderBase {
         constructor(image) {
             this.image = image;
         }
-        readSequential(startOffset, bytesToRead, blockSize, sectorSize, sectorOffset) {
-            return __awaiter(this, void 0, void 0, function* () {
-                let sectors = Math.ceil(bytesToRead / sectorSize);
-                let blob = this.image.slice(startOffset, startOffset + sectors * blockSize);
-                let buf = yield readFileAsArrayBuffer(blob);
-                let bufs = [];
-                for (let i = 0; i < sectors; i++) {
-                    bufs.push(new Uint8Array(buf, i * blockSize + sectorOffset, Math.min(bytesToRead, sectorSize)));
-                    bytesToRead -= sectorSize;
-                }
-                return bufs;
-            });
+        async readSequential(startOffset, bytesToRead, blockSize, sectorSize, sectorOffset) {
+            let sectors = Math.ceil(bytesToRead / sectorSize);
+            let blob = this.image.slice(startOffset, startOffset + sectors * blockSize);
+            let buf = await readFileAsArrayBuffer(blob);
+            let bufs = [];
+            for (let i = 0; i < sectors; i++) {
+                bufs.push(new Uint8Array(buf, i * blockSize + sectorOffset, Math.min(bytesToRead, sectorSize)));
+                bytesToRead -= sectorSize;
+            }
+            return bufs;
         }
         resetImage(image) {
             this.image = image;
@@ -360,12 +342,10 @@ var CDImage;
         readSector(sector) {
             return readFileAsArrayBuffer(this.image.slice(sector * 2048, (sector + 1) * 2048));
         }
-        readSequentialSectors(startSector, length) {
-            return __awaiter(this, void 0, void 0, function* () {
-                let start = startSector * 2048;
-                let buf = yield readFileAsArrayBuffer(this.image.slice(start, start + length));
-                return [new Uint8Array(buf)];
-            });
+        async readSequentialSectors(startSector, length) {
+            let start = startSector * 2048;
+            let buf = await readFileAsArrayBuffer(this.image.slice(start, start + length));
+            return [new Uint8Array(buf)];
         }
         maxTrack() {
             return 1;
@@ -386,84 +366,78 @@ var CDImage;
         readSequentialSectors(startSector, length) {
             return this.readSequential(startSector * 2352, length, 2352, 2048, 16);
         }
-        parseCue(cueFile) {
-            return __awaiter(this, void 0, void 0, function* () {
-                let lines = (yield readFileAsText(cueFile)).split('\n');
-                this.tracks = [];
-                let currentTrack = null;
-                for (let line of lines) {
-                    let fields = line.trim().split(/\s+/);
-                    switch (fields[0]) {
-                        case 'TRACK':
-                            currentTrack = Number(fields[1]);
-                            this.tracks[currentTrack] = { isAudio: fields[2] === 'AUDIO', index: [] };
-                            break;
-                        case 'INDEX':
-                            if (currentTrack)
-                                this.tracks[currentTrack].index[Number(fields[1])] = this.indexToSector(fields[2]);
-                            break;
-                        default:
-                        // Do nothing
-                    }
+        async parseCue(cueFile) {
+            let lines = (await readFileAsText(cueFile)).split('\n');
+            this.tracks = [];
+            let currentTrack = null;
+            for (let line of lines) {
+                let fields = line.trim().split(/\s+/);
+                switch (fields[0]) {
+                    case 'TRACK':
+                        currentTrack = Number(fields[1]);
+                        this.tracks[currentTrack] = { isAudio: fields[2] === 'AUDIO', index: [] };
+                        break;
+                    case 'INDEX':
+                        if (currentTrack)
+                            this.tracks[currentTrack].index[Number(fields[1])] = this.indexToSector(fields[2]);
+                        break;
+                    default:
+                    // Do nothing
                 }
-            });
+            }
         }
-        parseCcd(ccdFile) {
-            return __awaiter(this, void 0, void 0, function* () {
-                let lines = (yield readFileAsText(ccdFile)).split('\n');
-                this.tracks = [];
-                let currentTrack = null;
-                for (let line of lines) {
-                    line = line.trim();
-                    let match = line.match(/\[TRACK ([0-9]+)\]/);
-                    if (match) {
-                        currentTrack = Number(match[1]);
-                        this.tracks[currentTrack] = { isAudio: undefined, index: [] };
-                        continue;
-                    }
-                    if (!currentTrack)
-                        continue;
-                    let keyval = line.split(/=/);
-                    switch (keyval[0]) {
-                        case 'MODE':
-                            this.tracks[currentTrack].isAudio = keyval[1] === '0';
-                            break;
-                        case 'INDEX 0':
-                            this.tracks[currentTrack].index[0] = Number(keyval[1]);
-                            break;
-                        case 'INDEX 1':
-                            this.tracks[currentTrack].index[1] = Number(keyval[1]);
-                            break;
-                        default:
-                        // Do nothing
-                    }
+        async parseCcd(ccdFile) {
+            let lines = (await readFileAsText(ccdFile)).split('\n');
+            this.tracks = [];
+            let currentTrack = null;
+            for (let line of lines) {
+                line = line.trim();
+                let match = line.match(/\[TRACK ([0-9]+)\]/);
+                if (match) {
+                    currentTrack = Number(match[1]);
+                    this.tracks[currentTrack] = { isAudio: undefined, index: [] };
+                    continue;
                 }
-            });
+                if (!currentTrack)
+                    continue;
+                let keyval = line.split(/=/);
+                switch (keyval[0]) {
+                    case 'MODE':
+                        this.tracks[currentTrack].isAudio = keyval[1] === '0';
+                        break;
+                    case 'INDEX 0':
+                        this.tracks[currentTrack].index[0] = Number(keyval[1]);
+                        break;
+                    case 'INDEX 1':
+                        this.tracks[currentTrack].index[1] = Number(keyval[1]);
+                        break;
+                    default:
+                    // Do nothing
+                }
+            }
         }
         maxTrack() {
             return this.tracks.length - 1;
         }
-        extractTrack(track) {
-            return __awaiter(this, void 0, void 0, function* () {
-                if (!this.tracks[track] || !this.tracks[track].isAudio)
-                    return;
-                let start = this.tracks[track].index[1] * 2352;
-                let end;
-                if (this.tracks[track + 1]) {
-                    let index = this.tracks[track + 1].index[0] || this.tracks[track + 1].index[1];
-                    end = index * 2352;
-                }
-                else {
-                    end = this.image.size;
-                }
-                let size = end - start;
-                let pcm = this.image.slice(start, start + size);
-                if (navigator.userAgent.match(/Firefox\/6[234]/)) {
-                    console.log('Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1514581');
-                    pcm = yield readFileAsArrayBuffer(pcm);
-                }
-                return new Blob([createWaveHeader(size), pcm], { type: 'audio/wav' });
-            });
+        async extractTrack(track) {
+            if (!this.tracks[track] || !this.tracks[track].isAudio)
+                return;
+            let start = this.tracks[track].index[1] * 2352;
+            let end;
+            if (this.tracks[track + 1]) {
+                let index = this.tracks[track + 1].index[0] || this.tracks[track + 1].index[1];
+                end = index * 2352;
+            }
+            else {
+                end = this.image.size;
+            }
+            let size = end - start;
+            let pcm = this.image.slice(start, start + size);
+            if (navigator.userAgent.match(/Firefox\/6[234]/)) {
+                console.log('Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1514581');
+                pcm = await readFileAsArrayBuffer(pcm);
+            }
+            return new Blob([createWaveHeader(size), pcm], { type: 'audio/wav' });
         }
         indexToSector(index) {
             let msf = index.split(':').map(Number);
@@ -479,31 +453,29 @@ var CDImage;
         constructor(mdf) {
             super(mdf);
         }
-        parseMds(mdsFile) {
-            return __awaiter(this, void 0, void 0, function* () {
-                let buf = yield readFileAsArrayBuffer(mdsFile);
-                let signature = ASCIIArrayToString(new Uint8Array(buf, 0, 16));
-                if (signature !== 'MEDIA DESCRIPTOR')
-                    throw new Error(mdsFile.name + ': not a mds file');
-                let header = new DataView(buf, 0, 0x70);
-                let entries = header.getUint8(0x62);
-                if (0x70 + entries * 0x58 > buf.byteLength)
-                    throw new Error(mdsFile.name + ': unknown format');
-                this.tracks = [];
-                for (let i = 0; i < entries; i++) {
-                    let trackData = new DataView(buf, 0x70 + i * 0x50, 0x50);
-                    let extraData = new DataView(buf, 0x70 + entries * 0x50 + i * 8, 8);
-                    let mode = trackData.getUint8(0x00);
-                    let track = trackData.getUint8(0x04);
-                    let sectorSize = trackData.getUint16(0x10, true);
-                    let offset = trackData.getUint32(0x28, true); // >4GB offset is not supported.
-                    let sectors = extraData.getUint32(0x4, true);
-                    if (track < 100)
-                        this.tracks[track] = { mode, sectorSize, offset, sectors };
-                }
-                if (this.tracks[1].mode !== MdsTrackMode.Mode1)
-                    throw new Error('track 1 is not mode1');
-            });
+        async parseMds(mdsFile) {
+            let buf = await readFileAsArrayBuffer(mdsFile);
+            let signature = ASCIIArrayToString(new Uint8Array(buf, 0, 16));
+            if (signature !== 'MEDIA DESCRIPTOR')
+                throw new Error(mdsFile.name + ': not a mds file');
+            let header = new DataView(buf, 0, 0x70);
+            let entries = header.getUint8(0x62);
+            if (0x70 + entries * 0x58 > buf.byteLength)
+                throw new Error(mdsFile.name + ': unknown format');
+            this.tracks = [];
+            for (let i = 0; i < entries; i++) {
+                let trackData = new DataView(buf, 0x70 + i * 0x50, 0x50);
+                let extraData = new DataView(buf, 0x70 + entries * 0x50 + i * 8, 8);
+                let mode = trackData.getUint8(0x00);
+                let track = trackData.getUint8(0x04);
+                let sectorSize = trackData.getUint16(0x10, true);
+                let offset = trackData.getUint32(0x28, true); // >4GB offset is not supported.
+                let sectors = extraData.getUint32(0x4, true);
+                if (track < 100)
+                    this.tracks[track] = { mode, sectorSize, offset, sectors };
+            }
+            if (this.tracks[1].mode !== MdsTrackMode.Mode1)
+                throw new Error('track 1 is not mode1');
         }
         readSector(sector) {
             let start = sector * this.tracks[1].sectorSize + 16;
@@ -517,14 +489,12 @@ var CDImage;
         maxTrack() {
             return this.tracks.length - 1;
         }
-        extractTrack(track) {
-            return __awaiter(this, void 0, void 0, function* () {
-                if (!this.tracks[track] || this.tracks[track].mode !== MdsTrackMode.Audio)
-                    return;
-                let size = this.tracks[track].sectors * 2352;
-                let chunks = yield this.readSequential(this.tracks[track].offset, size, this.tracks[track].sectorSize, 2352, 0);
-                return new Blob([createWaveHeader(size)].concat(chunks), { type: 'audio/wav' });
-            });
+        async extractTrack(track) {
+            if (!this.tracks[track] || this.tracks[track].mode !== MdsTrackMode.Audio)
+                return;
+            let size = this.tracks[track].sectors * 2352;
+            let chunks = await this.readSequential(this.tracks[track].offset, size, this.tracks[track].sectorSize, 2352, 0);
+            return new Blob([createWaveHeader(size)].concat(chunks), { type: 'audio/wav' });
         }
     }
     function createWaveHeader(size) {
@@ -667,45 +637,43 @@ var xsystem35;
             this.imageFile = imageFile;
             this.metadataFile = metadataFile;
         }
-        startLoad() {
-            return __awaiter(this, void 0, void 0, function* () {
-                this.imageReader = yield CDImage.createReader(this.imageFile, this.metadataFile);
-                let isofs = yield CDImage.ISO9660FileSystem.create(this.imageReader);
-                // this.walk(isofs, isofs.rootDir(), '/');
-                let gamedata = yield this.findGameDir(isofs);
-                if (!gamedata)
-                    throw new NoGamedataError('イメージ内にGAMEDATAフォルダが見つかりません。');
-                let isSystem3 = !!(yield isofs.getDirEnt('system3.exe', gamedata));
-                yield xsystem35.shell.loadModule(isSystem3 ? 'system3' : 'xsystem35');
-                let endMeasure = startMeasure('ImageLoad', 'Image load', this.imageFile.name);
-                let aldFiles = [];
-                for (let e of yield isofs.readDir(gamedata)) {
-                    if (isSystem3) {
-                        if (!e.name.toLowerCase().endsWith('.dat'))
-                            continue;
-                    }
-                    else {
-                        if (e.name.match(/^\.|\.(exe|dll|txt|ini)$/i))
-                            continue;
-                        if (e.name.toLowerCase().endsWith('.ald'))
-                            aldFiles.push(e.name);
-                    }
-                    let em = startMeasure(e.name);
-                    let chunks = yield isofs.readFile(e);
-                    em();
-                    xsystem35.registerDataFile(e.name, e.size, chunks);
-                }
+        async startLoad() {
+            this.imageReader = await CDImage.createReader(this.imageFile, this.metadataFile);
+            let isofs = await CDImage.ISO9660FileSystem.create(this.imageReader);
+            // this.walk(isofs, isofs.rootDir(), '/');
+            let gamedata = await this.findGameDir(isofs);
+            if (!gamedata)
+                throw new NoGamedataError('イメージ内にGAMEDATAフォルダが見つかりません。');
+            let isSystem3 = !!await isofs.getDirEnt('system3.exe', gamedata);
+            await xsystem35.shell.loadModule(isSystem3 ? 'system3' : 'xsystem35');
+            let endMeasure = startMeasure('ImageLoad', 'Image load', this.imageFile.name);
+            let aldFiles = [];
+            for (let e of await isofs.readDir(gamedata)) {
                 if (isSystem3) {
-                    let savedir = yield this.saveDir(isofs);
-                    Module.arguments.push('-savedir', savedir + '/');
-                    xsystem35.saveDirReady.then(() => { mkdirIfNotExist(savedir); });
+                    if (!e.name.toLowerCase().endsWith('.dat'))
+                        continue;
                 }
                 else {
-                    FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
-                    FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
+                    if (e.name.match(/^\.|\.(exe|dll|txt|ini)$/i))
+                        continue;
+                    if (e.name.toLowerCase().endsWith('.ald'))
+                        aldFiles.push(e.name);
                 }
-                endMeasure();
-            });
+                let em = startMeasure(e.name);
+                let chunks = await isofs.readFile(e);
+                em();
+                xsystem35.registerDataFile(e.name, e.size, chunks);
+            }
+            if (isSystem3) {
+                let savedir = await this.saveDir(isofs);
+                Module.arguments.push('-savedir', savedir + '/');
+                xsystem35.saveDirReady.then(() => { mkdirIfNotExist(savedir); });
+            }
+            else {
+                FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
+                FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
+            }
+            endMeasure();
         }
         getCDDA(track) {
             return this.imageReader.extractTrack(track);
@@ -715,48 +683,42 @@ var xsystem35;
                 this.imageReader.resetImage(file);
             });
         }
-        findGameDir(isofs) {
-            return __awaiter(this, void 0, void 0, function* () {
-                for (let e of yield isofs.readDir(isofs.rootDir())) {
-                    if (e.isDirectory) {
-                        if (e.name.toLowerCase() === 'gamedata' || (yield isofs.getDirEnt('system3.exe', e)))
-                            return e;
-                    }
-                    if (e.name.toLowerCase() === 'system3.exe')
-                        return isofs.rootDir();
+        async findGameDir(isofs) {
+            for (let e of await isofs.readDir(isofs.rootDir())) {
+                if (e.isDirectory) {
+                    if (e.name.toLowerCase() === 'gamedata' || await isofs.getDirEnt('system3.exe', e))
+                        return e;
                 }
-                return null;
-            });
+                if (e.name.toLowerCase() === 'system3.exe')
+                    return isofs.rootDir();
+            }
+            return null;
         }
-        saveDir(isofs) {
-            return __awaiter(this, void 0, void 0, function* () {
-                let dirname = isofs.volumeLabel();
-                if (!dirname) {
-                    if (yield isofs.getDirEnt('prog.bat', isofs.rootDir())) {
-                        dirname = 'ProG';
-                    }
-                    else if (yield isofs.getDirEnt('dps_all.bat', isofs.rootDir())) {
-                        dirname = 'DPS_all';
-                    }
-                    else {
-                        dirname = 'untitled';
-                        ga('send', 'event', 'Loader', 'NoVolumeLabel');
-                    }
+        async saveDir(isofs) {
+            let dirname = isofs.volumeLabel();
+            if (!dirname) {
+                if (await isofs.getDirEnt('prog.bat', isofs.rootDir())) {
+                    dirname = 'ProG';
                 }
-                return '/save/' + dirname;
-            });
+                else if (await isofs.getDirEnt('dps_all.bat', isofs.rootDir())) {
+                    dirname = 'DPS_all';
+                }
+                else {
+                    dirname = 'untitled';
+                    ga('send', 'event', 'Loader', 'NoVolumeLabel');
+                }
+            }
+            return '/save/' + dirname;
         }
         // For debug
-        walk(isofs, dir, dirname) {
-            return __awaiter(this, void 0, void 0, function* () {
-                for (let e of yield isofs.readDir(dir)) {
-                    if (e.name !== '.' && e.name !== '..') {
-                        console.log(dirname + e.name);
-                        if (e.isDirectory)
-                            this.walk(isofs, e, dirname + e.name + '/');
-                    }
+        async walk(isofs, dir, dirname) {
+            for (let e of await isofs.readDir(dir)) {
+                if (e.name !== '.' && e.name !== '..') {
+                    console.log(dirname + e.name);
+                    if (e.isDirectory)
+                        this.walk(isofs, e, dirname + e.name + '/');
                 }
-            });
+            }
         }
     }
     xsystem35.CDImageSource = CDImageSource;
@@ -766,24 +728,22 @@ var xsystem35;
             this.files = files;
             this.tracks = [];
         }
-        startLoad() {
-            return __awaiter(this, void 0, void 0, function* () {
-                yield xsystem35.shell.loadModule('xsystem35');
-                let aldFiles = [];
-                for (let i = 0; i < this.files.length; i++) {
-                    let f = this.files[i];
-                    let match = /(\d+)\.(wav|mp3|ogg)$/.exec(f.name.toLowerCase());
-                    if (match) {
-                        this.tracks[Number(match[1])] = f;
-                        continue;
-                    }
-                    let content = yield readFileAsArrayBuffer(f);
-                    xsystem35.registerDataFile(f.name, f.size, [new Uint8Array(content)]);
-                    aldFiles.push(f.name);
+        async startLoad() {
+            await xsystem35.shell.loadModule('xsystem35');
+            let aldFiles = [];
+            for (let i = 0; i < this.files.length; i++) {
+                let f = this.files[i];
+                let match = /(\d+)\.(wav|mp3|ogg)$/.exec(f.name.toLowerCase());
+                if (match) {
+                    this.tracks[Number(match[1])] = f;
+                    continue;
                 }
-                FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
-                FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
-            });
+                let content = await readFileAsArrayBuffer(f);
+                xsystem35.registerDataFile(f.name, f.size, [new Uint8Array(content)]);
+                aldFiles.push(f.name);
+            }
+            FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
+            FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
         }
         getCDDA(track) {
             return Promise.resolve(this.tracks[track]);
@@ -795,27 +755,25 @@ var xsystem35;
             super();
             this.zipFile = zipFile;
         }
-        startLoad() {
-            return __awaiter(this, void 0, void 0, function* () {
-                yield loadScript(JSZIP_SCRIPT);
-                let zip = new JSZip();
-                yield zip.loadAsync(yield readFileAsArrayBuffer(this.zipFile), JSZipOptions());
-                let aldFiles = [];
-                for (let name in zip.files) {
-                    if (!name.toLowerCase().endsWith('.ald'))
-                        continue;
-                    if (aldFiles.length === 0)
-                        yield xsystem35.shell.loadModule('xsystem35');
-                    let content = yield zip.files[name].async('arraybuffer');
-                    let basename = name.split('/').pop();
-                    xsystem35.registerDataFile(basename, content.byteLength, [new Uint8Array(content)]);
-                    aldFiles.push(basename);
-                }
+        async startLoad() {
+            await loadScript(JSZIP_SCRIPT);
+            let zip = new JSZip();
+            await zip.loadAsync(await readFileAsArrayBuffer(this.zipFile), JSZipOptions());
+            let aldFiles = [];
+            for (let name in zip.files) {
+                if (!name.toLowerCase().endsWith('.ald'))
+                    continue;
                 if (aldFiles.length === 0)
-                    throw new NoGamedataError('ZIP内にゲームデータ (*.ALDファイル) が見つかりません。');
-                FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
-                FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
-            });
+                    await xsystem35.shell.loadModule('xsystem35');
+                let content = await zip.files[name].async('arraybuffer');
+                let basename = name.split('/').pop();
+                xsystem35.registerDataFile(basename, content.byteLength, [new Uint8Array(content)]);
+                aldFiles.push(basename);
+            }
+            if (aldFiles.length === 0)
+                throw new NoGamedataError('ZIP内にゲームデータ (*.ALDファイル) が見つかりません。');
+            FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
+            FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
         }
         getCDDA(track) {
             return Promise.reject(new Error('ZipSource#getCDDA: not supported'));
@@ -858,67 +816,65 @@ var xsystem35;
             evt.preventDefault();
             this.handleFiles(evt.dataTransfer.files);
         }
-        handleFiles(files) {
-            return __awaiter(this, void 0, void 0, function* () {
-                if (this.installing || files.length === 0)
-                    return;
-                let hasALD = false;
-                let recognized = false;
-                for (let file of files) {
-                    if (this.isImageFile(file)) {
-                        this.imageFile = file;
-                        $('#imgReady').classList.remove('notready');
-                        $('#imgReady').textContent = file.name;
-                        recognized = true;
-                    }
-                    else if (this.isMetadataFile(file)) {
-                        this.metadataFile = file;
-                        $('#cueReady').classList.remove('notready');
-                        $('#cueReady').textContent = file.name;
-                        recognized = true;
-                    }
-                    else if (file.name.toLowerCase().endsWith('.ald')) {
-                        hasALD = true;
-                    }
-                    else if (file.name.toLowerCase().endsWith('.rar')) {
-                        this.shell.addToast('展開前のrarファイルは読み込めません。', 'warning');
-                        recognized = true;
-                    }
+        async handleFiles(files) {
+            if (this.installing || files.length === 0)
+                return;
+            let hasALD = false;
+            let recognized = false;
+            for (let file of files) {
+                if (this.isImageFile(file)) {
+                    this.imageFile = file;
+                    $('#imgReady').classList.remove('notready');
+                    $('#imgReady').textContent = file.name;
+                    recognized = true;
                 }
-                if (this.imageFile && (this.metadataFile || this.imageFile.name.toLowerCase().endsWith('.iso'))) {
-                    this.source = new xsystem35.CDImageSource(this.imageFile, this.metadataFile);
+                else if (this.isMetadataFile(file)) {
+                    this.metadataFile = file;
+                    $('#cueReady').classList.remove('notready');
+                    $('#cueReady').textContent = file.name;
+                    recognized = true;
                 }
-                else if (!this.imageFile && !this.metadataFile) {
-                    if (files.length == 1 && files[0].name.toLowerCase().endsWith('.zip')) {
-                        this.source = new xsystem35.ZipSource(files[0]);
-                    }
-                    else if (hasALD) {
-                        this.source = new xsystem35.FileSource(files);
-                    }
+                else if (file.name.toLowerCase().endsWith('.ald')) {
+                    hasALD = true;
                 }
-                if (!this.source) {
-                    if (!recognized)
-                        this.shell.addToast(files[0].name + ' は認識できない形式です。', 'warning');
-                    return;
+                else if (file.name.toLowerCase().endsWith('.rar')) {
+                    this.shell.addToast('展開前のrarファイルは読み込めません。', 'warning');
+                    recognized = true;
                 }
-                this.installing = true;
-                try {
-                    yield this.source.startLoad();
-                    this.shell.loaded(this.source.hasMidi);
+            }
+            if (this.imageFile && (this.metadataFile || this.imageFile.name.toLowerCase().endsWith('.iso'))) {
+                this.source = new xsystem35.CDImageSource(this.imageFile, this.metadataFile);
+            }
+            else if (!this.imageFile && !this.metadataFile) {
+                if (files.length == 1 && files[0].name.toLowerCase().endsWith('.zip')) {
+                    this.source = new xsystem35.ZipSource(files[0]);
                 }
-                catch (err) {
-                    if (err instanceof xsystem35.NoGamedataError) {
-                        ga('send', 'event', 'Loader', 'NoGamedata', err.message);
-                        this.shell.addToast('インストールできません。' + err.message, 'warning');
-                    }
-                    else {
-                        ga('send', 'event', 'Loader', 'LoadFailed', err.message);
-                        this.shell.addToast('インストールできません。認識できない形式です。', 'warning');
-                    }
-                    this.source = null;
+                else if (hasALD) {
+                    this.source = new xsystem35.FileSource(files);
                 }
-                this.installing = false;
-            });
+            }
+            if (!this.source) {
+                if (!recognized)
+                    this.shell.addToast(files[0].name + ' は認識できない形式です。', 'warning');
+                return;
+            }
+            this.installing = true;
+            try {
+                await this.source.startLoad();
+                this.shell.loaded(this.source.hasMidi);
+            }
+            catch (err) {
+                if (err instanceof xsystem35.NoGamedataError) {
+                    ga('send', 'event', 'Loader', 'NoGamedata', err.message);
+                    this.shell.addToast('インストールできません。' + err.message, 'warning');
+                }
+                else {
+                    ga('send', 'event', 'Loader', 'LoadFailed', err.message);
+                    this.shell.addToast('インストールできません。認識できない形式です。', 'warning');
+                }
+                this.source = null;
+            }
+            this.installing = false;
         }
         isImageFile(file) {
             let name = file.name.toLowerCase();
@@ -960,64 +916,60 @@ var xsystem35;
             }
             return this.FSready.then((fs) => find(fs, '/save'));
         }
-        download() {
-            return __awaiter(this, void 0, void 0, function* () {
-                yield loadScript(JSZIP_SCRIPT);
-                let zip = new JSZip();
-                storeZip(yield this.FSready, '/save', zip.folder('save'));
-                let blob = yield zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
-                if (navigator.msSaveBlob) { // Edge
-                    navigator.msSaveBlob(blob, 'savedata.zip');
+        async download() {
+            await loadScript(JSZIP_SCRIPT);
+            let zip = new JSZip();
+            storeZip(await this.FSready, '/save', zip.folder('save'));
+            let blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+            if (navigator.msSaveBlob) { // Edge
+                navigator.msSaveBlob(blob, 'savedata.zip');
+            }
+            else {
+                let elem = document.createElement('a');
+                elem.setAttribute('download', 'savedata.zip');
+                elem.setAttribute('href', URL.createObjectURL(blob));
+                document.body.appendChild(elem);
+                elem.click();
+                setTimeout(() => { document.body.removeChild(elem); }, 5000);
+            }
+            ga('send', 'event', 'Savedata', 'Downloaded');
+        }
+        async extract(file) {
+            try {
+                let fs = await this.FSready;
+                if (file.name.toLowerCase().endsWith('.asd')) {
+                    addSaveFile(fs, '/save/' + file.name, await readFileAsArrayBuffer(file));
                 }
                 else {
-                    let elem = document.createElement('a');
-                    elem.setAttribute('download', 'savedata.zip');
-                    elem.setAttribute('href', URL.createObjectURL(blob));
-                    document.body.appendChild(elem);
-                    elem.click();
-                    setTimeout(() => { document.body.removeChild(elem); }, 5000);
+                    await loadScript(JSZIP_SCRIPT);
+                    let zip = new JSZip();
+                    await zip.loadAsync(await readFileAsArrayBuffer(file), JSZipOptions());
+                    let entries = [];
+                    zip.folder('save').forEach((path, z) => { entries.push(z); });
+                    for (let z of entries) {
+                        if (z.dir)
+                            mkdirIfNotExist('/' + z.name.slice(0, -1), fs);
+                        else
+                            addSaveFile(fs, '/' + z.name, await z.async('arraybuffer'));
+                    }
                 }
-                ga('send', 'event', 'Savedata', 'Downloaded');
-            });
-        }
-        extract(file) {
-            return __awaiter(this, void 0, void 0, function* () {
-                try {
-                    let fs = yield this.FSready;
-                    if (file.name.toLowerCase().endsWith('.asd')) {
-                        addSaveFile(fs, '/save/' + file.name, yield readFileAsArrayBuffer(file));
-                    }
-                    else {
-                        yield loadScript(JSZIP_SCRIPT);
-                        let zip = new JSZip();
-                        yield zip.loadAsync(yield readFileAsArrayBuffer(file), JSZipOptions());
-                        let entries = [];
-                        zip.folder('save').forEach((path, z) => { entries.push(z); });
-                        for (let z of entries) {
-                            if (z.dir)
-                                mkdirIfNotExist('/' + z.name.slice(0, -1), fs);
-                            else
-                                addSaveFile(fs, '/' + z.name, yield z.async('arraybuffer'));
-                        }
-                    }
-                    yield new Promise((resolve, reject) => {
-                        fs.syncfs(false, (err) => {
-                            if (err)
-                                reject(err);
-                            else
-                                resolve();
-                        });
+                await new Promise((resolve, reject) => {
+                    fs.syncfs(false, (err) => {
+                        if (err)
+                            reject(err);
+                        else
+                            resolve();
                     });
-                    xsystem35.shell.addToast('セーブデータの復元に成功しました。', 'success');
-                    ga('send', 'event', 'Savedata', 'Restored');
-                }
-                catch (err) {
-                    xsystem35.shell.addToast('セーブデータを復元できませんでした。', 'error');
-                    ga('send', 'event', 'Savedata', 'RestoreFailed', err.message);
-                    console.warn(err);
-                    ga('send', 'exception', { exDescription: err.stack, exFatal: false });
-                }
-            });
+                });
+                xsystem35.shell.addToast('セーブデータの復元に成功しました。', 'success');
+                ga('send', 'event', 'Savedata', 'Restored');
+            }
+            catch (err) {
+                xsystem35.shell.addToast('セーブデータを復元できませんでした。', 'error');
+                ga('send', 'event', 'Savedata', 'RestoreFailed', err.message);
+                console.warn(err);
+                ga('send', 'exception', { exDescription: err.stack, exFatal: false });
+            }
         }
     }
     xsystem35.SaveDataManager = SaveDataManager;
@@ -1085,17 +1037,13 @@ var xsystem35;
             xsystem35.config.unloadConfirmation = this.unloadConfirmation.checked;
             xsystem35.config.persist();
         }
-        checkSaveData() {
-            return __awaiter(this, void 0, void 0, function* () {
-                if ($('#downloadSaveData').hasAttribute('disabled') &&
-                    (yield this.saveDataManager.hasSaveData()))
-                    $('#downloadSaveData').removeAttribute('disabled');
-            });
+        async checkSaveData() {
+            if ($('#downloadSaveData').hasAttribute('disabled') &&
+                await this.saveDataManager.hasSaveData())
+                $('#downloadSaveData').removeAttribute('disabled');
         }
-        downloadSaveData() {
-            return __awaiter(this, void 0, void 0, function* () {
-                this.saveDataManager.download();
-            });
+        async downloadSaveData() {
+            this.saveDataManager.download();
         }
         uploadSaveData() {
             openFileInput().then((file) => this.saveDataManager.extract(file)).then(() => this.checkSaveData());
@@ -1310,14 +1258,12 @@ var xsystem35;
             this.blobCache = [];
             document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this));
         }
-        getCDDA(track) {
-            return __awaiter(this, void 0, void 0, function* () {
-                if (this.blobCache[track])
-                    return this.blobCache[track];
-                let blob = yield this.loader.getCDDA(track);
-                this.blobCache[track] = blob;
-                return blob;
-            });
+        async getCDDA(track) {
+            if (this.blobCache[track])
+                return this.blobCache[track];
+            let blob = await this.loader.getCDDA(track);
+            this.blobCache[track] = blob;
+            return blob;
         }
         onVisibilityChange() {
             if (document.hidden)
@@ -1331,42 +1277,40 @@ var xsystem35;
             this.cache = [];
             document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this));
         }
-        getCDDA(track) {
-            return __awaiter(this, void 0, void 0, function* () {
-                for (let entry of this.cache) {
-                    if (entry.track === track) {
-                        entry.time = performance.now();
-                        return entry.data;
-                    }
+        async getCDDA(track) {
+            for (let entry of this.cache) {
+                if (entry.track === track) {
+                    entry.time = performance.now();
+                    return entry.data;
                 }
-                this.shrink(2);
-                let blob = yield this.loader.getCDDA(track);
-                try {
-                    let buf = yield readFileAsArrayBuffer(blob);
-                    blob = new Blob([buf], { type: 'audio/wav' });
-                    this.cache.unshift({ track, data: blob, time: performance.now() });
-                    return blob;
-                }
-                catch (e) {
-                    if (e.constructor.name === 'FileError' && e.code === 1)
-                        ga('send', 'event', 'CDDAload', 'NOT_FOUND_ERR');
-                    else
-                        gaException({ type: 'CDDAload', name: e.constructor.name, code: e.code });
-                    let clone = document.importNode($('#cdda-error').content, true);
-                    if (this.reloadToast && this.reloadToast.parentElement)
-                        this.reloadToast.querySelector('.btn-clear').click();
-                    this.reloadToast = xsystem35.shell.addToast(clone, 'error');
-                    return new Promise(resolve => {
-                        this.reloadToast.querySelector('.cdda-reload-button').addEventListener('click', () => {
-                            this.loader.reloadImage().then(() => {
-                                ga('send', 'event', 'CDDAload', 'reloaded');
-                                this.reloadToast.querySelector('.btn-clear').click();
-                                resolve(this.getCDDA(track));
-                            });
+            }
+            this.shrink(2);
+            let blob = await this.loader.getCDDA(track);
+            try {
+                let buf = await readFileAsArrayBuffer(blob);
+                blob = new Blob([buf], { type: 'audio/wav' });
+                this.cache.unshift({ track, data: blob, time: performance.now() });
+                return blob;
+            }
+            catch (e) {
+                if (e.constructor.name === 'FileError' && e.code === 1)
+                    ga('send', 'event', 'CDDAload', 'NOT_FOUND_ERR');
+                else
+                    gaException({ type: 'CDDAload', name: e.constructor.name, code: e.code });
+                let clone = document.importNode($('#cdda-error').content, true);
+                if (this.reloadToast && this.reloadToast.parentElement)
+                    this.reloadToast.querySelector('.btn-clear').click();
+                this.reloadToast = xsystem35.shell.addToast(clone, 'error');
+                return new Promise(resolve => {
+                    this.reloadToast.querySelector('.cdda-reload-button').addEventListener('click', () => {
+                        this.loader.reloadImage().then(() => {
+                            ga('send', 'event', 'CDDAload', 'reloaded');
+                            this.reloadToast.querySelector('.btn-clear').click();
+                            resolve(this.getCDDA(track));
                         });
                     });
-                }
-            });
+                });
+            }
         }
         shrink(size) {
             if (this.cache.length <= size)
@@ -1870,46 +1814,44 @@ var xsystem35;
         close() {
             this.toolbar.classList.add('closed');
         }
-        saveScreenshot() {
-            return __awaiter(this, void 0, void 0, function* () {
-                let pixels = _sdl_getDisplaySurface();
-                let canvas = document.createElement('canvas');
-                canvas.width = Module.canvas.width;
-                canvas.height = Module.canvas.height;
-                let ctx = canvas.getContext('2d');
-                let image = ctx.createImageData(canvas.width, canvas.height);
-                let buffer = image.data;
-                let num = image.data.length;
-                for (let dst = 0; dst < num; dst += 4) {
-                    buffer[dst] = Module.HEAPU8[pixels + 2];
-                    buffer[dst + 1] = Module.HEAPU8[pixels + 1];
-                    buffer[dst + 2] = Module.HEAPU8[pixels];
-                    buffer[dst + 3] = 0xff;
-                    pixels += 4;
-                }
-                ctx.putImageData(image, 0, 0);
-                ga('send', 'event', 'Toolbar', 'Screenshot');
-                let url;
-                if (canvas.toBlob) {
-                    let blob = yield new Promise((resolve) => canvas.toBlob(resolve));
-                    url = URL.createObjectURL(blob);
-                }
-                else if (canvas.msToBlob) { // Edge
-                    let blob = canvas.msToBlob();
-                    navigator.msSaveBlob(blob, getScreenshotFilename());
-                    return;
-                }
-                else { // Safari
-                    url = canvas.toDataURL();
-                }
-                let elem = document.createElement('a');
-                elem.setAttribute('download', getScreenshotFilename());
-                elem.setAttribute('href', url);
-                elem.setAttribute('target', '_blank'); // Unless this, iOS safari replaces current page
-                document.body.appendChild(elem);
-                elem.click();
-                setTimeout(() => { document.body.removeChild(elem); }, 5000);
-            });
+        async saveScreenshot() {
+            let pixels = _sdl_getDisplaySurface();
+            let canvas = document.createElement('canvas');
+            canvas.width = Module.canvas.width;
+            canvas.height = Module.canvas.height;
+            let ctx = canvas.getContext('2d');
+            let image = ctx.createImageData(canvas.width, canvas.height);
+            let buffer = image.data;
+            let num = image.data.length;
+            for (let dst = 0; dst < num; dst += 4) {
+                buffer[dst] = Module.HEAPU8[pixels + 2];
+                buffer[dst + 1] = Module.HEAPU8[pixels + 1];
+                buffer[dst + 2] = Module.HEAPU8[pixels];
+                buffer[dst + 3] = 0xff;
+                pixels += 4;
+            }
+            ctx.putImageData(image, 0, 0);
+            ga('send', 'event', 'Toolbar', 'Screenshot');
+            let url;
+            if (canvas.toBlob) {
+                let blob = await new Promise((resolve) => canvas.toBlob(resolve));
+                url = URL.createObjectURL(blob);
+            }
+            else if (canvas.msToBlob) { // Edge
+                let blob = canvas.msToBlob();
+                navigator.msSaveBlob(blob, getScreenshotFilename());
+                return;
+            }
+            else { // Safari
+                url = canvas.toDataURL();
+            }
+            let elem = document.createElement('a');
+            elem.setAttribute('download', getScreenshotFilename());
+            elem.setAttribute('href', url);
+            elem.setAttribute('target', '_blank'); // Unless this, iOS safari replaces current page
+            document.body.appendChild(elem);
+            elem.click();
+            setTimeout(() => { document.body.removeChild(elem); }, 5000);
         }
     }
     xsystem35.ToolBar = ToolBar;
@@ -2114,62 +2056,58 @@ var xsystem35;
             }, timeout);
             this.persistStorage();
         }
-        persistStorage() {
-            return __awaiter(this, void 0, void 0, function* () {
-                if (this.persistRequested || !(navigator.storage && navigator.storage.persist))
-                    return;
-                this.persistRequested = true;
-                if (yield navigator.storage.persisted())
-                    return;
-                let result = yield navigator.storage.persist();
-                ga('send', 'event', 'Game', 'StoragePersist', result ? 'granted' : 'refused');
-            });
+        async persistStorage() {
+            if (this.persistRequested || !(navigator.storage && navigator.storage.persist))
+                return;
+            this.persistRequested = true;
+            if (await navigator.storage.persisted())
+                return;
+            let result = await navigator.storage.persist();
+            ga('send', 'event', 'Game', 'StoragePersist', result ? 'granted' : 'refused');
         }
     }
     xsystem35.System35Shell = System35Shell;
-    function importSaveDataFromLocalFileSystem() {
-        return __awaiter(this, void 0, void 0, function* () {
-            function requestFileSystem(type, size) {
-                return new Promise((resolve, reject) => window.webkitRequestFileSystem(type, size, resolve, reject));
-            }
-            function getDirectory(dir, path) {
-                return new Promise((resolve, reject) => dir.getDirectory(path, {}, resolve, reject));
-            }
-            function readEntries(reader) {
-                return new Promise((resolve, reject) => reader.readEntries(resolve, reject));
-            }
-            function fileOf(entry) {
-                return new Promise((resolve, reject) => entry.file(resolve, reject));
-            }
-            if (FS.readdir('/save').length > 2) // Are there any entries other than . and ..?
-                return;
-            if (!window.webkitRequestFileSystem)
-                return;
-            try {
-                let fs = yield requestFileSystem(self.PERSISTENT, 0);
-                let savedir = (yield getDirectory(fs.root, 'save')).createReader();
-                let entries = [];
-                while (true) {
-                    let results = yield readEntries(savedir);
-                    if (!results.length)
-                        break;
-                    for (let e of results) {
-                        if (e.isFile && e.name.toLowerCase().endsWith('.asd'))
-                            entries.push(e);
-                    }
-                }
-                if (entries.length && window.confirm('鬼畜王 on Chrome のセーブデータを引き継ぎますか?')) {
-                    for (let e of entries) {
-                        let content = yield readFileAsArrayBuffer(yield fileOf(e));
-                        FS.writeFile('/save/' + e.name, new Uint8Array(content), { encoding: 'binary' });
-                    }
-                    xsystem35.shell.syncfs(0);
-                    ga('send', 'event', 'Game', 'SaveDataImported');
+    async function importSaveDataFromLocalFileSystem() {
+        function requestFileSystem(type, size) {
+            return new Promise((resolve, reject) => window.webkitRequestFileSystem(type, size, resolve, reject));
+        }
+        function getDirectory(dir, path) {
+            return new Promise((resolve, reject) => dir.getDirectory(path, {}, resolve, reject));
+        }
+        function readEntries(reader) {
+            return new Promise((resolve, reject) => reader.readEntries(resolve, reject));
+        }
+        function fileOf(entry) {
+            return new Promise((resolve, reject) => entry.file(resolve, reject));
+        }
+        if (FS.readdir('/save').length > 2) // Are there any entries other than . and ..?
+            return;
+        if (!window.webkitRequestFileSystem)
+            return;
+        try {
+            let fs = await requestFileSystem(self.PERSISTENT, 0);
+            let savedir = (await getDirectory(fs.root, 'save')).createReader();
+            let entries = [];
+            while (true) {
+                let results = await readEntries(savedir);
+                if (!results.length)
+                    break;
+                for (let e of results) {
+                    if (e.isFile && e.name.toLowerCase().endsWith('.asd'))
+                        entries.push(e);
                 }
             }
-            catch (err) {
+            if (entries.length && window.confirm('鬼畜王 on Chrome のセーブデータを引き継ぎますか?')) {
+                for (let e of entries) {
+                    let content = await readFileAsArrayBuffer(await fileOf(e));
+                    FS.writeFile('/save/' + e.name, new Uint8Array(content), { encoding: 'binary' });
+                }
+                xsystem35.shell.syncfs(0);
+                ga('send', 'event', 'Game', 'SaveDataImported');
             }
-        });
+        }
+        catch (err) {
+        }
     }
     xsystem35.importSaveDataFromLocalFileSystem = importSaveDataFromLocalFileSystem;
     let mincho_loaded = false;
