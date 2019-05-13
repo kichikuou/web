@@ -1284,7 +1284,7 @@ var xsystem35;
                     return entry.data;
                 }
             }
-            this.shrink(2);
+            this.shrink(3);
             let blob = await this.loader.getCDDA(track);
             try {
                 let buf = await readFileAsArrayBuffer(blob);
