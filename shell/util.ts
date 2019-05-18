@@ -61,7 +61,7 @@ function mkdirIfNotExist(path: string, fs?: typeof FS) {
     try {
         (fs || FS).mkdir(path);
     } catch (err) {
-        if (<any>err.code !== 'EEXIST')
+        if (err.errno !== ERRNO_CODES.EEXIST)
             throw err;
     }
 }
@@ -150,6 +150,8 @@ declare namespace FS {
 declare namespace EmterpreterAsync {
     function handle(asyncOp: (resume: () => void) => void): void;
 }
+
+declare var ERRNO_CODES: any;
 
 // https://storage.spec.whatwg.org
 interface Navigator {

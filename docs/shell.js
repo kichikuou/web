@@ -54,7 +54,7 @@ function mkdirIfNotExist(path, fs) {
         (fs || FS).mkdir(path);
     }
     catch (err) {
-        if (err.code !== 'EEXIST')
+        if (err.errno !== ERRNO_CODES.EEXIST)
             throw err;
     }
 }
