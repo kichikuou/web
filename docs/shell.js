@@ -1896,12 +1896,16 @@ var xsystem35;
                 this.addToast('エラーが発生しました。', 'error');
                 window.onerror = null;
             };
-            // Chrome only
             window.addEventListener('unhandledrejection', (evt) => {
-                let err = evt.reason;
-                console.log(err);
-                let { message, stack } = err;
-                gaException({ type: 'rejection', message, stack }, true);
+                let reason = evt.reason;
+                console.log(reason);
+                if (reason instanceof Error) {
+                    let { name, message, stack } = reason;
+                    gaException({ type: 'rejection', name, message, stack }, true);
+                }
+                else {
+                    gaException({ type: 'rejection', name: reason.constructor.name, reason }, true);
+                }
                 // this.addToast('エラーが発生しました。', 'error');
             });
             this.loader = new xsystem35.Loader(this);
