@@ -31,6 +31,10 @@ namespace xsystem35 {
             let basename: string;
             let lines: string[] = [];
             for (let name of files) {
+                if (name.toLowerCase() === 'system39.ain') {
+                    lines.push('Ain ' + name);
+                    continue;
+                }
                 let type = name.charAt(name.length - 6).toLowerCase();
                 let id = name.charAt(name.length - 5);
                 basename = name.slice(0, -6);
@@ -73,7 +77,7 @@ namespace xsystem35 {
                 } else {
                     if (e.name.match(/^\.|\.(exe|dll|txt|ini)$/i))
                         continue;
-                    if (e.name.toLowerCase().endsWith('.ald'))
+                    if (e.name.match(/\.(ald|ain)$/i))
                         aldFiles.push(e.name);
                 }
                 let em = startMeasure(e.name);
@@ -160,7 +164,8 @@ namespace xsystem35 {
                 }
                 let content = await readFileAsArrayBuffer(f);
                 registerDataFile(f.name, f.size, [new Uint8Array(content)]);
-                aldFiles.push(f.name);
+                if (f.name.match(/\.(ald|ain)$/i))
+                    aldFiles.push(f.name);
             }
             FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
             FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
@@ -182,7 +187,7 @@ namespace xsystem35 {
             await zip.loadAsync(await readFileAsArrayBuffer(this.zipFile), JSZipOptions());
             let aldFiles = [];
             for (let name in zip.files) {
-                if (!name.toLowerCase().endsWith('.ald'))
+                if (!name.match(/\.(ald|ain)$/i))
                     continue;
                 if (aldFiles.length === 0)
                     await shell.loadModule('xsystem35');
