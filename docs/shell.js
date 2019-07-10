@@ -759,6 +759,7 @@ var xsystem35;
         constructor(zipFile) {
             super();
             this.zipFile = zipFile;
+            this.tracks = [];
         }
         async startLoad() {
             await loadScript(JSZIP_SCRIPT);
@@ -766,6 +767,11 @@ var xsystem35;
             await zip.loadAsync(await readFileAsArrayBuffer(this.zipFile), JSZipOptions());
             let aldFiles = [];
             for (let name in zip.files) {
+                let match = /(\d+)\.(wav|mp3|ogg)$/.exec(name.toLowerCase());
+                if (match) {
+                    this.tracks[Number(match[1])] = zip.files[name];
+                    continue;
+                }
                 if (!name.match(/\.(ald|ain)$/i))
                     continue;
                 if (aldFiles.length === 0)
@@ -781,7 +787,7 @@ var xsystem35;
             FS.writeFile('.xsys35rc', xsystem35.xsys35rc);
         }
         getCDDA(track) {
-            return Promise.reject(new Error('ZipSource#getCDDA: not supported'));
+            return this.tracks[track].async('blob');
         }
     }
     xsystem35.ZipSource = ZipSource;
