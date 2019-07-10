@@ -177,6 +177,8 @@ namespace xsystem35 {
     }
 
     export class ZipSource extends LoaderSource {
+        private tracks: JSZipObject[] = [];
+
         constructor(private zipFile: File) {
             super();
         }
@@ -187,6 +189,11 @@ namespace xsystem35 {
             await zip.loadAsync(await readFileAsArrayBuffer(this.zipFile), JSZipOptions());
             let aldFiles = [];
             for (let name in zip.files) {
+                let match = /(\d+)\.(wav|mp3|ogg)$/.exec(name.toLowerCase());
+                if (match) {
+                    this.tracks[Number(match[1])] = zip.files[name];
+                    continue;
+                }
                 if (!name.match(/\.(ald|ain)$/i))
                     continue;
                 if (aldFiles.length === 0)
@@ -204,7 +211,7 @@ namespace xsystem35 {
         }
 
         getCDDA(track: number): Promise<Blob> {
-            return Promise.reject(new Error('ZipSource#getCDDA: not supported'));
+            return this.tracks[track].async('blob');
         }
     }
 }
