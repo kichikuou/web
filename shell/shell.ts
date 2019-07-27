@@ -284,7 +284,7 @@ namespace xsystem35 {
         return new Promise((resolve) => {
             console.log('loading mincho font');
             let endMeasure = startMeasure('FontLoad', 'Font load', FontMincho);
-            Module.readAsync('fonts/' + FontMincho, (buf: ArrayBuffer) => {
+            readAsync('fonts/' + FontMincho, (buf: ArrayBuffer) => {
                 endMeasure();
                 FS.writeFile(FontMincho, new Uint8Array(buf), { encoding: 'binary' });
                 resolve(Status.OK);

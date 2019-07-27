@@ -137,7 +137,6 @@ declare namespace Module {
     function _malloc(size: number): number;
     function setStatus(status: string): void;
     function quit(status: number, toThrow: Error): void;
-    function readAsync(url: string, onload: (response: any) => void, onerror: () => void): void;
 }
 
 declare namespace FS {
@@ -145,6 +144,8 @@ declare namespace FS {
     function writeFile(path: string, data: ArrayBufferView | string,
                        opts?: {encoding?: string; flags?: string; canOwn?: boolean}): void;
 }
+
+declare function readAsync(url: string, onload: (response: any) => void, onerror: () => void): void;
 
 declare namespace EmterpreterAsync {
     function handle(asyncOp: (resume: () => void) => void): void;

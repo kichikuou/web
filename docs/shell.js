@@ -2151,7 +2151,7 @@ var xsystem35;
         return new Promise((resolve) => {
             console.log('loading mincho font');
             let endMeasure = startMeasure('FontLoad', 'Font load', FontMincho);
-            Module.readAsync('fonts/' + FontMincho, (buf) => {
+            readAsync('fonts/' + FontMincho, (buf) => {
                 endMeasure();
                 FS.writeFile(FontMincho, new Uint8Array(buf), { encoding: 'binary' });
                 resolve(xsystem35.Status.OK);
