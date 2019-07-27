@@ -532,34 +532,38 @@ var xsystem35;
         [0x16e61, 0x06, 0x05]
     ];
     function registerDataFile(fname, size, chunks) {
-        let dev = FS.makedev(major, entryCount++);
-        let ops = new NodeOps(size, chunks);
-        FS.registerDevice(dev, ops);
-        FS.mkdev('/' + fname, dev);
+        let patch = null;
+        ;
         switch (fname.toUpperCase()) {
             case 'ぱすてるSA.ALD':
-                ops.patch(PastelChimePatch);
+                patch = PastelChimePatch;
                 break;
             case '鬼畜王SA.ALD':
                 if (xsystem35.urlParams.get('tada') === '1')
-                    ops.patch(TADAModePatch);
+                    patch = TADAModePatch;
                 break;
         }
+        let dev = FS.makedev(major, entryCount++);
+        let ops = new NodeOps(size, chunks, patch);
+        FS.registerDevice(dev, ops);
+        FS.mkdev('/' + fname, dev);
     }
     xsystem35.registerDataFile = registerDataFile;
     class NodeOps {
-        constructor(size, chunks) {
+        constructor(size, chunks, patchTbl) {
             this.size = size;
-            let ptr = this.addr = Module.getMemory(size);
-            for (let c of chunks) {
-                Module.HEAPU8.set(c, ptr);
-                ptr += c.byteLength;
-            }
+            this.chunks = chunks;
+            this.patchTbl = patchTbl;
         }
         read(stream, buffer, offset, length, position) {
+            if (buffer !== Module.HEAP8)
+                throw new Error('Invalid argument');
+            if (this.addr === undefined)
+                this.load();
             let src = this.addr + position;
             length = Math.min(length, this.size - position);
-            buffer.set(Module.HEAPU8.subarray(src, src + length), offset);
+            // load() might have invalidated `buffer`, so use Module.HEAP8 directly
+            Module.HEAP8.set(Module.HEAPU8.subarray(src, src + length), offset);
             return length;
         }
         llseek(stream, offset, whence) {
@@ -571,18 +575,32 @@ var xsystem35;
             return position;
         }
         mmap() {
+            if (this.addr === undefined)
+                this.load();
             return { ptr: this.addr, allocated: false };
         }
-        patch(table) {
-            for (let a of table) {
+        load() {
+            let ptr = this.addr = Module._malloc(this.size);
+            for (let c of this.chunks) {
+                Module.HEAPU8.set(c, ptr);
+                ptr += c.byteLength;
+            }
+            this.chunks = null;
+            this.patch();
+        }
+        patch() {
+            if (!this.patchTbl)
+                return;
+            for (let a of this.patchTbl) {
                 if (Module.HEAPU8[this.addr + a[0]] !== a[1]) {
                     console.log('Patch failed');
                     return;
                 }
             }
-            for (let a of table)
+            for (let a of this.patchTbl)
                 Module.HEAPU8[this.addr + a[0]] = a[2];
             console.log('Patch applied');
+            this.patchTbl = null;
         }
     }
 })(xsystem35 || (xsystem35 = {}));

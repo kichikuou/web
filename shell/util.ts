@@ -134,7 +134,7 @@ declare function _sdl_getDisplaySurface(): number;
 declare namespace Module {
     // Undocumented methods / attributes
     let canvas: HTMLCanvasElement;
-    function getMemory(size: number): number;
+    function _malloc(size: number): number;
     function setStatus(status: string): void;
     function quit(status: number, toThrow: Error): void;
     function readAsync(url: string, onload: (response: any) => void, onerror: () => void): void;
