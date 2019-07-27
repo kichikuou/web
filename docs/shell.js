@@ -1942,15 +1942,6 @@ var xsystem35;
                 }
             }
             Module.print = Module.printErr = console.log.bind(console);
-            Module.setWindowTitle = (title) => {
-                let colon = title.indexOf(':');
-                if (colon !== -1) {
-                    title = title.slice(colon + 1);
-                    $('.navbar-brand').textContent = title;
-                    ga('set', 'dimension1', title);
-                    ga('send', 'event', 'Game', 'GameStart', title);
-                }
-            };
             Module.canvas = document.getElementById('canvas');
             Module.preRun = [
                 () => { Module.addRunDependency('gameFiles'); },
@@ -2025,6 +2016,15 @@ var xsystem35;
         windowSizeChanged() {
             this.zoom.handleZoom();
             this.zoom.recalcAspectRatio();
+        }
+        setWindowTitle(title) {
+            let colon = title.indexOf(':');
+            if (colon !== -1) {
+                title = title.slice(colon + 1);
+                $('.navbar-brand').textContent = title;
+                ga('set', 'dimension1', title);
+                ga('send', 'event', 'Game', 'GameStart', title);
+            }
         }
         inputString(title, initialValue, maxLength) {
             title += ' (全角' + maxLength + '文字まで)';

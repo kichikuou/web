@@ -136,7 +136,6 @@ declare namespace Module {
     let canvas: HTMLCanvasElement;
     function getMemory(size: number): number;
     function setStatus(status: string): void;
-    function setWindowTitle(title: string): void;
     function quit(status: number, toThrow: Error): void;
     function readAsync(url: string, onload: (response: any) => void, onerror: () => void): void;
 }

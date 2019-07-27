@@ -80,15 +80,6 @@ namespace xsystem35 {
                 }
             }
             Module.print = Module.printErr = console.log.bind(console);
-            Module.setWindowTitle = (title) => {
-                let colon = title.indexOf(':');
-                if (colon !== -1) {
-                    title = title.slice(colon + 1);
-                    $('.navbar-brand').textContent = title;
-                    ga('set', 'dimension1', title);
-                    ga('send', 'event', 'Game', 'GameStart', title);
-                }
-            };
             Module.canvas = <HTMLCanvasElement>document.getElementById('canvas');
             Module.preRun = [
                 () => { Module.addRunDependency('gameFiles'); },
@@ -168,6 +159,16 @@ namespace xsystem35 {
         windowSizeChanged() {
             this.zoom.handleZoom();
             this.zoom.recalcAspectRatio();
+        }
+
+        setWindowTitle(title: string) {
+            let colon = title.indexOf(':');
+            if (colon !== -1) {
+                title = title.slice(colon + 1);
+                $('.navbar-brand').textContent = title;
+                ga('set', 'dimension1', title);
+                ga('send', 'event', 'Game', 'GameStart', title);
+            }
         }
 
         inputString(title: string, initialValue: string, maxLength: number): string {
