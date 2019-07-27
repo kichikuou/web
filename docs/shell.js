@@ -54,8 +54,7 @@ function mkdirIfNotExist(path, fs) {
         (fs || FS).mkdir(path);
     }
     catch (err) {
-        if (err.errno !== ERRNO_CODES.EEXIST)
-            throw err;
+        // ignore EEXIST
     }
 }
 function isIOSVersionBetween(from, to) {
