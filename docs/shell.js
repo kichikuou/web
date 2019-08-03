@@ -1981,7 +1981,7 @@ var xsystem35;
         }
         loadModule(name) {
             $('#loader').classList.add('module-loading');
-            let src = name + (this.shouldUseWasm() ? '.js' : '.asm.js');
+            let src = name + '.js';
             let script = document.createElement('script');
             script.src = src;
             script.onerror = () => {
@@ -1996,20 +1996,6 @@ var xsystem35;
                 document.body.classList.add('bgblack-fade');
                 this.toolbar.setCloseable();
             });
-        }
-        shouldUseWasm() {
-            if (typeof WebAssembly !== 'object')
-                return false;
-            let param = xsystem35.urlParams.get('wasm');
-            if (param)
-                return param !== '0';
-            if (isIOSVersionBetween('11.2.2', '11.3')) {
-                // Disable wasm on iOS 11.2.[2-] to workaround WebKit bug
-                // https://bugs.webkit.org/show_bug.cgi?id=181781
-                ga('send', 'event', 'Game', 'WasmDisabled');
-                return false;
-            }
-            return true;
         }
         loaded(hasMidi) {
             if (hasMidi)
@@ -2174,6 +2160,9 @@ var xsystem35;
     window.addEventListener('load', loadPolyfills);
     xsystem35.shell = new System35Shell();
 })(xsystem35 || (xsystem35 = {}));
+if (typeof WebAssembly !== 'object') {
+    document.getElementById('unsupported').hidden = false;
+}
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('service-worker.js');

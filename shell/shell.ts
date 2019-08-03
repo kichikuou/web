@@ -103,7 +103,7 @@ namespace xsystem35 {
 
         loadModule(name: 'system3' | 'xsystem35'): Promise<any> {
             $('#loader').classList.add('module-loading');
-            let src = name + (this.shouldUseWasm() ? '.js' : '.asm.js');
+            let src = name + '.js';
             let script = document.createElement('script');
             script.src = src;
             script.onerror = () => {
@@ -118,21 +118,6 @@ namespace xsystem35 {
                 document.body.classList.add('bgblack-fade');
                 this.toolbar.setCloseable();
             });
-        }
-
-        private shouldUseWasm(): boolean {
-            if (typeof WebAssembly !== 'object')
-                return false;
-            let param = urlParams.get('wasm');
-            if (param)
-                return param !== '0';
-            if (isIOSVersionBetween('11.2.2', '11.3')) {
-                // Disable wasm on iOS 11.2.[2-] to workaround WebKit bug
-                // https://bugs.webkit.org/show_bug.cgi?id=181781
-                ga('send', 'event', 'Game', 'WasmDisabled');
-                return false;
-            }
-            return true;
         }
 
         loaded(hasMidi: boolean) {
@@ -307,6 +292,10 @@ namespace xsystem35 {
     window.addEventListener('load', loadPolyfills);
 
     export let shell = new System35Shell();
+}
+
+if (typeof WebAssembly !== 'object') {
+    document.getElementById('unsupported').hidden = false;
 }
 
 if ('serviceWorker' in navigator) {
