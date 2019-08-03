@@ -1623,27 +1623,27 @@ var xsystem35;
             return buf;
         }
         pcm_load(slot, no) {
-            return EmterpreterAsync.handle((resume) => {
+            return Asyncify.handleSleep((wakeUp) => {
                 this.pcm_stop(slot);
                 if (this.bufCache[no]) {
                     this.slots[slot] = new PCMSoundSimple(this.destNode, this.bufCache[no]);
-                    return resume(() => xsystem35.Status.OK);
+                    return wakeUp(xsystem35.Status.OK);
                 }
                 this.load(no).then((audioBuf) => {
                     this.slots[slot] = new PCMSoundSimple(this.destNode, audioBuf);
-                    resume(() => xsystem35.Status.OK);
+                    wakeUp(xsystem35.Status.OK);
                 }).catch((err) => {
                     gaException({ type: 'PCM', err });
-                    resume(() => xsystem35.Status.NG);
+                    wakeUp(xsystem35.Status.NG);
                 });
             });
         }
         pcm_load_mixlr(slot, noL, noR) {
-            return EmterpreterAsync.handle((resume) => {
+            return Asyncify.handleSleep((wakeUp) => {
                 this.pcm_stop(slot);
                 if (this.bufCache[noL] && this.bufCache[noR]) {
                     this.slots[slot] = new PCMSoundMixLR(this.destNode, this.bufCache[noL], this.bufCache[noR]);
-                    return resume(() => xsystem35.Status.OK);
+                    return wakeUp(xsystem35.Status.OK);
                 }
                 let ps = [
                     this.bufCache[noL] ? Promise.resolve(this.bufCache[noL]) : this.load(noL),
@@ -1651,10 +1651,10 @@ var xsystem35;
                 ];
                 Promise.all(ps).then((bufs) => {
                     this.slots[slot] = new PCMSoundMixLR(this.destNode, bufs[0], bufs[1]);
-                    resume(() => xsystem35.Status.OK);
+                    wakeUp(xsystem35.Status.OK);
                 }).catch((err) => {
                     gaException({ type: 'PCM', err });
-                    resume(() => xsystem35.Status.NG);
+                    wakeUp(xsystem35.Status.NG);
                 });
             });
         }
@@ -1709,10 +1709,10 @@ var xsystem35;
             return this.slots[slot].isPlaying() ? xsystem35.Bool.TRUE : xsystem35.Bool.FALSE;
         }
         pcm_waitend(slot) {
-            return EmterpreterAsync.handle((resume) => {
+            return Asyncify.handleSleep((wakeUp) => {
                 if (!this.slots[slot] || !this.slots[slot].isPlaying())
-                    return resume(() => xsystem35.Status.OK);
-                this.slots[slot].end_callback = () => resume(() => xsystem35.Status.OK);
+                    return wakeUp(xsystem35.Status.OK);
+                this.slots[slot].end_callback = () => wakeUp(xsystem35.Status.OK);
             });
         }
         onVisibilityChange() {

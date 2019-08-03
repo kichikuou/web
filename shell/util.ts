@@ -146,8 +146,8 @@ declare namespace FS {
 
 declare function readAsync(url: string, onload: (response: any) => void, onerror: () => void): void;
 
-declare namespace EmterpreterAsync {
-    function handle(asyncOp: (resume: () => void) => void): void;
+declare namespace Asyncify {
+    function handleSleep(op : (wakeUp: (result: any) => void) => void): void;
 }
 
 // https://storage.spec.whatwg.org

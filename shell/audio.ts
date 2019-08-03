@@ -50,28 +50,28 @@ namespace xsystem35 {
         }
 
         pcm_load(slot: number, no: number) {
-            return EmterpreterAsync.handle((resume: (f: () => Status) => void) => {
+            return Asyncify.handleSleep((wakeUp: (result: Status) => void) => {
                 this.pcm_stop(slot);
                 if (this.bufCache[no]) {
                     this.slots[slot] = new PCMSoundSimple(this.destNode, this.bufCache[no]);
-                    return resume(() => Status.OK);
+                    return wakeUp(Status.OK);
                 }
                 this.load(no).then((audioBuf) => {
                     this.slots[slot] = new PCMSoundSimple(this.destNode, audioBuf);
-                    resume(() => Status.OK);
+                    wakeUp(Status.OK);
                 }).catch((err) => {
                     gaException({type: 'PCM', err});
-                    resume(() => Status.NG);
+                    wakeUp(Status.NG);
                 });
             });
         }
 
         pcm_load_mixlr(slot: number, noL: number, noR: number) {
-            return EmterpreterAsync.handle((resume: (f: () => Status) => void) => {
+            return Asyncify.handleSleep((wakeUp: (result: Status) => void) => {
                 this.pcm_stop(slot);
                 if (this.bufCache[noL] && this.bufCache[noR]) {
                     this.slots[slot] = new PCMSoundMixLR(this.destNode, this.bufCache[noL], this.bufCache[noR]);
-                    return resume(() => Status.OK);
+                    return wakeUp(Status.OK);
                 }
                 let ps: [Promise<AudioBuffer>, Promise<AudioBuffer>] = [
                     this.bufCache[noL] ? Promise.resolve(this.bufCache[noL]) : this.load(noL),
@@ -79,10 +79,10 @@ namespace xsystem35 {
                 ];
                 Promise.all(ps).then((bufs) => {
                     this.slots[slot] = new PCMSoundMixLR(this.destNode, bufs[0], bufs[1]);
-                    resume(() => Status.OK);
+                    wakeUp(Status.OK);
                 }).catch((err) => {
                     gaException({type: 'PCM', err});
-                    resume(() => Status.NG);
+                    wakeUp(Status.NG);
                 });
             });
         }
@@ -146,10 +146,10 @@ namespace xsystem35 {
         }
 
         pcm_waitend(slot: number) {
-            return EmterpreterAsync.handle((resume: (f: () => Status) => void) => {
+            return Asyncify.handleSleep((wakeUp: (result: Status) => void) => {
                 if (!this.slots[slot] || !this.slots[slot].isPlaying())
-                    return resume(() => Status.OK);
-                this.slots[slot].end_callback = () => resume(() => Status.OK);
+                    return wakeUp(Status.OK);
+                this.slots[slot].end_callback = () => wakeUp(Status.OK);
             });
         }
 
