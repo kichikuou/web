@@ -1666,12 +1666,19 @@ var xsystem35;
             return xsystem35.Status.OK;
         }
         pcm_start(slot, loop) {
-            if (this.slots[slot]) {
-                this.slots[slot].start(loop);
-                return xsystem35.Status.OK;
+            if (!this.slots[slot]) {
+                console.log('pcm_start: invalid slot', slot);
+                return xsystem35.Status.NG;
             }
-            console.log('pcm_start: invalid slot', slot);
-            return xsystem35.Status.NG;
+            if (typeof (webkitAudioContext) !== 'undefined' &&
+                this.destNode.context.state === 'suspended') {
+                // Safari: The audio context is still locked. If we attempt to play
+                // a sound on it, it will start later when the context is unlocked.
+                ga('send', 'event', 'Audio', 'StillLocked');
+                return xsystem35.Status.NG;
+            }
+            this.slots[slot].start(loop);
+            return xsystem35.Status.OK;
         }
         pcm_stop(slot) {
             if (!this.slots[slot])

@@ -96,12 +96,19 @@ namespace xsystem35 {
         }
 
         pcm_start(slot: number, loop: number): Status {
-            if (this.slots[slot]) {
-                this.slots[slot].start(loop);
-                return Status.OK;
+            if (!this.slots[slot]) {
+                console.log('pcm_start: invalid slot', slot);
+                return Status.NG;
             }
-            console.log('pcm_start: invalid slot', slot);
-            return Status.NG;
+            if (typeof (webkitAudioContext) !== 'undefined' &&
+                this.destNode.context.state === 'suspended') {
+                // Safari: The audio context is still locked. If we attempt to play
+                // a sound on it, it will start later when the context is unlocked.
+                ga('send', 'event', 'Audio', 'StillLocked');
+                return Status.NG;
+            }
+            this.slots[slot].start(loop);
+            return Status.OK;
         }
 
         pcm_stop(slot: number): Status {
