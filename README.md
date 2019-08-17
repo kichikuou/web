@@ -42,4 +42,4 @@ https://kichikuou.github.io/web/ で公開されるディレクトリです。HT
 - [Font Awesome](https://fontawesome.com/v4.7.0/) by Dave Gandy ([License](https://fontawesome.com/v4.7.0/license/))
 - [JSZip](https://stuk.github.io/jszip/) by Stuart Knightley ([License](https://github.com/Stuk/jszip/blob/v3.1.3/LICENSE.markdown))
 - [Spectre.css](https://picturepan2.github.io/spectre/) by Yan Zhu ([License](https://github.com/picturepan2/spectre/blob/v0.5.8/LICENSE))
-- [WebAssembly port of libTiMidity](https://github.com/feross/timidity) (part of [BitMidi](https://bitmidi.com/)) by Feross Aboukhadijeh, used with permission.
+- [WebAssembly port of libTiMidity](https://github.com/feross/timidity) by Feross Aboukhadijeh ([License](https://github.com/feross/timidity/blob/v1.1.3/LICENSE))
