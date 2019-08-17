@@ -1966,6 +1966,7 @@ var xsystem35;
                 }
             }
             Module.print = Module.printErr = console.log.bind(console);
+            Module.setWindowTitle = () => { }; // Don't let emscripten overwrite the window title.
             Module.canvas = document.getElementById('canvas');
             Module.preRun = [
                 () => { Module.addRunDependency('gameFiles'); },

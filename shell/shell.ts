@@ -80,6 +80,7 @@ namespace xsystem35 {
                 }
             }
             Module.print = Module.printErr = console.log.bind(console);
+            Module.setWindowTitle = () => {}; // Don't let emscripten overwrite the window title.
             Module.canvas = <HTMLCanvasElement>document.getElementById('canvas');
             Module.preRun = [
                 () => { Module.addRunDependency('gameFiles'); },

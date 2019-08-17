@@ -135,6 +135,7 @@ declare namespace Module {
     let canvas: HTMLCanvasElement;
     function _malloc(size: number): number;
     function setStatus(status: string): void;
+    function setWindowTitle(title: string): void;
     function quit(status: number, toThrow: Error): void;
 }
 
