@@ -18,7 +18,7 @@ namespace xsystem35 {
                 if (ev.keyCode === 27)  // escape
                     this.closeModal();
             };
-            $('.modal-overlay').addEventListener('click', this.closeModal.bind(this));
+            $('#settings-overlay').addEventListener('click', this.closeModal.bind(this));
 
             this.antialias.addEventListener('change', this.antialiasChanged.bind(this));
             this.antialias.checked = config.antialias;

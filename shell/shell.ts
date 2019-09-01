@@ -11,6 +11,7 @@
 /// <reference path="midi.ts" />
 /// <reference path="audio.ts" />
 /// <reference path="toolbar.ts" />
+/// <reference path="textlog.ts" />
 
 namespace xsystem35 {
     const FontGothic = 'MTLc3m.ttf';
@@ -151,6 +152,7 @@ namespace xsystem35 {
             let colon = title.indexOf(':');
             if (colon !== -1) {
                 title = title.slice(colon + 1);
+                texthook.setTitle(title);
                 $('.navbar-brand').textContent = title;
                 ga('set', 'dimension1', title);
                 ga('send', 'event', 'Game', 'GameStart', title);

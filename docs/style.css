@@ -212,6 +212,14 @@ canvas.emscripten {
   width: initial;
 }
 
+#textlog-modal .modal-container {
+  max-width: 90vw;
+  background-color: rgba(255, 255, 255, 0.85);
+}
+#textlog-modal pre {
+  margin: 0;
+}
+
 .toast-container {
   position: fixed;
   bottom: 30px;

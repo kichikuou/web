@@ -39,6 +39,8 @@
         </div>
 
         <button id="screenshot-button" class="btn btn-link tooltip tooltip-bottom mr-2 hidden-until-game-start" data-tooltip="スクリーンショット"><i class="fa fa-camera"></i></button>
+
+        <button id="textlog-button" class="btn btn-link tooltip tooltip-bottom mr-2 hidden-until-game-start" data-tooltip="テキスト履歴"><i class="fa fa-history"></i></button>
         <button id="settings-button" class="btn btn-link tooltip tooltip-bottom mr-2" data-tooltip="設定"><i class="fa fa-cog"></i></button>
         <a class="btn btn-link tooltip tooltip-bottom" target="_blank" href="help.html" data-tooltip="ヘルプ"><i class="fa fa-question-circle mr-2"></i></a>
         <button id="toolbar-close-button" class="btn btn-link"><i class="fa fa-angle-up"></i></button>
@@ -52,7 +54,7 @@
       <h1>鬼畜王 on Web</h1>
       <p>アリスソフトの <a href="http://www.alicesoft.com/annai.html#free">配布フリー宣言</a> に基づいて配布されている「鬼畜王ランス」、「闘神都市II」等のゲームをWebブラウザ上で遊べるようにしたものです。
       <a target="_blank" href="help.html">遊び方はこちら。</a></p>
-      <p><span class="label label-secondary">2019-05-02</span> 対応ゲームを追加しました。詳しくは<a target="_blank" href="help.html">ヘルプ</a>をご覧ください。</p>
+      <p><span class="label label-secondary">2019-09-02</span> 簡易バックログ機能を追加しました。</p>
       <p><strong>(注意) 18歳未満の人は利用できません。</strong></p>
       <p>ゲームのCDイメージファイルをドラッグ＆ドロップするか、下の「ファイルを選択」ボタンを押して選択してください。</p>
       <ul class="hidden-while-loading">
@@ -75,7 +77,7 @@
 
   <!-- Settings -->
   <div id="settings-modal" class="modal">
-    <div class="modal-overlay"></div>
+    <div id="settings-overlay" class="modal-overlay"></div>
     <div class="modal-container">
       <div class="modal-header">
         <div class="modal-title">設定</div>
@@ -128,6 +130,21 @@
       </div>
       <div class="modal-footer">
         <button id="settings-close" class="btn btn-primary">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Text log -->
+  <div id="textlog-modal" class="modal">
+    <div id="textlog-overlay" class="modal-overlay"></div>
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title">テキスト履歴</div>
+      </div>
+      <pre id="textlog-content" class="modal-body">
+      </pre>
+      <div class="modal-footer">
+        <button id="textlog-close" class="btn btn-primary">閉じる</button>
       </div>
     </div>
   </div>

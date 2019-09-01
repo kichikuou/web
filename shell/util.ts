@@ -127,7 +127,6 @@ namespace xsystem35 {
 declare function _ags_setAntialiasedStringMode(on: number): void;
 declare function _ald_getdata(type: number, no: number): number;
 declare function _ald_freedata(data: number): void;
-declare function _sjis2unicode(byte1: number, byte2: number): void;
 declare function _sdl_getDisplaySurface(): number;
 
 declare namespace Module {
