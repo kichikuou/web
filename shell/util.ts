@@ -129,19 +129,12 @@ declare function _ald_getdata(type: number, no: number): number;
 declare function _ald_freedata(data: number): void;
 declare function _sdl_getDisplaySurface(): number;
 
-declare namespace Module {
+declare interface EmscriptenModule {
     // Undocumented methods / attributes
-    let canvas: HTMLCanvasElement;
-    function _malloc(size: number): number;
-    function setStatus(status: string): void;
-    function setWindowTitle(title: string): void;
-    function quit(status: number, toThrow: Error): void;
-}
-
-declare namespace FS {
-    function readFile(path: string, opts?: {encoding?: string; flags?: string}): any;
-    function writeFile(path: string, data: ArrayBufferView | string,
-                       opts?: {encoding?: string; flags?: string; canOwn?: boolean}): void;
+    canvas: HTMLCanvasElement;
+    setStatus(status: string): void;
+    setWindowTitle(title: string): void;
+    quit(status: number, toThrow: Error): void;
 }
 
 declare function readAsync(url: string, onload: (response: any) => void, onerror: () => void): void;
@@ -158,4 +151,8 @@ interface StorageManager {
     persisted: () => Promise<boolean>;
     persist: () => Promise<boolean>;
     // estimate: () => Promise<StorageEstimate>;
+}
+
+interface BaseAudioContext {
+    resume(): Promise<void>;
 }

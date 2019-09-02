@@ -103,6 +103,6 @@ namespace xsystem35 {
     }
 
     function addSaveFile(fs: typeof FS, path: string, content: ArrayBuffer) {
-        fs.writeFile(path, new Uint8Array(content), { encoding: 'binary' });
+        fs.writeFile(path, new Uint8Array(content));
     }
 }

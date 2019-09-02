@@ -1017,7 +1017,7 @@ var xsystem35;
         }
     }
     function addSaveFile(fs, path, content) {
-        fs.writeFile(path, new Uint8Array(content), { encoding: 'binary' });
+        fs.writeFile(path, new Uint8Array(content));
     }
 })(xsystem35 || (xsystem35 = {}));
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
@@ -2205,7 +2205,7 @@ var xsystem35;
             if (entries.length && window.confirm('鬼畜王 on Chrome のセーブデータを引き継ぎますか?')) {
                 for (let e of entries) {
                     let content = await readFileAsArrayBuffer(await fileOf(e));
-                    FS.writeFile('/save/' + e.name, new Uint8Array(content), { encoding: 'binary' });
+                    FS.writeFile('/save/' + e.name, new Uint8Array(content));
                 }
                 xsystem35.shell.syncfs(0);
                 ga('send', 'event', 'Game', 'SaveDataImported');
@@ -2225,7 +2225,7 @@ var xsystem35;
             let endMeasure = startMeasure('FontLoad', 'Font load', FontMincho);
             readAsync('fonts/' + FontMincho, (buf) => {
                 endMeasure();
-                FS.writeFile(FontMincho, new Uint8Array(buf), { encoding: 'binary' });
+                FS.writeFile(FontMincho, new Uint8Array(buf));
                 resolve(xsystem35.Status.OK);
             }, () => {
                 resolve(xsystem35.Status.NG);

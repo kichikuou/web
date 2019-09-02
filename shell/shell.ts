@@ -254,7 +254,7 @@ namespace xsystem35 {
             if (entries.length && window.confirm('鬼畜王 on Chrome のセーブデータを引き継ぎますか?')) {
                 for (let e of entries) {
                     let content = await readFileAsArrayBuffer(await fileOf(e));
-                    FS.writeFile('/save/' + e.name, new Uint8Array(content), { encoding: 'binary' });
+                    FS.writeFile('/save/' + e.name, new Uint8Array(content));
                 }
                 shell.syncfs(0);
                 ga('send', 'event', 'Game', 'SaveDataImported');
@@ -274,7 +274,7 @@ namespace xsystem35 {
             let endMeasure = startMeasure('FontLoad', 'Font load', FontMincho);
             readAsync('fonts/' + FontMincho, (buf: ArrayBuffer) => {
                 endMeasure();
-                FS.writeFile(FontMincho, new Uint8Array(buf), { encoding: 'binary' });
+                FS.writeFile(FontMincho, new Uint8Array(buf));
                 resolve(Status.OK);
             }, () => {
                 resolve(Status.NG);
