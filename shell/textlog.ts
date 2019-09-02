@@ -22,6 +22,7 @@ namespace xsystem35 {
         texthook.render(e);
         $('#textlog-modal').classList.add('active');
         e.scrollTop = e.scrollHeight;
+        ga('send', 'event', 'Toolbar', 'Textlog');
     }
 
     function closeTextLog() {
@@ -33,6 +34,7 @@ namespace xsystem35 {
         private linebuf = '';
         private lines: string[] = [];
         private quietPages: number[] = [];
+        private consoleLog = false;
 
         message(s: string, page: number) {
             if (this.linebuf === '')
@@ -43,7 +45,8 @@ namespace xsystem35 {
         newline() {
             if (this.linebuf !== '') {
                 if (!this.skiplog(this.currentPage)) {
-                    console.log(this.currentPage + ': ' + this.linebuf);
+                    if (this.consoleLog)
+                        console.log(this.currentPage + ': ' + this.linebuf);
                     this.addLine(this.linebuf);
                 }
                 this.linebuf = '';
@@ -53,7 +56,8 @@ namespace xsystem35 {
         nextpage() {
             this.newline();
             if (this.lines[this.lines.length - 1] !== '') {
-                console.log('');
+                if (this.consoleLog)
+                    console.log('');
                 this.addLine('');
             }
         }
@@ -68,6 +72,8 @@ namespace xsystem35 {
 
         setTitle(title: string) {
             this.quietPages = quietPagesTable[title] || [];
+            if (urlParams.get('consoleTextLog') === '1')
+                this.consoleLog = true;
         }
 
         private addLine(s: string) {

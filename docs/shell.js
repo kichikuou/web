@@ -1919,6 +1919,7 @@ var xsystem35;
         xsystem35.texthook.render(e);
         $('#textlog-modal').classList.add('active');
         e.scrollTop = e.scrollHeight;
+        ga('send', 'event', 'Toolbar', 'Textlog');
     }
     function closeTextLog() {
         $('#textlog-modal').classList.remove('active');
@@ -1929,6 +1930,7 @@ var xsystem35;
             this.linebuf = '';
             this.lines = [];
             this.quietPages = [];
+            this.consoleLog = false;
         }
         message(s, page) {
             if (this.linebuf === '')
@@ -1938,7 +1940,8 @@ var xsystem35;
         newline() {
             if (this.linebuf !== '') {
                 if (!this.skiplog(this.currentPage)) {
-                    console.log(this.currentPage + ': ' + this.linebuf);
+                    if (this.consoleLog)
+                        console.log(this.currentPage + ': ' + this.linebuf);
                     this.addLine(this.linebuf);
                 }
                 this.linebuf = '';
@@ -1947,7 +1950,8 @@ var xsystem35;
         nextpage() {
             this.newline();
             if (this.lines[this.lines.length - 1] !== '') {
-                console.log('');
+                if (this.consoleLog)
+                    console.log('');
                 this.addLine('');
             }
         }
@@ -1959,6 +1963,8 @@ var xsystem35;
         }
         setTitle(title) {
             this.quietPages = quietPagesTable[title] || [];
+            if (xsystem35.urlParams.get('consoleTextLog') === '1')
+                this.consoleLog = true;
         }
         addLine(s) {
             this.lines.push(s);
