@@ -1674,7 +1674,6 @@ var xsystem35;
                 this.destNode.context.state === 'suspended') {
                 // Safari: The audio context is still locked. If we attempt to play
                 // a sound on it, it will start later when the context is unlocked.
-                ga('send', 'event', 'Audio', 'StillLocked');
                 return xsystem35.Status.NG;
             }
             this.slots[slot].start(loop);
