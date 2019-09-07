@@ -1,31 +1,25 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {$} from './util.js';
-
+import { $ } from './util.js';
 class ToolBar {
-    private toolbar = $('#toolbar');
-    private handler = $('#toolbar-handler');
-
     constructor() {
+        this.toolbar = $('#toolbar');
+        this.handler = $('#toolbar-handler');
         $('#screenshot-button').addEventListener('click', this.saveScreenshot.bind(this));
     }
-
     setCloseable() {
         this.handler.addEventListener('click', this.open.bind(this));
         $('#toolbar-close-button').addEventListener('click', this.close.bind(this));
         this.toolbar.classList.add('closeable');
         this.close();
     }
-
-    private open() {
+    open() {
         this.toolbar.classList.remove('closed');
     }
-
-    private close() {
+    close() {
         this.toolbar.classList.add('closed');
     }
-
-    private async saveScreenshot() {
+    async saveScreenshot() {
         let pixels = _sdl_getDisplaySurface();
         let canvas = document.createElement('canvas');
         canvas.width = Module.canvas.width;
@@ -42,32 +36,31 @@ class ToolBar {
             pixels += 4;
         }
         ctx.putImageData(image, 0, 0);
-
         ga('send', 'event', 'Toolbar', 'Screenshot');
-
         let url;
         if (canvas.toBlob) {
             let blob = await new Promise((resolve) => canvas.toBlob(resolve));
             url = URL.createObjectURL(blob);
-        } else if ((canvas as any).msToBlob) {  // Edge
-            let blob = (canvas as any).msToBlob();
+        }
+        else if (canvas.msToBlob) { // Edge
+            let blob = canvas.msToBlob();
             navigator.msSaveBlob(blob, getScreenshotFilename());
             return;
-        } else {  // Safari
+        }
+        else { // Safari
             url = canvas.toDataURL();
         }
         let elem = document.createElement('a');
         elem.setAttribute('download', getScreenshotFilename());
         elem.setAttribute('href', url);
-        elem.setAttribute('target', '_blank');  // Unless this, iOS safari replaces current page
+        elem.setAttribute('target', '_blank'); // Unless this, iOS safari replaces current page
         document.body.appendChild(elem);
         elem.click();
         setTimeout(() => { document.body.removeChild(elem); }, 5000);
     }
 }
 export let toolbar = new ToolBar();
-
-function getScreenshotFilename(): string {
+function getScreenshotFilename() {
     let now = new Date();
     let MM = ('0' + (now.getMonth() + 1)).slice(-2);
     let DD = ('0' + now.getDate()).slice(-2);

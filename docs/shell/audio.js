@@ -1,40 +1,28 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {gaException, Bool, Status} from './util.js';
-import {volumeControl} from './volume.js';
-
-declare global {
-    interface BaseAudioContext {
-        resume(): Promise<void>;  // Missing in lib.dom.d.ts of TypeScript 3.6.2
-    }
-    var webkitAudioContext: any;
-}
-
+import { gaException, Bool, Status } from './util.js';
+import { volumeControl } from './volume.js';
 class AudioManager {
-    private slots: PCMSound[];
-    private bufCache: AudioBuffer[];
-
-    constructor(private destNode: AudioNode) {
+    constructor(destNode) {
+        this.destNode = destNode;
         this.slots = [];
         this.bufCache = [];
         document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this));
     }
-
-    private load(no: number): Promise<AudioBuffer> {
+    load(no) {
         let buf = this.getWave(no);
         if (!buf)
             return Promise.reject('Failed to open wave ' + no);
-
         // If the AudioContext was not created inside a user-initiated event
         // handler, then it will be suspended. Attempt to resume it.
         this.destNode.context.resume();
-
-        let decoded: Promise<AudioBuffer>;
-        if (typeof (webkitAudioContext) !== 'undefined') {  // Safari
+        let decoded;
+        if (typeof (webkitAudioContext) !== 'undefined') { // Safari
             decoded = new Promise((resolve, reject) => {
                 this.destNode.context.decodeAudioData(buf, resolve, reject);
             });
-        } else {
+        }
+        else {
             decoded = this.destNode.context.decodeAudioData(buf);
         }
         return decoded.then((audioBuf) => {
@@ -42,8 +30,7 @@ class AudioManager {
             return audioBuf;
         });
     }
-
-    private getWave(no: number): ArrayBuffer {
+    getWave(no) {
         let dfile = _ald_getdata(2 /* DRIFILE_WAVE */, no - 1);
         if (!dfile)
             return null;
@@ -53,9 +40,8 @@ class AudioManager {
         _ald_freedata(dfile);
         return buf;
     }
-
-    pcm_load(slot: number, no: number) {
-        return Asyncify.handleSleep((wakeUp: (result: Status) => void) => {
+    pcm_load(slot, no) {
+        return Asyncify.handleSleep((wakeUp) => {
             this.pcm_stop(slot);
             if (this.bufCache[no]) {
                 this.slots[slot] = new PCMSoundSimple(this.destNode, this.bufCache[no]);
@@ -65,20 +51,19 @@ class AudioManager {
                 this.slots[slot] = new PCMSoundSimple(this.destNode, audioBuf);
                 wakeUp(Status.OK);
             }).catch((err) => {
-                gaException({type: 'PCM', err});
+                gaException({ type: 'PCM', err });
                 wakeUp(Status.NG);
             });
         });
     }
-
-    pcm_load_mixlr(slot: number, noL: number, noR: number) {
-        return Asyncify.handleSleep((wakeUp: (result: Status) => void) => {
+    pcm_load_mixlr(slot, noL, noR) {
+        return Asyncify.handleSleep((wakeUp) => {
             this.pcm_stop(slot);
             if (this.bufCache[noL] && this.bufCache[noR]) {
                 this.slots[slot] = new PCMSoundMixLR(this.destNode, this.bufCache[noL], this.bufCache[noR]);
                 return wakeUp(Status.OK);
             }
-            let ps: [Promise<AudioBuffer>, Promise<AudioBuffer>] = [
+            let ps = [
                 this.bufCache[noL] ? Promise.resolve(this.bufCache[noL]) : this.load(noL),
                 this.bufCache[noR] ? Promise.resolve(this.bufCache[noR]) : this.load(noR),
             ];
@@ -86,21 +71,19 @@ class AudioManager {
                 this.slots[slot] = new PCMSoundMixLR(this.destNode, bufs[0], bufs[1]);
                 wakeUp(Status.OK);
             }).catch((err) => {
-                gaException({type: 'PCM', err});
+                gaException({ type: 'PCM', err });
                 wakeUp(Status.NG);
             });
         });
     }
-
-    pcm_unload(slot: number): Status {
+    pcm_unload(slot) {
         if (!this.slots[slot])
             return Status.NG;
         this.slots[slot].stop();
         this.slots[slot] = null;
         return Status.OK;
     }
-
-    pcm_start(slot: number, loop: number): Status {
+    pcm_start(slot, loop) {
         if (!this.slots[slot]) {
             console.log('pcm_start: invalid slot', slot);
             return Status.NG;
@@ -114,93 +97,76 @@ class AudioManager {
         this.slots[slot].start(loop);
         return Status.OK;
     }
-
-    pcm_stop(slot: number): Status {
+    pcm_stop(slot) {
         if (!this.slots[slot])
             return Status.NG;
         this.slots[slot].stop();
-        if (slot === 0)  // slot 0 plays at most once
+        if (slot === 0) // slot 0 plays at most once
             this.slots[slot] = null;
         return Status.OK;
     }
-
-    pcm_fadeout(slot: number, msec: number): Status {
+    pcm_fadeout(slot, msec) {
         if (!this.slots[slot])
             return Status.NG;
         this.slots[slot].fadeout(msec);
         return Status.OK;
     }
-
-    pcm_getpos(slot: number): number {
+    pcm_getpos(slot) {
         if (!this.slots[slot])
             return 0;
         return this.slots[slot].getPosition() * 1000;
     }
-
-    pcm_setvol(slot: number, vol: number): Status {
+    pcm_setvol(slot, vol) {
         if (!this.slots[slot])
             return Status.NG;
         this.slots[slot].setGain(vol / 100);
         return Status.OK;
     }
-
-    pcm_getwavelen(slot: number): number {
+    pcm_getwavelen(slot) {
         if (!this.slots[slot])
             return 0;
         return this.slots[slot].duration * 1000;
     }
-
-    pcm_isplaying(slot: number): Bool {
+    pcm_isplaying(slot) {
         if (!this.slots[slot])
             return Bool.FALSE;
         return this.slots[slot].isPlaying() ? Bool.TRUE : Bool.FALSE;
     }
-
-    pcm_waitend(slot: number) {
-        return Asyncify.handleSleep((wakeUp: (result: Status) => void) => {
+    pcm_waitend(slot) {
+        return Asyncify.handleSleep((wakeUp) => {
             if (!this.slots[slot] || !this.slots[slot].isPlaying())
                 return wakeUp(Status.OK);
             this.slots[slot].end_callback = () => wakeUp(Status.OK);
         });
     }
-
-    private onVisibilityChange() {
+    onVisibilityChange() {
         if (document.hidden)
             this.bufCache = [];
     }
 }
 export let audio = new AudioManager(volumeControl.audioNode());
-
-abstract class PCMSound {
-    end_callback: () => void;
-    protected context: BaseAudioContext;
-    protected gain: GainNode;
-    protected startTime: number;
-
-    constructor(protected dst: AudioNode) {
+class PCMSound {
+    constructor(dst) {
+        this.dst = dst;
         this.context = dst.context;
         this.gain = this.context.createGain();
         this.gain.connect(dst);
     }
-    abstract start(loop: number): void;
-    abstract stop(): void;
-    setGain(gain: number) {
+    setGain(gain) {
         this.gain.gain.value = gain;
     }
-    fadeout(msec: number) {
+    fadeout(msec) {
         this.gain.gain.linearRampToValueAtTime(0, this.context.currentTime + msec / 1000);
     }
-    getPosition(): number {
+    getPosition() {
         if (!this.startTime)
             return 0;
         return this.context.currentTime - this.startTime;
     }
-    isPlaying(): boolean {
+    isPlaying() {
         return !!this.startTime;
     }
-    abstract get duration(): number;
-
-    protected ended() {
+    ended() {
         this.startTime = null;
         if (this.end_callback) {
             this.end_callback();
@@ -208,15 +174,12 @@ abstract class PCMSound {
         }
     }
 }
-
 class PCMSoundSimple extends PCMSound {
-    private node: AudioBufferSourceNode;
-
-    constructor(dst: AudioNode, private buf: AudioBuffer) {
+    constructor(dst, buf) {
         super(dst);
+        this.buf = buf;
     }
-
-    start(loop: number) {
+    start(loop) {
         this.node = this.context.createBufferSource();
         this.node.buffer = this.buf;
         this.node.connect(this.gain);
@@ -229,30 +192,23 @@ class PCMSoundSimple extends PCMSound {
             this.node.start(0, 0, this.buf.duration * loop);
         this.startTime = this.context.currentTime;
     }
-
     stop() {
         if (this.startTime) {
             this.node.stop();
             this.startTime = null;
         }
     }
-
     get duration() {
         return this.buf.duration;
     }
-
-    private onended() {
+    onended() {
         this.ended();
     }
 }
-
 class PCMSoundMixLR extends PCMSound {
-    private lsrc: AudioBufferSourceNode;
-    private rsrc: AudioBufferSourceNode;
-    private endCount = 0;
-
-    constructor(dst: AudioNode, lbuf: AudioBuffer, rbuf: AudioBuffer) {
+    constructor(dst, lbuf, rbuf) {
         super(dst);
+        this.endCount = 0;
         this.lsrc = this.context.createBufferSource();
         this.rsrc = this.context.createBufferSource();
         this.lsrc.buffer = lbuf;
@@ -263,15 +219,13 @@ class PCMSoundMixLR extends PCMSound {
         this.rsrc.connect(merger, 0, 1);
         this.lsrc.onended = this.rsrc.onended = this.onended.bind(this);
     }
-
-    start(loop: number) {
+    start(loop) {
         if (loop !== 1)
             console.warn('PCMSoundMixLR: loop is not supported ' + loop);
         this.lsrc.start();
         this.rsrc.start();
         this.startTime = this.context.currentTime;
     }
-
     stop() {
         if (this.startTime) {
             this.lsrc.stop();
@@ -279,12 +233,10 @@ class PCMSoundMixLR extends PCMSound {
             this.startTime = null;
         }
     }
-
     get duration() {
         return Math.max(this.lsrc.buffer.duration, this.rsrc.buffer.duration);
     }
-
-    private onended() {
+    onended() {
         this.endCount++;
         if (this.endCount === 2)
             this.ended();

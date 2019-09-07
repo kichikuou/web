@@ -158,11 +158,9 @@
   <script>
     var Module = {};
   </script>
-  <script src="shell.js"></script>
-  <script>
-    if (xsystem35.shell === undefined) {
-      unsupported.hidden = false;
-    }
+  <script type="module" src="shell/shell.js"></script>
+  <script nomodule>
+    unsupported.hidden = false;
   </script>
   </body>
 </html>

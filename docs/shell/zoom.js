@@ -1,15 +1,13 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {$} from './util.js';
-import {config} from './config.js';
-
+import { $ } from './util.js';
+import { config } from './config.js';
 class ZoomManager {
-    private canvas = <HTMLCanvasElement>$('#canvas');
-    private zoomSelect = <HTMLInputElement>$('#zoom');
-    private pixelateCheckbox = <HTMLInputElement>$('#pixelate');
-    private throttling = false;
-
     constructor() {
+        this.canvas = $('#canvas');
+        this.zoomSelect = $('#zoom');
+        this.pixelateCheckbox = $('#pixelate');
+        this.throttling = false;
         this.zoomSelect.addEventListener('change', this.handleZoom.bind(this));
         this.zoomSelect.value = config.zoom;
         if (CSS.supports('image-rendering', 'pixelated') || CSS.supports('image-rendering', '-moz-crisp-edges')) {
@@ -18,7 +16,8 @@ class ZoomManager {
                 this.pixelateCheckbox.checked = true;
                 this.handlePixelate();
             }
-        } else {
+        }
+        else {
             this.pixelateCheckbox.setAttribute('disabled', 'true');
         }
         if (screen.orientation) {
@@ -31,7 +30,6 @@ class ZoomManager {
         }
         window.addEventListener('resize', this.onResize.bind(this));
     }
-
     handleZoom() {
         let value = this.zoomSelect.value;
         config.zoom = value;
@@ -41,13 +39,13 @@ class ZoomManager {
             $('#xsystem35').classList.add('fit');
             navbarStyle.maxWidth = 'none';
             this.canvas.style.width = null;
-        } else {
+        }
+        else {
             $('#xsystem35').classList.remove('fit');
             let ratio = Number(value);
             navbarStyle.maxWidth = this.canvas.style.width = this.canvas.width * ratio + 'px';
         }
     }
-
     onResize() {
         if (this.throttling)
             return;
@@ -57,7 +55,6 @@ class ZoomManager {
             this.throttling = false;
         });
     }
-
     recalcAspectRatio() {
         let container = $('.contents');
         let target = $('#xsystem35');
@@ -68,13 +65,13 @@ class ZoomManager {
         if (containerAspect < canvasAspect) {
             target.classList.add('letterbox');
             target.classList.remove('pillarbox');
-        } else {
+        }
+        else {
             target.classList.remove('letterbox');
             target.classList.add('pillarbox');
         }
     }
-
-    private handlePixelate() {
+    handlePixelate() {
         config.pixelate = this.pixelateCheckbox.checked;
         config.persist();
         if (this.pixelateCheckbox.checked)
@@ -82,22 +79,21 @@ class ZoomManager {
         else
             this.canvas.classList.remove('pixelated');
     }
-
-    private requestFullscreen() {
+    requestFullscreen() {
         let e = document.documentElement;
         if (e.requestFullscreen)
             e.requestFullscreen();
-        else if ((e as any).webkitRequestFullScreen)
-            (e as any).webkitRequestFullScreen();
+        else if (e.webkitRequestFullScreen)
+            e.webkitRequestFullScreen();
     }
-
-    private exitFullscreen() {
+    exitFullscreen() {
         if (document.exitFullscreen) {
-            if ((document as any).fullscreenElement)
+            if (document.fullscreenElement)
                 document.exitFullscreen();
-        } else if ((document as any).webkitExitFullscreen) {
-            if ((document as any).webkitFullscreenElement)
-                (document as any).webkitExitFullscreen();
+        }
+        else if (document.webkitExitFullscreen) {
+            if (document.webkitFullscreenElement)
+                document.webkitExitFullscreen();
         }
     }
 }

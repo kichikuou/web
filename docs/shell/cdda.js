@@ -1,23 +1,15 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {$, gaException} from './util.js';
-import {volumeControl} from './volume.js';
-import {CDDACache, BasicCDDACache, IOSCDDACache} from './cddacache.js';
-
+import { $, gaException } from './util.js';
+import { volumeControl } from './volume.js';
+import { BasicCDDACache, IOSCDDACache } from './cddacache.js';
 class CDPlayer {
-    private cddaCache: CDDACache;
-    private audio = <HTMLAudioElement>$('audio');
-    private currentTrack: number;
-    private isVolumeSupported: boolean;
-    private unmute: () => void;  // Non-null if emulating mute by pause
-
     constructor() {
+        this.audio = $('audio');
         // Volume control of <audio> is not supported in iOS
         this.audio.volume = 0.5;
         this.isVolumeSupported = this.audio.volume !== 1;
-
         this.cddaCache = this.isVolumeSupported ? new BasicCDDACache() : new IOSCDDACache();
-
         volumeControl.addEventListener(this.onVolumeChanged.bind(this));
         this.audio.volume = volumeControl.volume();
         this.audio.addEventListener('error', this.onAudioError.bind(this));
@@ -25,11 +17,10 @@ class CDPlayer {
         if (!this.isVolumeSupported) {
             volumeControl.hideSlider();
             if (this.audio.volume === 0)
-                this.unmute = () => {};
+                this.unmute = () => { };
         }
     }
-
-    play(track: number, loop: number) {
+    play(track, loop) {
         this.currentTrack = track;
         if (this.unmute) {
             this.unmute = () => { this.play(track, loop); };
@@ -39,51 +30,50 @@ class CDPlayer {
         this.cddaCache.getCDDA(track).then((blob) => {
             if (blob) {
                 this.startPlayback(blob, loop);
-            } else {
+            }
+            else {
                 ga('send', 'event', 'CDDA', 'InvalidTrack');
             }
         });
     }
-
     stop() {
         this.audio.pause();
         this.currentTrack = null;
         if (this.unmute)
-            this.unmute = () => {};
+            this.unmute = () => { };
     }
-
-    getPosition(): number {
+    getPosition() {
         if (!this.currentTrack)
             return 0;
         let time = Math.round(this.audio.currentTime * 75);
         if (this.unmute || this.audio.error)
-            time += 750;  // unblock Kichikuou OP
+            time += 750; // unblock Kichikuou OP
         return this.currentTrack | time << 8;
     }
-
-    private startPlayback(blob: Blob, loop: number) {
+    startPlayback(blob, loop) {
         this.audio.setAttribute('src', URL.createObjectURL(blob));
         this.audio.loop = (loop !== 0);
         this.audio.load();
-        let p: any = this.audio.play();  // Edge returns undefined
+        let p = this.audio.play(); // Edge returns undefined
         if (p instanceof Promise) {
             p.catch((err) => {
-                if (err.message.startsWith('The play() request was interrupted') ||  // Chrome
-                    err.name === 'AbortError') {  // Safari
+                if (err.message.startsWith('The play() request was interrupted') || // Chrome
+                    err.name === 'AbortError') { // Safari
                     // These errors are harmless, do nothing
-                } else if (err.name === 'NotAllowedError' || err.message.indexOf('gesture') >= 0) {
+                }
+                else if (err.name === 'NotAllowedError' || err.message.indexOf('gesture') >= 0) {
                     // Audio still locked?
                     this.removeUserGestureRestriction(false);
                     ga('send', 'event', 'CDDA', 'UnlockAgain');
-                } else {
-                    let {name, message} = err;
-                    gaException({type: 'CDDA', name, message});
+                }
+                else {
+                    let { name, message } = err;
+                    gaException({ type: 'CDDA', name, message });
                 }
             });
         }
     }
-
-    private onVolumeChanged(evt: CustomEvent) {
+    onVolumeChanged(evt) {
         if (this.isVolumeSupported) {
             this.audio.volume = evt.detail;
             return;
@@ -94,23 +84,23 @@ class CDPlayer {
         if (muted) {
             this.audio.pause();
             this.unmute = () => { this.audio.play(); };
-        } else {
+        }
+        else {
             let unmute = this.unmute;
             this.unmute = null;
             unmute();
         }
     }
-
-    private onAudioError(err: ErrorEvent) {
-        let {code, message} = this.audio.error;
-        gaException({type: 'Audio', code, message});
+    onAudioError(err) {
+        let { code, message } = this.audio.error;
+        gaException({ type: 'Audio', code, message });
     }
-
-    private removeUserGestureRestriction(firstTime: boolean) {
+    removeUserGestureRestriction(firstTime) {
         let hanlder = () => {
             if (!firstTime) {
                 this.audio.play();
-            } else if (!this.currentTrack) {
+            }
+            else if (!this.currentTrack) {
                 this.audio.load();
                 console.log('CDDA unlocked');
             }

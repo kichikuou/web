@@ -1,12 +1,20 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 
-const $: (selector: string) => HTMLElement = document.querySelector.bind(document);
+export const $: (selector: string) => HTMLElement = document.querySelector.bind(document);
 
-const JSZIP_SCRIPT = 'lib/jszip.3.1.3.min.js';
+export const urlParams = new URLSearchParams(location.search.slice(1));
+export const FontGothic = 'MTLc3m.ttf';
+export const FontMincho = 'mincho.otf';
+export const JSZIP_SCRIPT = 'lib/jszip.3.1.3.min.js';
+
+export let fsReady: () => void;
+export let fileSystemReady: Promise<any> = new Promise((resolve) => { fsReady = resolve; });
+export let idbfsReady: (fs: typeof FS) => void;
+export let saveDirReady: Promise<typeof FS> = new Promise((resolve) => { idbfsReady = resolve; });
 
 const scriptPromises: Map<string, Promise<any>> = new Map();
-function loadScript(src: string): Promise<any> {
+export function loadScript(src: string): Promise<any> {
     let p = scriptPromises.get(src);
     if (!p) {
         let e = document.createElement('script');
@@ -21,7 +29,7 @@ function loadScript(src: string): Promise<any> {
     return p;
 }
 
-function readFileAsArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
+export function readFileAsArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
     return new Promise((resolve, reject) => {
         let reader = new FileReader();
         reader.onload = () => { resolve(reader.result as ArrayBuffer); };
@@ -30,7 +38,7 @@ function readFileAsArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
     });
 }
 
-function readFileAsText(blob: Blob): Promise<string> {
+export function readFileAsText(blob: Blob): Promise<string> {
     return new Promise((resolve, reject) => {
         let reader = new FileReader();
         reader.onload = () => { resolve(reader.result as string); };
@@ -39,11 +47,7 @@ function readFileAsText(blob: Blob): Promise<string> {
     });
 }
 
-function ASCIIArrayToString(buffer: Uint8Array): string {
-    return String.fromCharCode.apply(null, buffer);
-}
-
-function openFileInput(): Promise<File> {
+export function openFileInput(): Promise<File> {
     return new Promise((resolve) => {
         let input = document.createElement('input');
         input.type = 'file';
@@ -57,7 +61,7 @@ function openFileInput(): Promise<File> {
     });
 }
 
-function mkdirIfNotExist(path: string, fs?: typeof FS) {
+export function mkdirIfNotExist(path: string, fs?: typeof FS) {
     try {
         (fs || FS).mkdir(path);
     } catch (err) {
@@ -73,7 +77,7 @@ function isIOSVersionBetween(from: string, to: string): boolean {
     return from <= ver && ver < to;
 }
 
-function JSZipOptions(): JSZipLoadOptions {
+export function JSZipOptions(): JSZipLoadOptions {
     let opts: JSZipLoadOptions = {};
     if (typeof TextDecoder !== 'undefined')
         opts = {decodeFileName} as JSZipLoadOptions;
@@ -88,7 +92,7 @@ function JSZipOptions(): JSZipLoadOptions {
     }
 }
 
-function startMeasure(name: string, gaName?: string, gaParam?: string): () => void {
+export function startMeasure(name: string, gaName?: string, gaParam?: string): () => void {
     let startMark = name + '-start';
     let endMark = name + '-end';
     performance.mark(startMark);
@@ -102,7 +106,7 @@ function startMeasure(name: string, gaName?: string, gaParam?: string): () => vo
     };
 }
 
-function gaException(description: any, exFatal: boolean = false) {
+export function gaException(description: any, exFatal: boolean = false) {
     let exDescription = JSON.stringify(description, (_, value) => {
         if (value instanceof DOMException) {
             return {DOMException: value.name, message: value.message};
@@ -112,35 +116,35 @@ function gaException(description: any, exFatal: boolean = false) {
     ga('send', 'exception', {exDescription, exFatal});
 }
 
-namespace xsystem35 {
-    export enum Status {
-        OK = 0,
-        NG = -1,
-    }
-    export enum Bool {
-        FALSE = 0,
-        TRUE = 1,
-    }
+// xsystem35 constants
+export enum Status {
+    OK = 0,
+    NG = -1,
+}
+export enum Bool {
+    FALSE = 0,
+    TRUE = 1,
 }
 
-// xsystem35 exported functions
-declare function _ags_setAntialiasedStringMode(on: number): void;
-declare function _ald_getdata(type: number, no: number): number;
-declare function _ald_freedata(data: number): void;
-declare function _sdl_getDisplaySurface(): number;
+declare global {
+    // xsystem35 exported functions
+    function _ags_setAntialiasedStringMode(on: number): void;
+    function _ald_getdata(type: number, no: number): number;
+    function _ald_freedata(data: number): void;
+    function _sdl_getDisplaySurface(): number;
 
-declare interface EmscriptenModule {
-    // Undocumented methods / attributes
-    canvas: HTMLCanvasElement;
-    setStatus(status: string): void;
-    setWindowTitle(title: string): void;
-    quit(status: number, toThrow: Error): void;
-}
+    interface EmscriptenModule {
+        // Undocumented methods / attributes
+        canvas: HTMLCanvasElement;
+        setStatus(status: string): void;
+        setWindowTitle(title: string): void;
+        quit(status: number, toThrow: Error): void;
+    }
+    function readAsync(url: string, onload: (response: any) => void, onerror: () => void): void;
 
-declare function readAsync(url: string, onload: (response: any) => void, onerror: () => void): void;
-
-declare namespace Asyncify {
-    function handleSleep(op : (wakeUp: (result: any) => void) => void): void;
+    namespace Asyncify {
+        function handleSleep(op : (wakeUp: (result: any) => void) => void): void;
+    }
 }
 
 // https://storage.spec.whatwg.org
@@ -151,8 +155,4 @@ interface StorageManager {
     persisted: () => Promise<boolean>;
     persist: () => Promise<boolean>;
     // estimate: () => Promise<StorageEstimate>;
-}
-
-interface BaseAudioContext {
-    resume(): Promise<void>;
 }

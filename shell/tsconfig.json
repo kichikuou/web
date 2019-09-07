@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "target": "ES2017",
-        "outFile": "../docs/shell.js",
+        "outDir": "../docs/shell",
         "newLine": "LF",
         "noImplicitAny": true,
         "sourceMap": false
