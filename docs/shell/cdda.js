@@ -20,21 +20,20 @@ class CDPlayer {
                 this.unmute = () => { };
         }
     }
-    play(track, loop) {
+    async play(track, loop) {
         this.currentTrack = track;
         if (this.unmute) {
             this.unmute = () => { this.play(track, loop); };
             return;
         }
         this.audio.currentTime = 0;
-        this.cddaCache.getCDDA(track).then((blob) => {
-            if (blob) {
-                this.startPlayback(blob, loop);
-            }
-            else {
-                ga('send', 'event', 'CDDA', 'InvalidTrack');
-            }
-        });
+        try {
+            let blob = await this.cddaCache.getCDDA(track);
+            this.startPlayback(blob, loop);
+        }
+        catch (err) {
+            ga('send', 'event', 'CDDA', 'InvalidTrack');
+        }
     }
     stop() {
         this.audio.pause();
@@ -92,8 +91,13 @@ class CDPlayer {
         }
     }
     onAudioError(err) {
-        let { code, message } = this.audio.error;
-        gaException({ type: 'Audio', code, message });
+        if (this.audio.error) {
+            let { code, message } = this.audio.error;
+            gaException({ type: 'Audio', code, message });
+        }
+        else {
+            gaException({ type: 'Audio', code: 'unknown' });
+        }
     }
     removeUserGestureRestriction(firstTime) {
         let hanlder = () => {

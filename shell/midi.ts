@@ -16,7 +16,7 @@ class MIDIPlayer {
     private gain: GainNode;
     private playing = false;
     private fadeFinishTime = 0;
-    private stopTimer: number = null;
+    private stopTimer: number | null = null;
 
     init(destNode: AudioNode) {
         Module.addRunDependency('timidity');

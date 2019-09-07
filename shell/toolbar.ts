@@ -30,7 +30,7 @@ class ToolBar {
         let canvas = document.createElement('canvas');
         canvas.width = Module.canvas.width;
         canvas.height = Module.canvas.height;
-        let ctx = canvas.getContext('2d');
+        let ctx = canvas.getContext('2d')!;
         let image = ctx.createImageData(canvas.width, canvas.height);
         let buffer = image.data;
         let num = image.data.length;

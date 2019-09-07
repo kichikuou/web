@@ -7,9 +7,9 @@ import {CDDACache, BasicCDDACache, IOSCDDACache} from './cddacache.js';
 class CDPlayer {
     private cddaCache: CDDACache;
     private audio = <HTMLAudioElement>$('audio');
-    private currentTrack: number;
+    private currentTrack: number | null;
     private isVolumeSupported: boolean;
-    private unmute: () => void;  // Non-null if emulating mute by pause
+    private unmute: (() => void) | null;  // Non-null if emulating mute by pause
 
     constructor() {
         // Volume control of <audio> is not supported in iOS
@@ -29,20 +29,19 @@ class CDPlayer {
         }
     }
 
-    play(track: number, loop: number) {
+    async play(track: number, loop: number) {
         this.currentTrack = track;
         if (this.unmute) {
             this.unmute = () => { this.play(track, loop); };
             return;
         }
         this.audio.currentTime = 0;
-        this.cddaCache.getCDDA(track).then((blob) => {
-            if (blob) {
-                this.startPlayback(blob, loop);
-            } else {
-                ga('send', 'event', 'CDDA', 'InvalidTrack');
-            }
-        });
+        try {
+            let blob = await this.cddaCache.getCDDA(track)
+            this.startPlayback(blob, loop);
+        } catch (err) {
+            ga('send', 'event', 'CDDA', 'InvalidTrack');
+        }
     }
 
     stop() {
@@ -95,15 +94,19 @@ class CDPlayer {
             this.audio.pause();
             this.unmute = () => { this.audio.play(); };
         } else {
-            let unmute = this.unmute;
+            let unmute = this.unmute!;
             this.unmute = null;
             unmute();
         }
     }
 
     private onAudioError(err: ErrorEvent) {
-        let {code, message} = this.audio.error;
-        gaException({type: 'Audio', code, message});
+        if (this.audio.error) {
+            let {code, message} = this.audio.error;
+            gaException({type: 'Audio', code, message});
+        } else {
+            gaException({type: 'Audio', code: 'unknown'});
+        }
     }
 
     private removeUserGestureRestriction(firstTime: boolean) {

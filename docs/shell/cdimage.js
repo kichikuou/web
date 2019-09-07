@@ -97,7 +97,7 @@ class VolumeDescriptor {
             return 'shift_jis';
         if (this.escapeSequence().match(/%\/[@CE]/))
             return 'utf-16be'; // Joliet
-        return null;
+        return undefined;
     }
     escapeSequence() {
         return ASCIIArrayToString(new Uint8Array(this.buf, 88, 32)).trim();
@@ -235,7 +235,7 @@ class ImgCueReader extends ImageReaderBase {
             let match = line.match(/\[TRACK ([0-9]+)\]/);
             if (match) {
                 currentTrack = Number(match[1]);
-                this.tracks[currentTrack] = { isAudio: undefined, index: [] };
+                this.tracks[currentTrack] = { isAudio: false, index: [] };
                 continue;
             }
             if (!currentTrack)
@@ -261,7 +261,7 @@ class ImgCueReader extends ImageReaderBase {
     }
     async extractTrack(track) {
         if (!this.tracks[track] || !this.tracks[track].isAudio)
-            return;
+            throw new Error('Invalid track ' + track);
         let start = this.tracks[track].index[1] * 2352;
         let end;
         if (this.tracks[track + 1]) {
@@ -331,7 +331,7 @@ class MdfMdsReader extends ImageReaderBase {
     }
     async extractTrack(track) {
         if (!this.tracks[track] || this.tracks[track].mode !== MdsTrackMode.Audio)
-            return;
+            throw new Error('Invalid track ' + track);
         let size = this.tracks[track].sectors * 2352;
         let chunks = await this.readSequential(this.tracks[track].offset, size, this.tracks[track].sectorSize, 2352, 0);
         return new Blob([createWaveHeader(size)].concat(chunks), { type: 'audio/wav' });

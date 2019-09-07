@@ -10,8 +10,6 @@ import {texthook} from './textlog.js';
 import {addToast} from './toast.js';
 
 class System35Shell {
-    status: HTMLElement = document.getElementById('status');
-
     constructor() {
         this.initModule();
 
@@ -85,7 +83,7 @@ class System35Shell {
         }
     }
 
-    inputString(title: string, initialValue: string, maxLength: number): string {
+    inputString(title: string, initialValue: string, maxLength: number): string | null {
         title += ' (全角' + maxLength + '文字まで)';
         let result = window.prompt(title, initialValue);
         if (result) {
@@ -204,7 +202,7 @@ let xsystem35 = {Status, shell, cdPlayer, midiPlayer, audio, texthook, load_minc
 (window as any).xsystem35 = xsystem35;
 
 if (typeof WebAssembly !== 'object') {
-    document.getElementById('unsupported').hidden = false;
+    document.getElementById('unsupported')!.hidden = false;
 }
 
 if ('serviceWorker' in navigator) {

@@ -10,7 +10,7 @@ import {volumeControl} from './volume.js';
 class Loader {
     private imageFile: File;
     private metadataFile: File;
-    private source: LoaderSource;
+    private source: LoaderSource | null;
     private installing = false;
 
     constructor() {
@@ -20,29 +20,29 @@ class Loader {
     }
 
     getCDDA(track: number): Promise<Blob> {
-        return this.source.getCDDA(track);
+        return this.source!.getCDDA(track);
     }
 
     reloadImage(): Promise<any> {
-        return this.source.reloadImage();
+        return this.source!.reloadImage();
     }
 
     private handleFileSelect(evt: Event) {
         let input = <HTMLInputElement>evt.target;
-        this.handleFiles(input.files);
+        this.handleFiles(input.files!);
         input.value = '';
     }
 
     private handleDragOver(evt: DragEvent) {
         evt.stopPropagation();
         evt.preventDefault();
-        evt.dataTransfer.dropEffect = 'copy';
+        evt.dataTransfer!.dropEffect = 'copy';
     }
 
     private handleDrop(evt: DragEvent) {
         evt.stopPropagation();
         evt.preventDefault();
-        this.handleFiles(evt.dataTransfer.files);
+        this.handleFiles(evt.dataTransfer!.files);
     }
 
     private async handleFiles(files: FileList) {

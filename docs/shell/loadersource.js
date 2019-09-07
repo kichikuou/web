@@ -30,7 +30,7 @@ export class LoaderSource {
         const resourceType = {
             d: 'Data', g: 'Graphics', m: 'Midi', r: 'Resource', s: 'Scenario', w: 'Wave',
         };
-        let basename;
+        let basename = '';
         let lines = [];
         for (let name of files) {
             if (name.toLowerCase() === 'system39.ain') {

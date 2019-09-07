@@ -11,7 +11,7 @@ declare global {
 }
 
 class AudioManager {
-    private slots: PCMSound[];
+    private slots: (PCMSound | null)[];
     private bufCache: AudioBuffer[];
 
     constructor(private destNode: AudioNode) {
@@ -21,7 +21,7 @@ class AudioManager {
     }
 
     private load(no: number): Promise<AudioBuffer> {
-        let buf = this.getWave(no);
+        const buf = this.getWave(no);
         if (!buf)
             return Promise.reject('Failed to open wave ' + no);
 
@@ -43,7 +43,7 @@ class AudioManager {
         });
     }
 
-    private getWave(no: number): ArrayBuffer {
+    private getWave(no: number): ArrayBuffer | null {
         let dfile = _ald_getdata(2 /* DRIFILE_WAVE */, no - 1);
         if (!dfile)
             return null;
@@ -93,15 +93,17 @@ class AudioManager {
     }
 
     pcm_unload(slot: number): Status {
-        if (!this.slots[slot])
+        let sound = this.slots[slot];
+        if (!sound)
             return Status.NG;
-        this.slots[slot].stop();
+        sound!.stop();
         this.slots[slot] = null;
         return Status.OK;
     }
 
     pcm_start(slot: number, loop: number): Status {
-        if (!this.slots[slot]) {
+        let sound = this.slots[slot];
+        if (!sound) {
             console.log('pcm_start: invalid slot', slot);
             return Status.NG;
         }
@@ -111,56 +113,63 @@ class AudioManager {
             // a sound on it, it will start later when the context is unlocked.
             return Status.NG;
         }
-        this.slots[slot].start(loop);
+        sound.start(loop);
         return Status.OK;
     }
 
     pcm_stop(slot: number): Status {
-        if (!this.slots[slot])
+        let sound = this.slots[slot];
+        if (!sound)
             return Status.NG;
-        this.slots[slot].stop();
+        sound.stop();
         if (slot === 0)  // slot 0 plays at most once
             this.slots[slot] = null;
         return Status.OK;
     }
 
     pcm_fadeout(slot: number, msec: number): Status {
-        if (!this.slots[slot])
+        let sound = this.slots[slot];
+        if (!sound)
             return Status.NG;
-        this.slots[slot].fadeout(msec);
+        sound.fadeout(msec);
         return Status.OK;
     }
 
     pcm_getpos(slot: number): number {
-        if (!this.slots[slot])
+        let sound = this.slots[slot];
+        if (!sound)
             return 0;
-        return this.slots[slot].getPosition() * 1000;
+        return sound.getPosition() * 1000;
     }
 
     pcm_setvol(slot: number, vol: number): Status {
-        if (!this.slots[slot])
+        let sound = this.slots[slot];
+        if (!sound)
             return Status.NG;
-        this.slots[slot].setGain(vol / 100);
+        sound.setGain(vol / 100);
         return Status.OK;
     }
 
     pcm_getwavelen(slot: number): number {
-        if (!this.slots[slot])
+        let sound = this.slots[slot];
+        if (!sound)
             return 0;
-        return this.slots[slot].duration * 1000;
+        return sound.duration * 1000;
     }
 
     pcm_isplaying(slot: number): Bool {
-        if (!this.slots[slot])
+        let sound = this.slots[slot];
+        if (!sound)
             return Bool.FALSE;
-        return this.slots[slot].isPlaying() ? Bool.TRUE : Bool.FALSE;
+        return sound.isPlaying() ? Bool.TRUE : Bool.FALSE;
     }
 
     pcm_waitend(slot: number) {
         return Asyncify.handleSleep((wakeUp: (result: Status) => void) => {
-            if (!this.slots[slot] || !this.slots[slot].isPlaying())
+            let sound = this.slots[slot];
+            if (!sound || !sound.isPlaying())
                 return wakeUp(Status.OK);
-            this.slots[slot].end_callback = () => wakeUp(Status.OK);
+            sound.end_callback = () => wakeUp(Status.OK);
         });
     }
 
@@ -172,10 +181,10 @@ class AudioManager {
 export let audio = new AudioManager(volumeControl.audioNode());
 
 abstract class PCMSound {
-    end_callback: () => void;
+    end_callback: (() => void) | null;
     protected context: BaseAudioContext;
     protected gain: GainNode;
-    protected startTime: number;
+    protected startTime: number | null;
 
     constructor(protected dst: AudioNode) {
         this.context = dst.context;
@@ -281,7 +290,7 @@ class PCMSoundMixLR extends PCMSound {
     }
 
     get duration() {
-        return Math.max(this.lsrc.buffer.duration, this.rsrc.buffer.duration);
+        return Math.max(this.lsrc.buffer!.duration, this.rsrc.buffer!.duration);
     }
 
     private onended() {

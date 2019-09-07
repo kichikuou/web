@@ -6,7 +6,7 @@ export class ISO9660FileSystem {
     private decoder: TextDecoder;
 
     static async create(sectorReader: Reader): Promise<ISO9660FileSystem> {
-        let best_vd: VolumeDescriptor = null;
+        let best_vd: VolumeDescriptor | null = null;
         for (let sector = 0x10;; sector++) {
             let vd = new VolumeDescriptor(await sectorReader.readSector(sector));
             switch (vd.type) {
@@ -38,7 +38,7 @@ export class ISO9660FileSystem {
         return this.vd.rootDirEnt(this.decoder);
     }
 
-    async getDirEnt(name: string, parent: DirEnt): Promise<DirEnt> {
+    async getDirEnt(name: string, parent: DirEnt): Promise<DirEnt | null> {
         name = name.toLowerCase();
         for (let e of await this.readDir(parent)) {
             if (e.name.toLowerCase() === name)
@@ -56,7 +56,7 @@ export class ISO9660FileSystem {
         while (position < length) {
             if (position === 0)
                 buf = await this.sectorReader.readSector(sector);
-            let child = new DirEnt(buf, position, this.decoder);
+            let child = new DirEnt(buf!, position, this.decoder);
             if (child.length === 0) {
                 // Padded end of sector
                 position = 2048;
@@ -99,12 +99,12 @@ class VolumeDescriptor {
     volumeLabel(decoder: TextDecoder): string {
         return decoder.decode(new DataView(this.buf, 40, 32)).trim();
     }
-    encoding(): string {
+    encoding(): string | undefined {
         if (this.type === VDType.Primary)
             return 'shift_jis';
         if (this.escapeSequence().match(/%\/[@CE]/))
             return 'utf-16be';  // Joliet
-        return null;
+        return undefined;
     }
     escapeSequence(): string {
         return ASCIIArrayToString(new Uint8Array(this.buf, 88, 32)).trim();
@@ -236,7 +236,7 @@ class ImgCueReader extends ImageReaderBase implements Reader {
     async parseCue(cueFile: File) {
         let lines = (await readFileAsText(cueFile)).split('\n');
         this.tracks = [];
-        let currentTrack: number = null;
+        let currentTrack: number | null = null;
         for (let line of lines) {
             let fields = line.trim().split(/\s+/);
             switch (fields[0]) {
@@ -257,13 +257,13 @@ class ImgCueReader extends ImageReaderBase implements Reader {
     async parseCcd(ccdFile: File) {
         let lines = (await readFileAsText(ccdFile)).split('\n');
         this.tracks = [];
-        let currentTrack: number = null;
+        let currentTrack: number | null = null;
         for (let line of lines) {
             line = line.trim();
             let match = line.match(/\[TRACK ([0-9]+)\]/);
             if (match) {
                 currentTrack = Number(match[1]);
-                this.tracks[currentTrack] = { isAudio: undefined, index: [] };
+                this.tracks[currentTrack] = { isAudio: false, index: [] };
                 continue;
             }
             if (!currentTrack)
@@ -291,7 +291,7 @@ class ImgCueReader extends ImageReaderBase implements Reader {
 
     async extractTrack(track: number): Promise<Blob> {
         if (!this.tracks[track] || !this.tracks[track].isAudio)
-            return;
+            throw new Error('Invalid track ' + track);
 
         let start = this.tracks[track].index[1] * 2352;
         let end: number;
@@ -371,7 +371,7 @@ class MdfMdsReader extends ImageReaderBase implements Reader {
 
     async extractTrack(track: number): Promise<Blob> {
         if (!this.tracks[track] || this.tracks[track].mode !== MdsTrackMode.Audio)
-            return;
+            throw new Error('Invalid track ' + track);
 
         let size = this.tracks[track].sectors * 2352;
         let chunks = await this.readSequential(this.tracks[track].offset, size,

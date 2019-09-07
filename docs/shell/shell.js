@@ -10,7 +10,6 @@ import { texthook } from './textlog.js';
 import { addToast } from './toast.js';
 class System35Shell {
     constructor() {
-        this.status = document.getElementById('status');
         this.persistRequested = false;
         this.initModule();
         window.onerror = (message, url, line, column, error) => {

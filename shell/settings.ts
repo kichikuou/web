@@ -8,7 +8,7 @@ import {SaveDataManager} from './savedata.js';
 class Settings {
     private antialias: HTMLInputElement = <HTMLInputElement>$('#antialias');
     private unloadConfirmation: HTMLInputElement = <HTMLInputElement>$('#unload-confirmation');
-    private saveDataManager: SaveDataManager;
+    private saveDataManager: SaveDataManager | null;
     private keyDownHandler: (ev: KeyboardEvent) => void;
 
     constructor() {
@@ -56,17 +56,17 @@ class Settings {
 
     private async checkSaveData() {
         if ($('#downloadSaveData').hasAttribute('disabled') &&
-            await this.saveDataManager.hasSaveData())
+            await this.saveDataManager!.hasSaveData())
             $('#downloadSaveData').removeAttribute('disabled');
     }
 
     private async downloadSaveData() {
-        this.saveDataManager.download();
+        this.saveDataManager!.download();
     }
 
     private uploadSaveData() {
         openFileInput().then((file) =>
-            this.saveDataManager.extract(file)).then(() =>
+            this.saveDataManager!.extract(file)).then(() =>
             this.checkSaveData());
     }
 }

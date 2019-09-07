@@ -35,7 +35,7 @@ export abstract class LoaderSource {
         const resourceType: { [ch: string]: string } = {
             d: 'Data', g: 'Graphics', m: 'Midi', r: 'Resource', s: 'Scenario', w: 'Wave',
         };
-        let basename: string;
+        let basename = '';
         let lines: string[] = [];
         for (let name of files) {
             if (name.toLowerCase() === 'system39.ain') {
@@ -113,7 +113,7 @@ export class CDImageSource extends LoaderSource {
         });
     }
 
-    private async findGameDir(isofs: CDImage.ISO9660FileSystem): Promise<CDImage.DirEnt> {
+    private async findGameDir(isofs: CDImage.ISO9660FileSystem): Promise<CDImage.DirEnt | null> {
         for (let e of await isofs.readDir(isofs.rootDir())) {
             if (e.isDirectory) {
                 if (e.name.toLowerCase() === 'gamedata' || await isofs.getDirEnt('system3.exe', e))
@@ -206,7 +206,7 @@ export class ZipSource extends LoaderSource {
             if (aldFiles.length === 0)
                 await loadModule('xsystem35');
             let content: ArrayBuffer = await zip.files[name].async('arraybuffer');
-            let basename = name.split('/').pop();
+            let basename = name.split('/').pop()!;
             registerDataFile(basename, content.byteLength, [new Uint8Array(content)]);
             aldFiles.push(basename);
         }

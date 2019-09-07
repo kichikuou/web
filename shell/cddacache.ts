@@ -63,7 +63,7 @@ export class IOSCDDACache implements CDDACache {
                 (<HTMLElement>this.reloadToast.querySelector('.btn-clear')).click();
             this.reloadToast = addToast(clone, 'error');
             return new Promise(resolve => {
-                this.reloadToast.querySelector('.cdda-reload-button').addEventListener('click', () => {
+                this.reloadToast.querySelector('.cdda-reload-button')!.addEventListener('click', () => {
                     loader.reloadImage().then(() => {
                         ga('send', 'event', 'CDDAload', 'reloaded');
                         (<HTMLElement>this.reloadToast.querySelector('.btn-clear')).click();

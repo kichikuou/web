@@ -10,7 +10,7 @@ class AudioManager {
         document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this));
     }
     load(no) {
-        let buf = this.getWave(no);
+        const buf = this.getWave(no);
         if (!buf)
             return Promise.reject('Failed to open wave ' + no);
         // If the AudioContext was not created inside a user-initiated event
@@ -77,14 +77,16 @@ class AudioManager {
         });
     }
     pcm_unload(slot) {
-        if (!this.slots[slot])
+        let sound = this.slots[slot];
+        if (!sound)
             return Status.NG;
-        this.slots[slot].stop();
+        sound.stop();
         this.slots[slot] = null;
         return Status.OK;
     }
     pcm_start(slot, loop) {
-        if (!this.slots[slot]) {
+        let sound = this.slots[slot];
+        if (!sound) {
             console.log('pcm_start: invalid slot', slot);
             return Status.NG;
         }
@@ -94,49 +96,56 @@ class AudioManager {
             // a sound on it, it will start later when the context is unlocked.
             return Status.NG;
         }
-        this.slots[slot].start(loop);
+        sound.start(loop);
         return Status.OK;
     }
     pcm_stop(slot) {
-        if (!this.slots[slot])
+        let sound = this.slots[slot];
+        if (!sound)
             return Status.NG;
-        this.slots[slot].stop();
+        sound.stop();
         if (slot === 0) // slot 0 plays at most once
             this.slots[slot] = null;
         return Status.OK;
     }
     pcm_fadeout(slot, msec) {
-        if (!this.slots[slot])
+        let sound = this.slots[slot];
+        if (!sound)
             return Status.NG;
-        this.slots[slot].fadeout(msec);
+        sound.fadeout(msec);
         return Status.OK;
     }
     pcm_getpos(slot) {
-        if (!this.slots[slot])
+        let sound = this.slots[slot];
+        if (!sound)
             return 0;
-        return this.slots[slot].getPosition() * 1000;
+        return sound.getPosition() * 1000;
     }
     pcm_setvol(slot, vol) {
-        if (!this.slots[slot])
+        let sound = this.slots[slot];
+        if (!sound)
             return Status.NG;
-        this.slots[slot].setGain(vol / 100);
+        sound.setGain(vol / 100);
         return Status.OK;
     }
     pcm_getwavelen(slot) {
-        if (!this.slots[slot])
+        let sound = this.slots[slot];
+        if (!sound)
             return 0;
-        return this.slots[slot].duration * 1000;
+        return sound.duration * 1000;
     }
     pcm_isplaying(slot) {
-        if (!this.slots[slot])
+        let sound = this.slots[slot];
+        if (!sound)
             return Bool.FALSE;
-        return this.slots[slot].isPlaying() ? Bool.TRUE : Bool.FALSE;
+        return sound.isPlaying() ? Bool.TRUE : Bool.FALSE;
     }
     pcm_waitend(slot) {
         return Asyncify.handleSleep((wakeUp) => {
-            if (!this.slots[slot] || !this.slots[slot].isPlaying())
+            let sound = this.slots[slot];
+            if (!sound || !sound.isPlaying())
                 return wakeUp(Status.OK);
-            this.slots[slot].end_callback = () => wakeUp(Status.OK);
+            sound.end_callback = () => wakeUp(Status.OK);
         });
     }
     onVisibilityChange() {

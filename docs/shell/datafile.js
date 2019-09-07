@@ -34,8 +34,8 @@ export function registerDataFile(fname, size, chunks) {
 class NodeOps {
     constructor(size, chunks, patchTbl) {
         this.size = size;
-        this.chunks = chunks;
         this.patchTbl = patchTbl;
+        this.chunks = chunks;
     }
     read(stream, buffer, offset, length, position) {
         if (buffer !== Module.HEAP8)

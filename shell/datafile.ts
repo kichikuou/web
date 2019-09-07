@@ -21,7 +21,7 @@ const TADAModePatch: PatchTable = [
 ];
 
 export function registerDataFile(fname: string, size: number, chunks: Uint8Array[]) {
-    let patch: PatchTable = null;;
+    let patch: PatchTable | null = null;;
     switch (fname.toUpperCase()) {
     case 'ぱすてるSA.ALD':
         patch = PastelChimePatch;
@@ -40,8 +40,11 @@ export function registerDataFile(fname: string, size: number, chunks: Uint8Array
 
 class NodeOps {
     private addr: number;
+    private chunks: Uint8Array[] | null
 
-    constructor(private size: number, private chunks: Uint8Array[], private patchTbl: PatchTable) {}
+    constructor(private size: number, chunks: Uint8Array[], private patchTbl: PatchTable | null) {
+        this.chunks = chunks;
+    }
 
     read(stream: any, buffer: Int8Array, offset: number, length: number, position: number): number {
         if (buffer !== Module.HEAP8)
@@ -72,7 +75,7 @@ class NodeOps {
 
     private load() {
         let ptr = this.addr = Module._malloc(this.size);
-        for (let c of this.chunks) {
+        for (let c of this.chunks!) {
             Module.HEAPU8.set(c, ptr);
             ptr += c.byteLength;
         }
