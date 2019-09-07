@@ -41,7 +41,6 @@ class System35Shell {
             }
         }
         Module.print = Module.printErr = console.log.bind(console);
-        Module.setWindowTitle = () => { }; // Don't let emscripten overwrite the window title.
         Module.canvas = document.getElementById('canvas');
         Module.preRun = [
             () => { Module.addRunDependency('gameFiles'); },
@@ -60,6 +59,11 @@ class System35Shell {
                     });
                 });
             },
+            () => {
+                // Don't let emscripten change the window title.
+                // Must be overwritten after the emscripten module is evaluated.
+                Module.setWindowTitle = () => { };
+            }
         ];
     }
     windowSizeChanged() {
