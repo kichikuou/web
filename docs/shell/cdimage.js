@@ -143,6 +143,9 @@ export async function createReader(img, metadata) {
     if (img.name.endsWith('.iso')) {
         return new IsoReader(img);
     }
+    else if (!metadata) {
+        throw new Error('No metadata file');
+    }
     else if (metadata.name.endsWith('.cue')) {
         let reader = new ImgCueReader(img);
         await reader.parseCue(metadata);
@@ -197,6 +200,7 @@ class IsoReader extends ImageReaderBase {
 class ImgCueReader extends ImageReaderBase {
     constructor(img) {
         super(img);
+        this.tracks = [];
     }
     readSector(sector) {
         let start = sector * 2352 + 16;
@@ -208,7 +212,6 @@ class ImgCueReader extends ImageReaderBase {
     }
     async parseCue(cueFile) {
         let lines = (await readFileAsText(cueFile)).split('\n');
-        this.tracks = [];
         let currentTrack = null;
         for (let line of lines) {
             let fields = line.trim().split(/\s+/);
@@ -228,7 +231,6 @@ class ImgCueReader extends ImageReaderBase {
     }
     async parseCcd(ccdFile) {
         let lines = (await readFileAsText(ccdFile)).split('\n');
-        this.tracks = [];
         let currentTrack = null;
         for (let line of lines) {
             line = line.trim();
@@ -292,6 +294,7 @@ var MdsTrackMode;
 class MdfMdsReader extends ImageReaderBase {
     constructor(mdf) {
         super(mdf);
+        this.tracks = [];
     }
     async parseMds(mdsFile) {
         let buf = await readFileAsArrayBuffer(mdsFile);
@@ -302,7 +305,6 @@ class MdfMdsReader extends ImageReaderBase {
         let entries = header.getUint8(0x62);
         if (0x70 + entries * 0x58 > buf.byteLength)
             throw new Error(mdsFile.name + ': unknown format');
-        this.tracks = [];
         for (let i = 0; i < entries; i++) {
             let trackData = new DataView(buf, 0x70 + i * 0x50, 0x50);
             let extraData = new DataView(buf, 0x70 + entries * 0x50 + i * 8, 8);

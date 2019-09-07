@@ -7,9 +7,9 @@ import {CDDACache, BasicCDDACache, IOSCDDACache} from './cddacache.js';
 class CDPlayer {
     private cddaCache: CDDACache;
     private audio = <HTMLAudioElement>$('audio');
-    private currentTrack: number | null;
+    private currentTrack: number | null = null;
     private isVolumeSupported: boolean;
-    private unmute: (() => void) | null;  // Non-null if emulating mute by pause
+    private unmute: (() => void) | null = null;  // Non-null if emulating mute by pause
 
     constructor() {
         // Volume control of <audio> is not supported in iOS

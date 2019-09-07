@@ -32,7 +32,7 @@ export class BasicCDDACache implements CDDACache {
 
 export class IOSCDDACache implements CDDACache {
     private cache: {track: number, data: Blob, time: number}[];
-    private reloadToast: HTMLElement;
+    private reloadToast: HTMLElement | undefined;
 
     constructor() {
         this.cache = [];
@@ -61,12 +61,12 @@ export class IOSCDDACache implements CDDACache {
             let clone = document.importNode((<HTMLTemplateElement>$('#cdda-error')).content, true);
             if (this.reloadToast && this.reloadToast.parentElement)
                 (<HTMLElement>this.reloadToast.querySelector('.btn-clear')).click();
-            this.reloadToast = addToast(clone, 'error');
+            let reloadToast = this.reloadToast = addToast(clone, 'error');
             return new Promise(resolve => {
-                this.reloadToast.querySelector('.cdda-reload-button')!.addEventListener('click', () => {
+                reloadToast.querySelector('.cdda-reload-button')!.addEventListener('click', () => {
                     loader.reloadImage().then(() => {
                         ga('send', 'event', 'CDDAload', 'reloaded');
-                        (<HTMLElement>this.reloadToast.querySelector('.btn-clear')).click();
+                        (<HTMLElement>reloadToast.querySelector('.btn-clear')).click();
                         resolve(this.getCDDA(track));
                     });
                 });

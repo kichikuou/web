@@ -8,6 +8,7 @@ import { midiPlayer } from './midi.js';
 import { volumeControl } from './volume.js';
 class Loader {
     constructor() {
+        this.source = null;
         this.installing = false;
         $('#fileselect').addEventListener('change', this.handleFileSelect.bind(this), false);
         document.body.ondragover = this.handleDragOver.bind(this);

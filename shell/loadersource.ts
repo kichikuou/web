@@ -58,9 +58,9 @@ export abstract class LoaderSource {
 }
 
 export class CDImageSource extends LoaderSource {
-    private imageReader: CDImage.Reader;
+    private imageReader!: CDImage.Reader;
 
-    constructor(private imageFile: File, private metadataFile: File) {
+    constructor(private imageFile: File, private metadataFile: File | undefined) {
         super();
     }
 

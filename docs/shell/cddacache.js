@@ -48,12 +48,12 @@ export class IOSCDDACache {
             let clone = document.importNode($('#cdda-error').content, true);
             if (this.reloadToast && this.reloadToast.parentElement)
                 this.reloadToast.querySelector('.btn-clear').click();
-            this.reloadToast = addToast(clone, 'error');
+            let reloadToast = this.reloadToast = addToast(clone, 'error');
             return new Promise(resolve => {
-                this.reloadToast.querySelector('.cdda-reload-button').addEventListener('click', () => {
+                reloadToast.querySelector('.cdda-reload-button').addEventListener('click', () => {
                     loader.reloadImage().then(() => {
                         ga('send', 'event', 'CDDAload', 'reloaded');
-                        this.reloadToast.querySelector('.btn-clear').click();
+                        reloadToast.querySelector('.btn-clear').click();
                         resolve(this.getCDDA(track));
                     });
                 });

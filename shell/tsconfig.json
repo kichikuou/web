@@ -3,11 +3,8 @@
         "target": "ES2017",
         "outDir": "../docs/shell",
         "newLine": "LF",
-        "noImplicitAny": true,
-        "noImplicitReturns": true,
-        "noImplicitThis": true,
         "sourceMap": false,
-        "strictNullChecks": true
+        "strict": true
     },
     "files": [
         "shell.ts"

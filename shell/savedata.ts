@@ -6,7 +6,7 @@ import {addToast} from './toast.js';
 declare function FSLib(): {saveDirReady: Promise<typeof FS>};
 
 export class SaveDataManager {
-    private FSready: Promise<typeof FS>;
+    private FSready!: Promise<typeof FS>;
 
     constructor() {
         if ((<any>window).FS)

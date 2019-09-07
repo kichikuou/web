@@ -8,7 +8,7 @@ import {SaveDataManager} from './savedata.js';
 class Settings {
     private antialias: HTMLInputElement = <HTMLInputElement>$('#antialias');
     private unloadConfirmation: HTMLInputElement = <HTMLInputElement>$('#unload-confirmation');
-    private saveDataManager: SaveDataManager | null;
+    private saveDataManager: SaveDataManager | null = null;
     private keyDownHandler: (ev: KeyboardEvent) => void;
 
     constructor() {

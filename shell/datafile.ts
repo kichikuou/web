@@ -39,7 +39,7 @@ export function registerDataFile(fname: string, size: number, chunks: Uint8Array
 }
 
 class NodeOps {
-    private addr: number;
+    private addr: number | undefined;
     private chunks: Uint8Array[] | null
 
     constructor(private size: number, chunks: Uint8Array[], private patchTbl: PatchTable | null) {
@@ -51,7 +51,7 @@ class NodeOps {
             throw new Error('Invalid argument');
         if (this.addr === undefined)
             this.load();
-        let src = this.addr + position;
+        let src = this.addr! + position;
         length = Math.min(length, this.size - position);
         // load() might have invalidated `buffer`, so use Module.HEAP8 directly
         Module.HEAP8.set(Module.HEAPU8.subarray(src, src + length), offset);
@@ -87,13 +87,13 @@ class NodeOps {
         if (!this.patchTbl)
             return;
         for (let a of this.patchTbl) {
-            if (Module.HEAPU8[this.addr + a[0]] !== a[1]) {
+            if (Module.HEAPU8[this.addr! + a[0]] !== a[1]) {
                 console.log('Patch failed');
                 return;
             }
         }
         for (let a of this.patchTbl)
-            Module.HEAPU8[this.addr + a[0]] = a[2];
+            Module.HEAPU8[this.addr! + a[0]] = a[2];
         console.log('Patch applied');
         this.patchTbl = null;
     }

@@ -98,7 +98,7 @@ class System35Shell {
         window.onbeforeunload = null;
     }
 
-    private fsyncTimer: number;
+    private fsyncTimer: number | undefined;
     syncfs(timeout = 100) {
         window.clearTimeout(this.fsyncTimer);
         this.fsyncTimer = window.setTimeout(() => {

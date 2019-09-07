@@ -154,9 +154,11 @@ export interface Reader {
     resetImage(image: File): void;
 }
 
-export async function createReader(img: File, metadata: File) {
+export async function createReader(img: File, metadata?: File) {
     if (img.name.endsWith('.iso')) {
         return new IsoReader(img);
+    } else if (!metadata) {
+        throw new Error('No metadata file');
     } else if (metadata.name.endsWith('.cue')) {
         let reader = new ImgCueReader(img);
         await reader.parseCue(metadata);
@@ -217,7 +219,7 @@ class IsoReader extends ImageReaderBase implements Reader {
 }
 
 class ImgCueReader extends ImageReaderBase implements Reader {
-    private tracks: Array<{ isAudio: boolean; index: number[]; }>;
+    private tracks: Array<{ isAudio: boolean; index: number[]; }> = [];
 
     constructor(img: File) {
         super(img);
@@ -235,7 +237,6 @@ class ImgCueReader extends ImageReaderBase implements Reader {
 
     async parseCue(cueFile: File) {
         let lines = (await readFileAsText(cueFile)).split('\n');
-        this.tracks = [];
         let currentTrack: number | null = null;
         for (let line of lines) {
             let fields = line.trim().split(/\s+/);
@@ -256,7 +257,6 @@ class ImgCueReader extends ImageReaderBase implements Reader {
 
     async parseCcd(ccdFile: File) {
         let lines = (await readFileAsText(ccdFile)).split('\n');
-        this.tracks = [];
         let currentTrack: number | null = null;
         for (let line of lines) {
             line = line.trim();
@@ -319,7 +319,7 @@ class ImgCueReader extends ImageReaderBase implements Reader {
 enum MdsTrackMode { Audio = 0xa9, Mode1 = 0xaa }
 
 class MdfMdsReader extends ImageReaderBase implements Reader {
-    private tracks: Array<{ mode: number; sectorSize: number; offset: number; sectors: number; }>;
+    private tracks: Array<{ mode: number; sectorSize: number; offset: number; sectors: number; }> = [];
 
     constructor(mdf: File) {
         super(mdf);
@@ -337,7 +337,6 @@ class MdfMdsReader extends ImageReaderBase implements Reader {
         if (0x70 + entries * 0x58 > buf.byteLength)
             throw new Error(mdsFile.name + ': unknown format');
 
-        this.tracks = [];
         for (let i = 0; i < entries; i++) {
             let trackData = new DataView(buf, 0x70 + i * 0x50, 0x50);
             let extraData = new DataView(buf, 0x70 + entries * 0x50 + i * 8, 8);
@@ -381,7 +380,7 @@ class MdfMdsReader extends ImageReaderBase implements Reader {
 }
 
 function ASCIIArrayToString(buffer: Uint8Array): string {
-    return String.fromCharCode.apply(null, buffer);
+    return String.fromCharCode.apply(null, buffer as any);
 }
 
 function createWaveHeader(size: number): ArrayBuffer {

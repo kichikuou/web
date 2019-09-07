@@ -157,6 +157,8 @@ export let audio = new AudioManager(volumeControl.audioNode());
 class PCMSound {
     constructor(dst) {
         this.dst = dst;
+        this.end_callback = null;
+        this.startTime = null;
         this.context = dst.context;
         this.gain = this.context.createGain();
         this.gain.connect(dst);

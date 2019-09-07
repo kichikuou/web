@@ -7,13 +7,14 @@ declare class Timidity {
     load(urlOrBuf: string | Uint8Array): Promise<void>;
     play(): void;
     pause(): void;
+    on(event: 'playing', callback: (playbackTime: number) => void): void;
     on(event: string, callback: () => void): void;
     currentTime: number;
 }
 
 class MIDIPlayer {
-    private timidity: Timidity;
-    private gain: GainNode;
+    private timidity: Timidity | undefined;
+    private gain!: GainNode;
     private playing = false;
     private fadeFinishTime = 0;
     private stopTimer: number | null = null;
@@ -127,7 +128,7 @@ class MIDIPlayer {
 
     private onEnd() {
         if (this.playing)
-            this.timidity.play();
+            this.timidity!.play();
     }
 }
 export let midiPlayer = new MIDIPlayer();

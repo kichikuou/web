@@ -181,10 +181,10 @@ class AudioManager {
 export let audio = new AudioManager(volumeControl.audioNode());
 
 abstract class PCMSound {
-    end_callback: (() => void) | null;
+    end_callback: (() => void) | null = null;
     protected context: BaseAudioContext;
     protected gain: GainNode;
-    protected startTime: number | null;
+    protected startTime: number | null = null;
 
     constructor(protected dst: AudioNode) {
         this.context = dst.context;
@@ -219,7 +219,7 @@ abstract class PCMSound {
 }
 
 class PCMSoundSimple extends PCMSound {
-    private node: AudioBufferSourceNode;
+    private node!: AudioBufferSourceNode;
 
     constructor(dst: AudioNode, private buf: AudioBuffer) {
         super(dst);

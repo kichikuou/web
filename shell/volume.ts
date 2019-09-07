@@ -63,7 +63,7 @@ class VolumeControl {
     }
 
     addEventListener(handler: (evt: CustomEvent) => any) {
-        this.elem.addEventListener('volumechange', handler);
+        this.elem.addEventListener('volumechange', handler as any);
     }
 
     hideSlider() {

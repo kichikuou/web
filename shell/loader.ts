@@ -8,9 +8,9 @@ import {midiPlayer} from './midi.js';
 import {volumeControl} from './volume.js';
 
 class Loader {
-    private imageFile: File;
-    private metadataFile: File;
-    private source: LoaderSource | null;
+    private imageFile: File | undefined;
+    private metadataFile: File | undefined;
+    private source: LoaderSource | null = null;
     private installing = false;
 
     constructor() {

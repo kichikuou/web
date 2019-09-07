@@ -8,6 +8,7 @@ class Settings {
     constructor() {
         this.antialias = $('#antialias');
         this.unloadConfirmation = $('#unload-confirmation');
+        this.saveDataManager = null;
         $('#settings-button').addEventListener('click', this.openModal.bind(this));
         $('#settings-close').addEventListener('click', this.closeModal.bind(this));
         this.keyDownHandler = (ev) => {
