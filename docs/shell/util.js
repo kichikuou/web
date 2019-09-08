@@ -40,19 +40,6 @@ export function readFileAsText(blob) {
         reader.readAsText(blob);
     });
 }
-export function openFileInput() {
-    return new Promise((resolve) => {
-        let input = document.createElement('input');
-        input.type = 'file';
-        input.addEventListener('change', (evt) => {
-            document.body.removeChild(input);
-            resolve(input.files[0]);
-        });
-        input.style.display = 'none';
-        document.body.appendChild(input);
-        input.click();
-    });
-}
 export function mkdirIfNotExist(path, fs) {
     try {
         (fs || FS).mkdir(path);

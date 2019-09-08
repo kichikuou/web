@@ -1,6 +1,7 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 import { $ } from './util.js';
+import { downloadAs } from './widgets.js';
 class ToolBar {
     constructor() {
         this.toolbar = $('#toolbar');
@@ -50,13 +51,8 @@ class ToolBar {
         else { // Safari
             url = canvas.toDataURL();
         }
-        let elem = document.createElement('a');
-        elem.setAttribute('download', getScreenshotFilename());
-        elem.setAttribute('href', url);
-        elem.setAttribute('target', '_blank'); // Unless this, iOS safari replaces current page
-        document.body.appendChild(elem);
-        elem.click();
-        setTimeout(() => { document.body.removeChild(elem); }, 5000);
+        // Unless target="_blank", iOS safari replaces current page
+        downloadAs(getScreenshotFilename(), url, '_blank');
     }
 }
 export let toolbar = new ToolBar();

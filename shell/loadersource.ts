@@ -1,10 +1,10 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {$, fileSystemReady, saveDirReady, startMeasure, mkdirIfNotExist, openFileInput, readFileAsArrayBuffer, loadScript, FontMincho, FontGothic, JSZIP_SCRIPT, JSZipOptions} from './util.js';
+import {$, fileSystemReady, saveDirReady, startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, FontMincho, FontGothic, JSZIP_SCRIPT, JSZipOptions} from './util.js';
 import * as CDImage from './cdimage.js';
 import {registerDataFile} from './datafile.js';
 import {toolbar} from './toolbar.js';
-import {addToast} from './toast.js';
+import {addToast, openFileInput} from './widgets.js';
 
 const xsys35rc = [
     'font_device: ttf',

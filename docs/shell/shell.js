@@ -7,7 +7,7 @@ import { cdPlayer } from './cdda.js';
 import { audio } from './audio.js';
 import { midiPlayer } from './midi.js';
 import { texthook } from './textlog.js';
-import { addToast } from './toast.js';
+import { addToast } from './widgets.js';
 class System35Shell {
     constructor() {
         this.persistRequested = false;

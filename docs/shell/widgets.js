@@ -23,3 +23,26 @@ export function addToast(msg, type) {
     container.insertBefore(div, container.firstChild);
     return div;
 }
+export function openFileInput() {
+    return new Promise((resolve) => {
+        let input = document.createElement('input');
+        input.type = 'file';
+        input.addEventListener('change', (evt) => {
+            document.body.removeChild(input);
+            resolve(input.files[0]);
+        });
+        input.style.display = 'none';
+        document.body.appendChild(input);
+        input.click();
+    });
+}
+export function downloadAs(filename, url, target) {
+    let elem = document.createElement('a');
+    elem.setAttribute('download', filename);
+    elem.setAttribute('href', url);
+    if (target)
+        elem.setAttribute('target', target);
+    document.body.appendChild(elem);
+    elem.click();
+    setTimeout(() => { document.body.removeChild(elem); }, 5000);
+}

@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 import { loadScript, saveDirReady, JSZIP_SCRIPT, readFileAsArrayBuffer, JSZipOptions, mkdirIfNotExist } from './util.js';
-import { addToast } from './toast.js';
+import { addToast, downloadAs } from './widgets.js';
 export class SaveDataManager {
     constructor() {
         if (window.FS)
@@ -36,12 +36,7 @@ export class SaveDataManager {
             navigator.msSaveBlob(blob, 'savedata.zip');
         }
         else {
-            let elem = document.createElement('a');
-            elem.setAttribute('download', 'savedata.zip');
-            elem.setAttribute('href', URL.createObjectURL(blob));
-            document.body.appendChild(elem);
-            elem.click();
-            setTimeout(() => { document.body.removeChild(elem); }, 5000);
+            downloadAs('savedata.zip', URL.createObjectURL(blob));
         }
         ga('send', 'event', 'Savedata', 'Downloaded');
     }

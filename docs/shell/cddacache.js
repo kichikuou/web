@@ -2,7 +2,7 @@
 // This source code is governed by the MIT License, see the LICENSE file.
 import { $, readFileAsArrayBuffer, gaException } from './util.js';
 import { loader } from './loader.js';
-import { addToast } from './toast.js';
+import { addToast } from './widgets.js';
 export class BasicCDDACache {
     constructor() {
         this.blobCache = [];

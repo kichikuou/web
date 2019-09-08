@@ -3,7 +3,7 @@
 import {$} from './util.js';
 import {config} from './config.js';
 import {LoaderSource, CDImageSource, FileSource, ZipSource, NoGamedataError} from './loadersource.js';
-import {addToast} from './toast.js';
+import {addToast} from './widgets.js';
 import {midiPlayer} from './midi.js';
 import {volumeControl} from './volume.js';
 

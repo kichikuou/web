@@ -1,8 +1,9 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {$, openFileInput} from './util.js';
+import {$} from './util.js';
 import {config} from './config.js';
 import {SaveDataManager} from './savedata.js';
+import {openFileInput} from './widgets.js';
 
 // Settings Dialog
 class Settings {
