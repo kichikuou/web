@@ -2,8 +2,6 @@
 // This source code is governed by the MIT License, see the LICENSE file.
 export const $ = document.querySelector.bind(document);
 export const urlParams = new URLSearchParams(location.search.slice(1));
-export const FontGothic = 'MTLc3m.ttf';
-export const FontMincho = 'mincho.otf';
 export const JSZIP_SCRIPT = 'lib/jszip.3.1.3.min.js';
 export let fsReady;
 export let fileSystemReady = new Promise((resolve) => { fsReady = resolve; });

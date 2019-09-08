@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {$, fileSystemReady, saveDirReady, startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, FontMincho, FontGothic, JSZIP_SCRIPT, JSZipOptions} from './util.js';
+import {$, fileSystemReady, saveDirReady, startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, JSZIP_SCRIPT, JSZipOptions} from './util.js';
 import * as CDImage from './cdimage.js';
 import {registerDataFile} from './datafile.js';
 import * as Toolbar from './toolbar.js';
@@ -8,8 +8,9 @@ import {addToast, openFileInput} from './widgets.js';
 
 const xsys35rc = [
     'font_device: ttf',
-    'ttfont_mincho: ' + FontMincho,
-    'ttfont_gothic: ' + FontGothic, '',
+    'ttfont_mincho: mincho.otf',
+    'ttfont_gothic: MTLc3m.ttf',
+    '',
 ].join('\n');
 
 export class NoGamedataError implements Error {

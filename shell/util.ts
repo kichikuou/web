@@ -4,8 +4,6 @@
 export const $: (selector: string) => HTMLElement = document.querySelector.bind(document);
 
 export const urlParams = new URLSearchParams(location.search.slice(1));
-export const FontGothic = 'MTLc3m.ttf';
-export const FontMincho = 'mincho.otf';
 export const JSZIP_SCRIPT = 'lib/jszip.3.1.3.min.js';
 
 export let fsReady: () => void;

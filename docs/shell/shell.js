@@ -1,6 +1,6 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import { $, fsReady, idbfsReady, urlParams, gaException, FontGothic, FontMincho, startMeasure, readFileAsArrayBuffer, loadScript, Status } from './util.js';
+import { $, fsReady, idbfsReady, urlParams, gaException, startMeasure, readFileAsArrayBuffer, loadScript, Status } from './util.js';
 import './settings.js';
 import { zoom } from './zoom.js';
 import { cdPlayer } from './cdda.js';
@@ -8,6 +8,8 @@ import { audio } from './audio.js';
 import { midiPlayer } from './midi.js';
 import { texthook } from './textlog.js';
 import { addToast } from './widgets.js';
+const FontGothic = 'MTLc3m.ttf';
+const FontMincho = 'mincho.otf';
 class System35Shell {
     constructor() {
         this.persistRequested = false;
