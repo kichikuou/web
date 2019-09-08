@@ -1,9 +1,9 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 import { $, fileSystemReady, saveDirReady, startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, JSZIP_SCRIPT, JSZipOptions } from './util.js';
-import * as CDImage from './cdimage.js';
+import * as cdimage from './cdimage.js';
 import { registerDataFile } from './datafile.js';
-import * as Toolbar from './toolbar.js';
+import * as toolbar from './toolbar.js';
 import { addToast, openFileInput } from './widgets.js';
 export class NoGamedataError {
     constructor(message) {
@@ -53,8 +53,8 @@ export class CDImageSource extends LoaderSource {
         this.metadataFile = metadataFile;
     }
     async startLoad() {
-        this.imageReader = await CDImage.createReader(this.imageFile, this.metadataFile);
-        let isofs = await CDImage.ISO9660FileSystem.create(this.imageReader);
+        this.imageReader = await cdimage.createReader(this.imageFile, this.metadataFile);
+        let isofs = await cdimage.ISO9660FileSystem.create(this.imageReader);
         // this.walk(isofs, isofs.rootDir(), '/');
         let gamedata = await this.findGameDir(isofs);
         if (!gamedata)
@@ -211,6 +211,6 @@ function loadModule(name) {
         endMeasure();
         $('#loader').hidden = true;
         document.body.classList.add('bgblack-fade');
-        Toolbar.setCloseable();
+        toolbar.setCloseable();
     });
 }

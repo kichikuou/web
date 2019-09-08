@@ -3,7 +3,9 @@
 import {$} from './util.js';
 import {downloadAs} from './widgets.js';
 
-$('#screenshot-button').addEventListener('click', saveScreenshot);
+function init() {
+    $('#screenshot-button').addEventListener('click', saveScreenshot);
+}
 
 export function setCloseable() {
     $('#toolbar-handler').addEventListener('click', open);
@@ -63,3 +65,5 @@ function getScreenshotFilename(): string {
     let mm = ('0' + now.getMinutes()).slice(-2);
     return 'Screenshot-' + now.getFullYear() + MM + DD + '-' + hh + mm + '.png';
 }
+
+init();

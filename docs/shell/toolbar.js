@@ -2,7 +2,9 @@
 // This source code is governed by the MIT License, see the LICENSE file.
 import { $ } from './util.js';
 import { downloadAs } from './widgets.js';
-$('#screenshot-button').addEventListener('click', saveScreenshot);
+function init() {
+    $('#screenshot-button').addEventListener('click', saveScreenshot);
+}
 export function setCloseable() {
     $('#toolbar-handler').addEventListener('click', open);
     $('#toolbar-close-button').addEventListener('click', close);
@@ -57,3 +59,4 @@ function getScreenshotFilename() {
     let mm = ('0' + now.getMinutes()).slice(-2);
     return 'Screenshot-' + now.getFullYear() + MM + DD + '-' + hh + mm + '.png';
 }
+init();

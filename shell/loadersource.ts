@@ -1,9 +1,9 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 import {$, fileSystemReady, saveDirReady, startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, JSZIP_SCRIPT, JSZipOptions} from './util.js';
-import * as CDImage from './cdimage.js';
+import * as cdimage from './cdimage.js';
 import {registerDataFile} from './datafile.js';
-import * as Toolbar from './toolbar.js';
+import * as toolbar from './toolbar.js';
 import {addToast, openFileInput} from './widgets.js';
 
 export class NoGamedataError implements Error {
@@ -52,15 +52,15 @@ export abstract class LoaderSource {
 }
 
 export class CDImageSource extends LoaderSource {
-    private imageReader!: CDImage.Reader;
+    private imageReader!: cdimage.Reader;
 
     constructor(private imageFile: File, private metadataFile: File | undefined) {
         super();
     }
 
     async startLoad() {
-        this.imageReader = await CDImage.createReader(this.imageFile, this.metadataFile);
-        let isofs = await CDImage.ISO9660FileSystem.create(this.imageReader);
+        this.imageReader = await cdimage.createReader(this.imageFile, this.metadataFile);
+        let isofs = await cdimage.ISO9660FileSystem.create(this.imageReader);
         // this.walk(isofs, isofs.rootDir(), '/');
         let gamedata = await this.findGameDir(isofs);
         if (!gamedata)
@@ -106,7 +106,7 @@ export class CDImageSource extends LoaderSource {
         });
     }
 
-    private async findGameDir(isofs: CDImage.ISO9660FileSystem): Promise<CDImage.DirEnt | null> {
+    private async findGameDir(isofs: cdimage.ISO9660FileSystem): Promise<cdimage.DirEnt | null> {
         for (let e of await isofs.readDir(isofs.rootDir())) {
             if (e.isDirectory) {
                 if (e.name.toLowerCase() === 'gamedata' || await isofs.getDirEnt('system3.exe', e))
@@ -118,7 +118,7 @@ export class CDImageSource extends LoaderSource {
         return null;
     }
 
-    private async saveDir(isofs: CDImage.ISO9660FileSystem): Promise<string> {
+    private async saveDir(isofs: cdimage.ISO9660FileSystem): Promise<string> {
         let dirname = isofs.volumeLabel();
         if (!dirname) {
             if (await isofs.getDirEnt('prog.bat', isofs.rootDir())) {
@@ -134,7 +134,7 @@ export class CDImageSource extends LoaderSource {
     }
 
     // For debug
-    private async walk(isofs: CDImage.ISO9660FileSystem, dir: CDImage.DirEnt, dirname: string) {
+    private async walk(isofs: cdimage.ISO9660FileSystem, dir: cdimage.DirEnt, dirname: string) {
         for (let e of await isofs.readDir(dir)) {
             if (e.name !== '.' && e.name !== '..') {
                 console.log(dirname + e.name);
@@ -228,6 +228,6 @@ function loadModule(name: 'system3' | 'xsystem35'): Promise<any> {
         endMeasure();
         $('#loader').hidden = true;
         document.body.classList.add('bgblack-fade');
-        Toolbar.setCloseable();
+        toolbar.setCloseable();
     });
 }

@@ -6,69 +6,69 @@ import {SaveDataManager} from './savedata.js';
 import {openFileInput} from './widgets.js';
 
 // Settings Dialog
-class Settings {
-    private antialias: HTMLInputElement = <HTMLInputElement>$('#antialias');
-    private unloadConfirmation: HTMLInputElement = <HTMLInputElement>$('#unload-confirmation');
-    private saveDataManager: SaveDataManager | null = null;
-    private keyDownHandler: (ev: KeyboardEvent) => void;
 
-    constructor() {
-        $('#settings-button').addEventListener('click', this.openModal.bind(this));
-        $('#settings-close').addEventListener('click', this.closeModal.bind(this));
-        this.keyDownHandler = (ev: KeyboardEvent) => {
-            if (ev.keyCode === 27)  // escape
-                this.closeModal();
-        };
-        $('#settings-overlay').addEventListener('click', this.closeModal.bind(this));
+const antialias = <HTMLInputElement>$('#antialias');
+const unloadConfirmation = <HTMLInputElement>$('#unload-confirmation');
+let saveDataManager: SaveDataManager | null = null;
+let keyDownHandler: (ev: KeyboardEvent) => void;
 
-        this.antialias.addEventListener('change', this.antialiasChanged.bind(this));
-        this.antialias.checked = config.antialias;
-        this.unloadConfirmation.addEventListener('change', this.unloadConfirmationChanged.bind(this));
-        this.unloadConfirmation.checked = config.unloadConfirmation;
+function init() {
+    $('#settings-button').addEventListener('click', openModal);
+    $('#settings-close').addEventListener('click', closeModal);
+    keyDownHandler = (ev: KeyboardEvent) => {
+        if (ev.keyCode === 27)  // escape
+            closeModal();
+    };
+    $('#settings-overlay').addEventListener('click', closeModal);
 
-        $('#downloadSaveData').addEventListener('click', this.downloadSaveData.bind(this));
-        $('#uploadSaveData').addEventListener('click', this.uploadSaveData.bind(this));
-    }
+    antialias.addEventListener('change', antialiasChanged);
+    antialias.checked = config.antialias;
+    unloadConfirmation.addEventListener('change', unloadConfirmationChanged);
+    unloadConfirmation.checked = config.unloadConfirmation;
 
-    private openModal() {
-        $('#settings-modal').classList.add('active');
-        document.addEventListener('keydown', this.keyDownHandler);
-        this.saveDataManager = new SaveDataManager();
-        this.checkSaveData();
-    }
-
-    private closeModal() {
-        $('#settings-modal').classList.remove('active');
-        document.removeEventListener('keydown', this.keyDownHandler);
-        this.saveDataManager = null;
-    }
-
-    private antialiasChanged() {
-        config.antialias = this.antialias.checked;
-        config.persist();
-        if (!$('#xsystem35').hidden)
-            _ags_setAntialiasedStringMode(config.antialias ? 1 : 0);
-    }
-
-    private unloadConfirmationChanged() {
-        config.unloadConfirmation = this.unloadConfirmation.checked;
-        config.persist();
-    }
-
-    private async checkSaveData() {
-        if ($('#downloadSaveData').hasAttribute('disabled') &&
-            await this.saveDataManager!.hasSaveData())
-            $('#downloadSaveData').removeAttribute('disabled');
-    }
-
-    private async downloadSaveData() {
-        this.saveDataManager!.download();
-    }
-
-    private uploadSaveData() {
-        openFileInput().then((file) =>
-            this.saveDataManager!.extract(file)).then(() =>
-            this.checkSaveData());
-    }
+    $('#downloadSaveData').addEventListener('click', downloadSaveData);
+    $('#uploadSaveData').addEventListener('click', uploadSaveData);
 }
-export let settings = new Settings();
+
+function openModal() {
+    $('#settings-modal').classList.add('active');
+    document.addEventListener('keydown', keyDownHandler);
+    saveDataManager = new SaveDataManager();
+    checkSaveData();
+}
+
+function closeModal() {
+    $('#settings-modal').classList.remove('active');
+    document.removeEventListener('keydown', keyDownHandler);
+    saveDataManager = null;
+}
+
+function antialiasChanged() {
+    config.antialias = antialias.checked;
+    config.persist();
+    if (!$('#xsystem35').hidden)
+        _ags_setAntialiasedStringMode(config.antialias ? 1 : 0);
+}
+
+function unloadConfirmationChanged() {
+    config.unloadConfirmation = unloadConfirmation.checked;
+    config.persist();
+}
+
+async function checkSaveData() {
+    if ($('#downloadSaveData').hasAttribute('disabled') &&
+        await saveDataManager!.hasSaveData())
+        $('#downloadSaveData').removeAttribute('disabled');
+}
+
+async function downloadSaveData() {
+    saveDataManager!.download();
+}
+
+function uploadSaveData() {
+    openFileInput().then((file) =>
+        saveDataManager!.extract(file)).then(() =>
+        checkSaveData());
+}
+
+init();

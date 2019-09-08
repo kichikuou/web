@@ -13,7 +13,7 @@ $('#textlog-close').addEventListener('click', closeTextLog);
 $('#textlog-overlay').addEventListener('click', closeTextLog);
 function openTextLog() {
     let e = $('#textlog-content');
-    texthook.render(e);
+    render(e);
     $('#textlog-modal').classList.add('active');
     e.scrollTop = e.scrollHeight;
     ga('send', 'event', 'Toolbar', 'Textlog');
@@ -21,55 +21,50 @@ function openTextLog() {
 function closeTextLog() {
     $('#textlog-modal').classList.remove('active');
 }
-class TextHook {
-    constructor() {
-        this.currentPage = -1;
-        this.linebuf = '';
-        this.lines = [];
-        this.quietPages = [];
-        this.consoleLog = false;
-    }
-    message(s, page) {
-        if (this.linebuf === '')
-            this.currentPage = page;
-        this.linebuf += s;
-    }
-    newline() {
-        if (this.linebuf !== '') {
-            if (!this.skiplog(this.currentPage)) {
-                if (this.consoleLog)
-                    console.log(this.currentPage + ': ' + this.linebuf);
-                this.addLine(this.linebuf);
-            }
-            this.linebuf = '';
+let currentPage = -1;
+let linebuf = '';
+let lines = [];
+let quietPages = [];
+let consoleLog = false;
+export function message(s, page) {
+    if (linebuf === '')
+        currentPage = page;
+    linebuf += s;
+}
+export function newline() {
+    if (linebuf !== '') {
+        if (!skiplog(currentPage)) {
+            if (consoleLog)
+                console.log(currentPage + ': ' + linebuf);
+            addLine(linebuf);
         }
-    }
-    nextpage() {
-        this.newline();
-        if (this.lines[this.lines.length - 1] !== '') {
-            if (this.consoleLog)
-                console.log('');
-            this.addLine('');
-        }
-    }
-    keywait() {
-        this.newline();
-    }
-    render(e) {
-        e.textContent = this.lines.join('\n');
-    }
-    setTitle(title) {
-        this.quietPages = quietPagesTable[title] || [];
-        if (urlParams.get('consoleTextLog') === '1')
-            this.consoleLog = true;
-    }
-    addLine(s) {
-        this.lines.push(s);
-        if (this.lines.length > textLogMaxLines)
-            this.lines.shift();
-    }
-    skiplog(page) {
-        return this.quietPages.includes(page);
+        linebuf = '';
     }
 }
-export let texthook = new TextHook();
+export function nextpage() {
+    newline();
+    if (lines[lines.length - 1] !== '') {
+        if (consoleLog)
+            console.log('');
+        addLine('');
+    }
+}
+export function keywait() {
+    newline();
+}
+function render(e) {
+    e.textContent = lines.join('\n');
+}
+export function setTitle(title) {
+    quietPages = quietPagesTable[title] || [];
+    if (urlParams.get('consoleTextLog') === '1')
+        consoleLog = true;
+}
+function addLine(s) {
+    lines.push(s);
+    if (lines.length > textLogMaxLines)
+        lines.shift();
+}
+function skiplog(page) {
+    return quietPages.includes(page);
+}

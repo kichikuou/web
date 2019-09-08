@@ -5,56 +5,55 @@ import { config } from './config.js';
 import { SaveDataManager } from './savedata.js';
 import { openFileInput } from './widgets.js';
 // Settings Dialog
-class Settings {
-    constructor() {
-        this.antialias = $('#antialias');
-        this.unloadConfirmation = $('#unload-confirmation');
-        this.saveDataManager = null;
-        $('#settings-button').addEventListener('click', this.openModal.bind(this));
-        $('#settings-close').addEventListener('click', this.closeModal.bind(this));
-        this.keyDownHandler = (ev) => {
-            if (ev.keyCode === 27) // escape
-                this.closeModal();
-        };
-        $('#settings-overlay').addEventListener('click', this.closeModal.bind(this));
-        this.antialias.addEventListener('change', this.antialiasChanged.bind(this));
-        this.antialias.checked = config.antialias;
-        this.unloadConfirmation.addEventListener('change', this.unloadConfirmationChanged.bind(this));
-        this.unloadConfirmation.checked = config.unloadConfirmation;
-        $('#downloadSaveData').addEventListener('click', this.downloadSaveData.bind(this));
-        $('#uploadSaveData').addEventListener('click', this.uploadSaveData.bind(this));
-    }
-    openModal() {
-        $('#settings-modal').classList.add('active');
-        document.addEventListener('keydown', this.keyDownHandler);
-        this.saveDataManager = new SaveDataManager();
-        this.checkSaveData();
-    }
-    closeModal() {
-        $('#settings-modal').classList.remove('active');
-        document.removeEventListener('keydown', this.keyDownHandler);
-        this.saveDataManager = null;
-    }
-    antialiasChanged() {
-        config.antialias = this.antialias.checked;
-        config.persist();
-        if (!$('#xsystem35').hidden)
-            _ags_setAntialiasedStringMode(config.antialias ? 1 : 0);
-    }
-    unloadConfirmationChanged() {
-        config.unloadConfirmation = this.unloadConfirmation.checked;
-        config.persist();
-    }
-    async checkSaveData() {
-        if ($('#downloadSaveData').hasAttribute('disabled') &&
-            await this.saveDataManager.hasSaveData())
-            $('#downloadSaveData').removeAttribute('disabled');
-    }
-    async downloadSaveData() {
-        this.saveDataManager.download();
-    }
-    uploadSaveData() {
-        openFileInput().then((file) => this.saveDataManager.extract(file)).then(() => this.checkSaveData());
-    }
+const antialias = $('#antialias');
+const unloadConfirmation = $('#unload-confirmation');
+let saveDataManager = null;
+let keyDownHandler;
+function init() {
+    $('#settings-button').addEventListener('click', openModal);
+    $('#settings-close').addEventListener('click', closeModal);
+    keyDownHandler = (ev) => {
+        if (ev.keyCode === 27) // escape
+            closeModal();
+    };
+    $('#settings-overlay').addEventListener('click', closeModal);
+    antialias.addEventListener('change', antialiasChanged);
+    antialias.checked = config.antialias;
+    unloadConfirmation.addEventListener('change', unloadConfirmationChanged);
+    unloadConfirmation.checked = config.unloadConfirmation;
+    $('#downloadSaveData').addEventListener('click', downloadSaveData);
+    $('#uploadSaveData').addEventListener('click', uploadSaveData);
 }
-export let settings = new Settings();
+function openModal() {
+    $('#settings-modal').classList.add('active');
+    document.addEventListener('keydown', keyDownHandler);
+    saveDataManager = new SaveDataManager();
+    checkSaveData();
+}
+function closeModal() {
+    $('#settings-modal').classList.remove('active');
+    document.removeEventListener('keydown', keyDownHandler);
+    saveDataManager = null;
+}
+function antialiasChanged() {
+    config.antialias = antialias.checked;
+    config.persist();
+    if (!$('#xsystem35').hidden)
+        _ags_setAntialiasedStringMode(config.antialias ? 1 : 0);
+}
+function unloadConfirmationChanged() {
+    config.unloadConfirmation = unloadConfirmation.checked;
+    config.persist();
+}
+async function checkSaveData() {
+    if ($('#downloadSaveData').hasAttribute('disabled') &&
+        await saveDataManager.hasSaveData())
+        $('#downloadSaveData').removeAttribute('disabled');
+}
+async function downloadSaveData() {
+    saveDataManager.download();
+}
+function uploadSaveData() {
+    openFileInput().then((file) => saveDataManager.extract(file)).then(() => checkSaveData());
+}
+init();
