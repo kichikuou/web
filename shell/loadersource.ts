@@ -3,7 +3,7 @@
 import {$, fileSystemReady, saveDirReady, startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, FontMincho, FontGothic, JSZIP_SCRIPT, JSZipOptions} from './util.js';
 import * as CDImage from './cdimage.js';
 import {registerDataFile} from './datafile.js';
-import {toolbar} from './toolbar.js';
+import * as Toolbar from './toolbar.js';
 import {addToast, openFileInput} from './widgets.js';
 
 const xsys35rc = [
@@ -237,6 +237,6 @@ function loadModule(name: 'system3' | 'xsystem35'): Promise<any> {
         endMeasure();
         $('#loader').hidden = true;
         document.body.classList.add('bgblack-fade');
-        toolbar.setCloseable();
+        Toolbar.setCloseable();
     });
 }
