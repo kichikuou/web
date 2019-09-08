@@ -6,13 +6,6 @@ import {registerDataFile} from './datafile.js';
 import * as Toolbar from './toolbar.js';
 import {addToast, openFileInput} from './widgets.js';
 
-const xsys35rc = [
-    'font_device: ttf',
-    'ttfont_mincho: mincho.otf',
-    'ttfont_gothic: MTLc3m.ttf',
-    '',
-].join('\n');
-
 export class NoGamedataError implements Error {
     public name = 'NoGamedataError';
     constructor(public message: string) {}
@@ -99,7 +92,6 @@ export class CDImageSource extends LoaderSource {
             saveDirReady.then(() => { mkdirIfNotExist(savedir); });
         } else {
             FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
-            FS.writeFile('.xsys35rc', xsys35rc);
         }
         endMeasure();
     }
@@ -176,7 +168,6 @@ export class FileSource extends LoaderSource {
                 aldFiles.push(f.name);
         }
         FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
-        FS.writeFile('.xsys35rc', xsys35rc);
     }
 
     getCDDA(track: number): Promise<Blob> {
@@ -215,7 +206,6 @@ export class ZipSource extends LoaderSource {
             throw new NoGamedataError('ZIP内にゲームデータ (*.ALDファイル) が見つかりません。');
 
         FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
-        FS.writeFile('.xsys35rc', xsys35rc);
     }
 
     getCDDA(track: number): Promise<Blob> {
