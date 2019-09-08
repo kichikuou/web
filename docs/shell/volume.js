@@ -12,6 +12,8 @@ function init() {
     $('#volume-control-icon').addEventListener('click', onIconClicked);
     slider.addEventListener('input', onSliderValueChanged);
     slider.addEventListener('change', onSliderValueSettled);
+    // Firefox fix, https://github.com/emscripten-ports/SDL2/issues/41
+    slider.addEventListener('mouseup', () => { slider.blur(); });
     if (typeof (webkitAudioContext) !== 'undefined') {
         audioContext = new webkitAudioContext();
         removeUserGestureRestriction();
