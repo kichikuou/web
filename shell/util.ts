@@ -6,11 +6,6 @@ export const $: (selector: string) => HTMLElement = document.querySelector.bind(
 export const urlParams = new URLSearchParams(location.search.slice(1));
 export const JSZIP_SCRIPT = 'lib/jszip.3.1.3.min.js';
 
-export let fsReady: () => void;
-export let fileSystemReady: Promise<any> = new Promise((resolve) => { fsReady = resolve; });
-export let idbfsReady: (fs: typeof FS) => void;
-export let saveDirReady: Promise<typeof FS> = new Promise((resolve) => { idbfsReady = resolve; });
-
 const scriptPromises: Map<string, Promise<any>> = new Map();
 export function loadScript(src: string): Promise<any> {
     let p = scriptPromises.get(src);

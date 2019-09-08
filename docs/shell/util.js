@@ -3,10 +3,6 @@
 export const $ = document.querySelector.bind(document);
 export const urlParams = new URLSearchParams(location.search.slice(1));
 export const JSZIP_SCRIPT = 'lib/jszip.3.1.3.min.js';
-export let fsReady;
-export let fileSystemReady = new Promise((resolve) => { fsReady = resolve; });
-export let idbfsReady;
-export let saveDirReady = new Promise((resolve) => { idbfsReady = resolve; });
 const scriptPromises = new Map();
 export function loadScript(src) {
     let p = scriptPromises.get(src);

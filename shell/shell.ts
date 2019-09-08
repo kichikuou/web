@@ -1,7 +1,8 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {$, fsReady, idbfsReady, urlParams, gaException, startMeasure, readFileAsArrayBuffer, loadScript, Status} from './util.js';
+import {$, gaException, loadScript, Status} from './util.js';
 import './settings.js';
+import {syncfs, load_mincho_font} from './moduleloader.js';
 import * as zoom from './zoom.js';
 import * as cdPlayer from './cdda.js';
 import * as audio from './audio.js';
@@ -9,13 +10,8 @@ import * as midiPlayer from './midi.js';
 import * as texthook from './textlog.js';
 import {addToast} from './widgets.js';
 
-const FontGothic = 'MTLc3m.ttf';
-const FontMincho = 'mincho.otf';
-
 class System35Shell {
     constructor() {
-        this.initModule();
-
         window.onerror = (message, url, line, column, error) => {
             gaException({type: 'onerror', message, url, line, column}, true);
             addToast('エラーが発生しました。', 'error');
@@ -32,42 +28,6 @@ class System35Shell {
             }
             // this.addToast('エラーが発生しました。', 'error');
         });
-    }
-
-    private initModule() {
-        Module.arguments = [];
-        for (let [name, val] of urlParams) {
-            if (name.startsWith('-')) {
-                Module.arguments.push(name);
-                if (val)
-                    Module.arguments.push(val);
-            }
-        }
-        Module.print = Module.printErr = console.log.bind(console);
-        Module.canvas = <HTMLCanvasElement>document.getElementById('canvas');
-        Module.preRun = [
-            () => { Module.addRunDependency('gameFiles'); },
-            fsReady,
-            function loadFont() {
-                FS.createPreloadedFile('/', FontGothic, 'fonts/' + FontGothic, true, false);
-            },
-            function prepareSaveDir() {
-                FS.mkdir('/save');
-                FS.mount(IDBFS, {}, '/save');
-                Module.addRunDependency('syncfs');
-                FS.syncfs(true, (err) => {
-                    importSaveDataFromLocalFileSystem().then(() => {
-                        Module.removeRunDependency('syncfs');
-                        idbfsReady(FS);
-                    });
-                });
-            },
-            () => {
-                // Don't let emscripten change the window title.
-                // Must be overwritten after the emscripten module is evaluated.
-                Module.setWindowTitle = () => {};
-            }
-        ];
     }
 
     windowSizeChanged() {
@@ -101,90 +61,9 @@ class System35Shell {
         window.onbeforeunload = null;
     }
 
-    private fsyncTimer: number | undefined;
     syncfs(timeout = 100) {
-        window.clearTimeout(this.fsyncTimer);
-        this.fsyncTimer = window.setTimeout(() => {
-            FS.syncfs(false, (err) => {
-                if (err)
-                    console.log('FS.syncfs error: ', err);
-            });
-        }, timeout);
-        this.persistStorage();
+        syncfs(timeout);
     }
-
-    private persistRequested = false;
-    async persistStorage() {
-        if (this.persistRequested || !(navigator.storage && navigator.storage.persist))
-            return;
-        this.persistRequested = true;
-        if (await navigator.storage.persisted())
-            return;
-        let result = await navigator.storage.persist();
-        ga('send', 'event', 'Game', 'StoragePersist', result ? 'granted' : 'refused');
-    }
-}
-
-async function importSaveDataFromLocalFileSystem() {
-    function requestFileSystem(type: number, size: number): Promise<FileSystem> {
-        return new Promise((resolve, reject) => window.webkitRequestFileSystem(type, size, resolve, reject));
-    }
-    function getDirectory(dir: DirectoryEntry, path: string): Promise<DirectoryEntry> {
-        return new Promise((resolve, reject) => dir.getDirectory(path, {}, resolve, reject));
-    }
-    function readEntries(reader: DirectoryReader): Promise<Entry[]> {
-        return new Promise((resolve, reject) => reader.readEntries(resolve, reject));
-    }
-    function fileOf(entry: FileEntry): Promise<File> {
-        return new Promise((resolve, reject) => entry.file(resolve, reject));
-    }
-
-    if (FS.readdir('/save').length > 2)  // Are there any entries other than . and ..?
-        return;
-    if (!window.webkitRequestFileSystem)
-        return;
-    try {
-        let fs = await requestFileSystem(self.PERSISTENT, 0);
-        let savedir = (await getDirectory(fs.root, 'save')).createReader();
-        let entries: FileEntry[] = [];
-        while (true) {
-            let results = await readEntries(savedir);
-            if (!results.length)
-                break;
-            for (let e of results) {
-                if (e.isFile && e.name.toLowerCase().endsWith('.asd'))
-                    entries.push(e as FileEntry);
-            }
-        }
-        if (entries.length && window.confirm('鬼畜王 on Chrome のセーブデータを引き継ぎますか?')) {
-            for (let e of entries) {
-                let content = await readFileAsArrayBuffer(await fileOf(e));
-                FS.writeFile('/save/' + e.name, new Uint8Array(content));
-            }
-            shell.syncfs(0);
-            ga('send', 'event', 'Game', 'SaveDataImported');
-        }
-    } catch (err) {
-    }
-}
-
-let mincho_loaded = false;
-function load_mincho_font(): Promise<number> {
-    if (mincho_loaded)
-        return Promise.resolve(Status.OK);
-    mincho_loaded = true;
-
-    return new Promise((resolve) => {
-        console.log('loading mincho font');
-        let endMeasure = startMeasure('FontLoad', 'Font load', FontMincho);
-        readAsync('fonts/' + FontMincho, (buf: ArrayBuffer) => {
-            endMeasure();
-            FS.writeFile(FontMincho, new Uint8Array(buf));
-            resolve(Status.OK);
-        }, () => {
-            resolve(Status.NG);
-        });
-    });
 }
 
 function loadPolyfills() {

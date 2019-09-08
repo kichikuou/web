@@ -1,10 +1,10 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {$, fileSystemReady, saveDirReady, startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, JSZIP_SCRIPT, JSZipOptions} from './util.js';
+import {startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, JSZIP_SCRIPT, JSZipOptions} from './util.js';
 import * as cdimage from './cdimage.js';
 import {registerDataFile} from './datafile.js';
-import * as toolbar from './toolbar.js';
-import {addToast, openFileInput} from './widgets.js';
+import {openFileInput} from './widgets.js';
+import {loadModule, saveDirReady} from './moduleloader.js';
 
 export class NoGamedataError implements Error {
     public name = 'NoGamedataError';
@@ -211,23 +211,4 @@ export class ZipSource extends LoaderSource {
     getCDDA(track: number): Promise<Blob> {
         return this.tracks[track].async('blob');
     }
-}
-
-function loadModule(name: 'system3' | 'xsystem35'): Promise<any> {
-    $('#loader').classList.add('module-loading');
-    let src = name + '.js';
-    let script = document.createElement('script');
-    script.src = src;
-    script.onerror = () => {
-        ga('send', 'event', 'Game', 'ModuleLoadFailed', src);
-        addToast(src + 'の読み込みに失敗しました。リロードしてください。', 'error');
-    };
-    document.body.appendChild(script);
-    let endMeasure = startMeasure('ModuleLoad', 'Module load', src);
-    return fileSystemReady.then(() => {
-        endMeasure();
-        $('#loader').hidden = true;
-        document.body.classList.add('bgblack-fade');
-        toolbar.setCloseable();
-    });
 }

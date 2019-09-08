@@ -1,6 +1,7 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {loadScript, saveDirReady, JSZIP_SCRIPT, readFileAsArrayBuffer, JSZipOptions, mkdirIfNotExist} from './util.js';
+import {loadScript, JSZIP_SCRIPT, readFileAsArrayBuffer, JSZipOptions, mkdirIfNotExist} from './util.js';
+import {saveDirReady} from './moduleloader.js';
 import {addToast, downloadAs} from './widgets.js';
 
 declare function FSLib(): {saveDirReady: Promise<typeof FS>};
