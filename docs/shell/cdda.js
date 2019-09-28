@@ -1,6 +1,6 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import { $, gaException } from './util.js';
+import { $, gaException, isMobileSafari } from './util.js';
 import * as volumeControl from './volume.js';
 import { BasicCDDACache, IOSCDDACache } from './cddacache.js';
 let cddaCache;
@@ -10,8 +10,7 @@ let isVolumeSupported;
 let unmute = null; // Non-null if emulating mute by pause
 function init() {
     // Volume control of <audio> is not supported in iOS
-    audio.volume = 0.5;
-    isVolumeSupported = audio.volume !== 1;
+    isVolumeSupported = !isMobileSafari();
     cddaCache = isVolumeSupported ? new BasicCDDACache() : new IOSCDDACache();
     volumeControl.addEventListener(onVolumeChanged);
     audio.volume = volumeControl.volume();

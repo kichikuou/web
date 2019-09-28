@@ -48,12 +48,12 @@ export function mkdirIfNotExist(path: string, fs?: typeof FS) {
     }
 }
 
-function isIOSVersionBetween(from: string, to: string): boolean {
+export function isMobileSafari(from?: string, to?: string): boolean {
     let match = navigator.userAgent.match(/OS ([0-9_]+) like Mac OS X\)/);
     if (!match)
         return false;
     let ver = match[1].replace(/_/g, '.');
-    return from <= ver && ver < to;
+    return (!from || from <= ver) && (!to || ver < to);
 }
 
 export function JSZipOptions(): JSZipLoadOptions {

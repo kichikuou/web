@@ -42,12 +42,12 @@ export function mkdirIfNotExist(path, fs) {
         // ignore EEXIST
     }
 }
-function isIOSVersionBetween(from, to) {
+export function isMobileSafari(from, to) {
     let match = navigator.userAgent.match(/OS ([0-9_]+) like Mac OS X\)/);
     if (!match)
         return false;
     let ver = match[1].replace(/_/g, '.');
-    return from <= ver && ver < to;
+    return (!from || from <= ver) && (!to || ver < to);
 }
 export function JSZipOptions() {
     let opts = {};
