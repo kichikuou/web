@@ -3,6 +3,7 @@ EMFLAGS += -s WASM=0 -s ENVIRONMENT=web
 EMFLAGS += -s FORCE_FILESYSTEM=1
 EMFLAGS += -s 'EXTRA_EXPORTED_RUNTIME_METHODS=["FS"]'
 EMFLAGS += --post-js post.js
+EMFLAGS += -lidbfs.js
 EMFLAGS += -O2 --memory-init-file 0
 
 ../docs/fslib.js: fslib.c post.js Makefile
