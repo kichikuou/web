@@ -6,6 +6,7 @@ import { CDImageSource, FileSource, ZipSource, NoGamedataError } from './loaders
 import { addToast } from './widgets.js';
 import * as midiPlayer from './midi.js';
 import * as volumeControl from './volume.js';
+import { message } from './strings.js';
 let imageFile;
 let metadataFile;
 let source = null;
@@ -58,7 +59,7 @@ async function handleFiles(files) {
             hasALD = true;
         }
         else if (file.name.toLowerCase().endsWith('.rar')) {
-            addToast('展開前のrarファイルは読み込めません。', 'warning');
+            addToast(message.unextracted_rar, 'warning');
             recognized = true;
         }
     }
@@ -75,7 +76,7 @@ async function handleFiles(files) {
     }
     if (!source) {
         if (!recognized)
-            addToast(files[0].name + ' は認識できない形式です。', 'warning');
+            addToast(`${files[0].name}: ${message.unrecognized_format}`, 'warning');
         return;
     }
     installing = true;
@@ -86,11 +87,11 @@ async function handleFiles(files) {
     catch (err) {
         if (err instanceof NoGamedataError) {
             ga('send', 'event', 'Loader', 'NoGamedata', err.message);
-            addToast('インストールできません。' + err.message, 'warning');
+            addToast(`${message.cannot_install}: ${err.message}`, 'warning');
         }
         else {
             ga('send', 'event', 'Loader', 'LoadFailed', err.message);
-            addToast('インストールできません。認識できない形式です。', 'warning');
+            addToast(`${message.cannot_install}: ${message.unrecognized_format}`, 'warning');
         }
         source = null;
     }
@@ -119,7 +120,7 @@ function loaded(hasMidi) {
 }
 function onBeforeUnload(e) {
     if (config.unloadConfirmation) {
-        e.returnValue = 'セーブしていないデータは失われます。';
+        e.returnValue = message.unload_confirmation;
         volumeControl.suspendForModalDialog();
     }
 }

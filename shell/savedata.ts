@@ -3,6 +3,7 @@
 import {loadScript, JSZIP_SCRIPT, readFileAsArrayBuffer, JSZipOptions, mkdirIfNotExist} from './util.js';
 import {saveDirReady} from './moduleloader.js';
 import {addToast, downloadAs} from './widgets.js';
+import {message} from './strings.js';
 
 declare function FSLib(): {saveDirReady: Promise<typeof FS>};
 
@@ -74,10 +75,10 @@ export class SaveDataManager {
                         resolve();
                 });
             });
-            addToast('セーブデータの復元に成功しました。', 'success');
+            addToast(message.restore_success, 'success');
             ga('send', 'event', 'Savedata', 'Restored');
         } catch (err) {
-            addToast('セーブデータを復元できませんでした。', 'error');
+            addToast(message.restore_failure, 'error');
             ga('send', 'event', 'Savedata', 'RestoreFailed', err.message);
             console.warn(err);
             ga('send', 'exception', {exDescription: err.stack, exFatal: false});

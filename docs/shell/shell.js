@@ -9,6 +9,7 @@ import * as audio from './audio.js';
 import * as midiPlayer from './midi.js';
 import * as texthook from './textlog.js';
 import { addToast } from './widgets.js';
+import { message } from './strings.js';
 class System35Shell {
     constructor() {
         window.onerror = (message, url, line, column, error) => {
@@ -26,7 +27,6 @@ class System35Shell {
             else {
                 gaException({ type: 'rejection', name: reason.constructor.name, reason }, true);
             }
-            // this.addToast('エラーが発生しました。', 'error');
         });
     }
     windowSizeChanged() {
@@ -44,7 +44,7 @@ class System35Shell {
         }
     }
     inputString(title, initialValue, maxLength) {
-        title += ' (全角' + maxLength + '文字まで)';
+        title += ' (' + message.input_char_limit(maxLength) + ')';
         let result = window.prompt(title, initialValue);
         if (result) {
             result = result.substring(0, maxLength);
@@ -52,7 +52,7 @@ class System35Shell {
         return result;
     }
     quit() {
-        addToast('終了しました。');
+        addToast(message.game_over);
         ga('send', 'event', 'Game', 'GameEnd');
         window.onbeforeunload = null;
     }

@@ -3,6 +3,7 @@
 import { $, urlParams, readFileAsArrayBuffer, startMeasure, Status } from './util.js';
 import { addToast } from './widgets.js';
 import * as toolbar from './toolbar.js';
+import { message } from './strings.js';
 const FontGothic = 'MTLc3m.ttf';
 const FontMincho = 'mincho.otf';
 let fsReady;
@@ -52,7 +53,7 @@ export function loadModule(name) {
     script.src = src;
     script.onerror = () => {
         ga('send', 'event', 'Game', 'ModuleLoadFailed', src);
-        addToast(src + 'の読み込みに失敗しました。リロードしてください。', 'error');
+        addToast(message.module_load_failed(src), 'error');
     };
     document.body.appendChild(script);
     let endMeasure = startMeasure('ModuleLoad', 'Module load', src);
@@ -131,7 +132,7 @@ async function importSaveDataFromLocalFileSystem() {
                     entries.push(e);
             }
         }
-        if (entries.length && window.confirm('鬼畜王 on Chrome のセーブデータを引き継ぎますか?')) {
+        if (entries.length && window.confirm(message.import_savedata_confirm)) {
             for (let e of entries) {
                 let content = await readFileAsArrayBuffer(await fileOf(e));
                 FS.writeFile('/save/' + e.name, new Uint8Array(content));

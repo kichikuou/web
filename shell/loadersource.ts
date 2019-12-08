@@ -5,6 +5,7 @@ import * as cdimage from './cdimage.js';
 import {registerDataFile} from './datafile.js';
 import {openFileInput} from './widgets.js';
 import {loadModule, saveDirReady} from './moduleloader.js';
+import {message} from './strings.js';
 
 export class NoGamedataError implements Error {
     public name = 'NoGamedataError';
@@ -64,7 +65,7 @@ export class CDImageSource extends LoaderSource {
         // this.walk(isofs, isofs.rootDir(), '/');
         let gamedata = await this.findGameDir(isofs);
         if (!gamedata)
-            throw new NoGamedataError('イメージ内にGAMEDATAフォルダが見つかりません。');
+            throw new NoGamedataError(message.no_gamedata_dir);
 
         let isSystem3 = !!await isofs.getDirEnt('system3.exe', gamedata);
         await loadModule(isSystem3 ? 'system3' : 'xsystem35');
@@ -203,7 +204,7 @@ export class ZipSource extends LoaderSource {
             aldFiles.push(basename);
         }
         if (aldFiles.length === 0)
-            throw new NoGamedataError('ZIP内にゲームデータ (*.ALDファイル) が見つかりません。');
+            throw new NoGamedataError(message.no_ald_in_zip);
 
         FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
     }
