@@ -99,7 +99,6 @@ header {
   margin: 2ex auto 0;
 }
 #loader h1 {
-  margin: 1rem auto;
   font-size: 1.6rem;
 }
 #loader ul {
@@ -117,12 +116,18 @@ header {
   color: #808080;
 }
 #loader li.notready:after {
+  content: " (unselected)";
+}
+#loader li[lang=ja].notready:after {
   content: " (未選択)";
 }
 #loader #unsupported {
   max-width: 640px;
   margin: 2ex auto 0;
   color: red;
+}
+#loader .language-selector {
+  text-align: right;
 }
 
 #loader.module-loading .hidden-while-loading {

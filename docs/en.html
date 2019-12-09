@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>鬼畜王 on Web</title>
-    <meta name="description" content="アリスソフトの18禁ゲーム「鬼畜王ランス」等をWebブラウザ上で遊べるようにしたものです。">
+    <title>Kichikuou on Web</title>
+    <meta name="description" content="A web-based implementation of AliceSoft's system3 / system3.5 game engines.">
     <link rel="stylesheet" href="lib/spectre.0.5.8.min.css">
     <link rel="stylesheet" href="lib/font-awesome.4.3.0.min.css">
     <link rel="stylesheet" href="style.css">
@@ -25,24 +25,24 @@
   <body>
 
   <header id="toolbar" class="before-game-start">
-    <div id="toolbar-handler" class="tooltip tooltip-bottom" data-tooltip="メニュー">
+    <div id="toolbar-handler" class="tooltip tooltip-bottom" data-tooltip="Menu">
       <div class="toolbar-handler-icon"></div>
     </div>
     <div class="navbar">
       <section class="navbar-center">
-        <span class="navbar-brand text-ellipsis ml-2">鬼畜王 on Web</span>
+        <span class="navbar-brand text-ellipsis ml-2">Kichikuou on Web</span>
       </section>
       <section class="navbar-section">
         <div id="volume-control" class="mr-2 hidden-until-game-start">
-          <i id="volume-control-icon" class="fa fa-volume-up tooltip tooltip-bottom" data-tooltip="ミュート"></i>
-          <input id="volume-control-slider" type="range" class="tooltip tooltip-bottom" data-tooltip="音量">
+          <i id="volume-control-icon" class="fa fa-volume-up tooltip tooltip-bottom" data-tooltip="Mute"></i>
+          <input id="volume-control-slider" type="range" class="tooltip tooltip-bottom" data-tooltip="Volume">
         </div>
 
-        <button id="screenshot-button" class="btn btn-link tooltip tooltip-bottom mr-2 hidden-until-game-start" data-tooltip="スクリーンショット"><i class="fa fa-camera"></i></button>
+        <button id="screenshot-button" class="btn btn-link tooltip tooltip-bottom mr-2 hidden-until-game-start" data-tooltip="Take screenshot"><i class="fa fa-camera"></i></button>
 
-        <button id="textlog-button" class="btn btn-link tooltip tooltip-bottom mr-2 hidden-until-game-start" data-tooltip="テキスト履歴"><i class="fa fa-history"></i></button>
-        <button id="settings-button" class="btn btn-link tooltip tooltip-bottom mr-2" data-tooltip="設定"><i class="fa fa-cog"></i></button>
-        <a class="btn btn-link tooltip tooltip-bottom" target="_blank" href="help.html" data-tooltip="ヘルプ"><i class="fa fa-question-circle mr-2"></i></a>
+        <button id="textlog-button" class="btn btn-link tooltip tooltip-bottom mr-2 hidden-until-game-start" data-tooltip="Text history"><i class="fa fa-history"></i></button>
+        <button id="settings-button" class="btn btn-link tooltip tooltip-bottom mr-2" data-tooltip="Settings"><i class="fa fa-cog"></i></button>
+        <a class="btn btn-link tooltip tooltip-bottom" target="_blank" href="https://translate.google.com/translate?sl=ja&tl=en&u=https%3A%2F%2Fkichikuou.github.io/web/help.html" data-tooltip="Help"><i class="fa fa-question-circle mr-2"></i></a>
         <button id="toolbar-close-button" class="btn btn-link"><i class="fa fa-angle-up"></i></button>
       </section>
     </div>
@@ -51,22 +51,19 @@
   <div class="contents">
 
     <div id="loader">
-      <div class="language-selector"><a href="en.html">English</a></div>
-      <h1>鬼畜王 on Web</h1>
-      <p>アリスソフトの <a href="http://www.alicesoft.com/annai.html#free">配布フリー宣言</a> に基づいて配布されている「鬼畜王ランス」、「闘神都市II」等のゲームをWebブラウザ上で遊べるようにしたものです。
-      <a target="_blank" href="help.html">遊び方はこちら。</a></p>
-      <p><span class="label label-secondary">2019-09-02</span> 簡易バックログ機能を追加しました。</p>
-      <p><strong>(注意) 18歳未満の人は利用できません。</strong></p>
-      <p>ゲームのCDイメージファイルをドラッグ＆ドロップするか、下の「ファイルを選択」ボタンを押して選択してください。</p>
+      <div class="language-selector"><a href="./">日本語</a></div>
+      <h1>Kichikuou on Web</h1>
+      <p>This is a browser based implementation of AliceSoft's system3 / system3.5 game engines.</p>
+      <p>Choose a game image (CD-ROM image or ZIP), or drag-and-drop image file(s) into this page.</p>
       <ul class="hidden-while-loading">
-        <li id="imgReady" class="notready" lang="ja">KICHIKUOU.img</li>
-        <li id="cueReady" class="notready" lang="ja">KICHIKUOU.cue</li>
+        <li id="imgReady" class="notready" lang="en">KICHIKUOU.img</li>
+        <li id="cueReady" class="notready" lang="en">KICHIKUOU.cue</li>
       </ul>
       <input type="file" id="fileselect" class="form-input hidden-while-loading" multiple/>
       <div class="show-while-loading loading loading-lg" hidden></div>
 
       <div id="unsupported" hidden>
-	このブラウザでは利用できません。
+	This browser is not supported.
       </div>
     </div>
 
@@ -81,51 +78,51 @@
     <div id="settings-overlay" class="modal-overlay"></div>
     <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-title">設定</div>
+        <div class="modal-title">Settings</div>
       </div>
       <div class="modal-body settings">
         <section>
-          <h5>表示</h5>
+          <h5>Screen</h5>
           <div class="form-group">
-            <span class="mr-2">拡大率:</span>
+            <span class="mr-2">Zoom:</span>
             <select id="zoom" class="form-select">
               <option value="1">100%</option>
               <option value="1.25">125%</option>
               <option value="1.5">150%</option>
               <option value="2">200%</option>
               <option value="3">300%</option>
-              <option value="fit">自動</option>
+              <option value="fit">Fit to window</option>
             </select>
           </div>
           <div>
             <label for="pixelate" class="form-checkbox">
               <input type="checkbox" id="pixelate">
-              <i class="form-icon"></i>拡大時に補間しない
+              <i class="form-icon"></i>Pixelated zoom
             </label>
           </div>
           <div>
             <label for="antialias" class="form-checkbox">
               <input type="checkbox" id="antialias" checked>
-              <i class="form-icon"></i>文字をなめらかに表示する
+              <i class="form-icon"></i>Font antialiasing
             </label>
           </div>
         </section>
         <div class="divider"></div>
         <section>
-          <h5>一般</h5>
+          <h5>General</h5>
           <div>
             <label for="unload-confirmation" class="form-checkbox">
               <input type="checkbox" id="unload-confirmation">
-              <i class="form-icon"></i>ページを閉じる前に確認する
+              <i class="form-icon"></i>Confirm before closing the page
             </label>
           </div>
         </section>
         <div class="divider"></div>
         <section>
-          <h5>セーブデータ</h5>
+          <h5>Saved data</h5>
           <div>
-            <button id="downloadSaveData" class="btn mr-2" disabled>ZIPに保存</button>
-            <button id="uploadSaveData" class="btn">ZIPから復元</button>
+            <button id="downloadSaveData" class="btn mr-2" disabled>Download as ZIP</button>
+            <button id="uploadSaveData" class="btn">Restore from ZIP</button>
           </div>
         </section>
       </div>
@@ -140,20 +137,20 @@
     <div id="textlog-overlay" class="modal-overlay"></div>
     <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-title">テキスト履歴</div>
+        <div class="modal-title">Text History</div>
       </div>
       <pre id="textlog-content" class="modal-body">
       </pre>
       <div class="modal-footer">
-        <button id="textlog-close" class="btn btn-primary">閉じる</button>
+        <button id="textlog-close" class="btn btn-primary">Close</button>
       </div>
     </div>
   </div>
 
   <div class="toast-container"></div>
   <template id="cdda-error">
-    BGMの再生に失敗しました。
-    <button class="btn btn-link cdda-reload-button">imgファイルを再読み込み</button>
+    Music playback failed.
+    <button class="btn btn-link cdda-reload-button">Reload .img file</button>
   </template>
 
   <script type="module" src="shell/shell.js"></script>

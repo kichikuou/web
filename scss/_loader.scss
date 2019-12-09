@@ -2,7 +2,6 @@
     max-width: 640px;
     margin: 2ex auto 0;
     h1 {
-        margin: 1rem auto;
         font-size: 1.6rem;
     }
     ul {
@@ -20,12 +19,18 @@
         color: #808080;
     }
     li.notready:after {
+        content: " (unselected)";
+    }
+    li[lang=ja].notready:after {
         content: " (未選択)";
     }
     #unsupported {
         max-width: 640px;
         margin: 2ex auto 0;
         color: red;
+    }
+    .language-selector {
+	text-align: right;
     }
 }
 
