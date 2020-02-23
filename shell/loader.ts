@@ -62,7 +62,7 @@ async function handleFiles(files: FileList) {
             $('#cueReady').classList.remove('notready');
             $('#cueReady').textContent = file.name;
             recognized = true;
-        } else if (file.name.toLowerCase().endsWith('.ald')) {
+        } else if (file.name.toLowerCase().endsWith('.ald') || file.name.toLowerCase() === 'adisk.dat') {
             hasALD = true;
         } else if (file.name.toLowerCase().endsWith('.rar')) {
             addToast(message.unextracted_rar, 'warning');
