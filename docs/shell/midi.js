@@ -9,13 +9,13 @@ let stopTimer = null;
 export function init(destNode) {
     Module.addRunDependency('timidity');
     loadScript('/timidity/timidity.js').then(() => {
-        Module.removeRunDependency('timidity');
         gain = destNode.context.createGain();
         gain.connect(destNode);
         timidity = new Timidity(gain, '/timidity/');
         timidity.on('playing', onPlaying);
         timidity.on('error', onError);
         timidity.on('ended', onEnd);
+        Module.removeRunDependency('timidity');
     });
 }
 export function play(loop, data, datalen) {
