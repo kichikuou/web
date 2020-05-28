@@ -27,6 +27,8 @@ function init() {
         fsReady,
         function loadFont() {
             FS.createPreloadedFile('/', FontGothic, 'fonts/' + FontGothic, true, false);
+            FS.mkdir('/fonts');
+            FS.symlink('/' + FontGothic, 'fonts/' + FontGothic);
         },
         function prepareSaveDir() {
             FS.mkdir('/save');
@@ -96,6 +98,7 @@ export function load_mincho_font() {
         readAsync('fonts/' + FontMincho, (buf) => {
             endMeasure();
             FS.writeFile(FontMincho, new Uint8Array(buf));
+            FS.symlink('/' + FontMincho, 'fonts/' + FontMincho);
             resolve(Status.OK);
         }, () => {
             resolve(Status.NG);
