@@ -47,7 +47,7 @@ function init() {
         () => {
             // Don't let emscripten change the window title.
             // Must be overwritten after the emscripten module is evaluated.
-            Module.setWindowTitle = () => {};
+            window.setWindowTitle = () => {};
         }
     ];
 }
