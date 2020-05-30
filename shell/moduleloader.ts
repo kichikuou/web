@@ -29,9 +29,8 @@ function init() {
         () => { Module.addRunDependency('gameFiles'); },
         fsReady,
         function loadFont() {
-            FS.createPreloadedFile('/', FontGothic, 'fonts/' + FontGothic, true, false);
             FS.mkdir('/fonts');
-            FS.symlink('/' + FontGothic, 'fonts/' + FontGothic);
+            FS.createPreloadedFile('/fonts', FontGothic, 'fonts/' + FontGothic, true, false);
         },
         function prepareSaveDir() {
             FS.mkdir('/save');
@@ -105,8 +104,7 @@ export function load_mincho_font(): Promise<number> {
         let endMeasure = startMeasure('FontLoad', 'Font load', FontMincho);
         readAsync('fonts/' + FontMincho, (buf: ArrayBuffer) => {
             endMeasure();
-            FS.writeFile(FontMincho, new Uint8Array(buf));
-            FS.symlink('/' + FontMincho, 'fonts/' + FontMincho);
+            FS.writeFile('/fonts/' + FontMincho, new Uint8Array(buf));
             resolve(Status.OK);
         }, () => {
             resolve(Status.NG);
