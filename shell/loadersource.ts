@@ -40,6 +40,10 @@ export abstract class LoaderSource {
             let type = name.charAt(name.length - 6).toLowerCase();
             let id = name.charAt(name.length - 5);
             basename = name.slice(0, -6);
+            if (!resourceType[type]) {
+                console.log('Resource file of unknown type: ' + name);
+                continue;
+            }
             lines.push(resourceType[type] + id.toUpperCase() + ' ' + name);
             if (type == 'm')
                 this.hasMidi = true;
