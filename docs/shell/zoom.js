@@ -37,7 +37,7 @@ export function handleZoom() {
     if (value === 'fit') {
         $('#xsystem35').classList.add('fit');
         navbarStyle.maxWidth = 'none';
-        canvas.style.width = null;
+        canvas.style.width = '';
     }
     else {
         $('#xsystem35').classList.remove('fit');
