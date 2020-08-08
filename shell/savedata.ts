@@ -14,7 +14,11 @@ export class SaveDataManager {
         if ((<any>window).FS)
             this.FSready = saveDirReady;
         if (!this.FSready) {
-            this.FSready = loadScript('fslib.js').then(() => FSLib().saveDirReady);
+            this.FSready = (async () => {
+                await loadScript('fslib.js');
+                const fslib = await FSLib();
+                return fslib.saveDirReady;
+            })();
         }
         loadScript(JSZIP_SCRIPT);
     }
