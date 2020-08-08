@@ -112,11 +112,13 @@ declare global {
     function _ald_freedata(data: number): void;
     function _sdl_getDisplaySurface(): number;
 
+    var Module: EmscriptenModule;
     interface EmscriptenModule {
+        getValue: typeof getValue;
+        addRunDependency: typeof addRunDependency;
+        removeRunDependency: typeof removeRunDependency;
         // Undocumented methods / attributes
         canvas: HTMLCanvasElement;
-        setStatus(status: string): void;
-        quit(status: number, toThrow: Error): void;
     }
     function setWindowTitle(title: string): void;
     function readAsync(url: string, onload: (response: any) => void, onerror: () => void): void;
