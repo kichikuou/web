@@ -1,58 +1,67 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 import {$, readFileAsArrayBuffer, gaException} from './util.js';
-import * as loader from './loader.js';
+import {Reader} from './cdimage.js';
 import {addToast} from './widgets.js';
 
 export interface CDDACache {
-    getCDDA(track: number): Promise<Blob>;
+    getCDDA(track: number): Promise<string>;
 }
 
 export class BasicCDDACache implements CDDACache {
-    private blobCache: Blob[];
+    private cache: string[];
 
-    constructor() {
-        this.blobCache = [];
-        document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this));
-    }
-
-    async getCDDA(track: number): Promise<Blob> {
-        if (this.blobCache[track])
-            return this.blobCache[track];
-        let blob = await loader.getCDDA(track);
-        this.blobCache[track] = blob;
-        return blob;
-    }
-
-    private onVisibilityChange() {
-        if (document.hidden)
-            this.blobCache = [];
-    }
-}
-
-export class IOSCDDACache implements CDDACache {
-    private cache: {track: number, data: Blob, time: number}[];
-    private reloadToast: HTMLElement | undefined;
-
-    constructor() {
+    constructor(private imageReader: Reader) {
         this.cache = [];
         document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this));
     }
 
-    async getCDDA(track: number): Promise<Blob> {
+    async getCDDA(track: number): Promise<string> {
+        if (!this.cache[track]) {
+            const blob = await this.imageReader.extractTrack(track);
+            this.cache[track] = URL.createObjectURL(blob);
+        }
+        return this.cache[track];
+    }
+
+    private onVisibilityChange() {
+        if (document.hidden) {
+            for (const url of this.cache) {
+                if (url)
+                    URL.revokeObjectURL(url);
+            }
+            this.cache = [];
+        }
+    }
+}
+
+// IOSCDDACache provides an interface to reload image file to address the
+// Mobile Safari issue where files become unreadable after 1-2 minutes.
+// https://bugs.webkit.org/show_bug.cgi?id=203806
+export class IOSCDDACache implements CDDACache {
+    private cache: {track: number, url: string, time: number}[];
+    private reloadToast: HTMLElement | undefined;
+
+    constructor(private imageReader: Reader) {
+        this.cache = [];
+        document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this));
+    }
+
+    async getCDDA(track: number): Promise<string> {
         for (let entry of this.cache) {
             if (entry.track === track) {
                 entry.time = performance.now();
-                return entry.data;
+                return entry.url;
             }
         }
         this.shrink(3);
-        let blob = await loader.getCDDA(track);
+        let blob = await this.imageReader.extractTrack(track);
         try {
             let buf = await readFileAsArrayBuffer(blob);
             blob = new Blob([buf], { type: 'audio/wav' });
-            this.cache.unshift({track, data: blob, time: performance.now()});
-            return blob;
+            const url = URL.createObjectURL(blob);
+            this.cache.unshift({track, url, time: performance.now()});
+            return url;
         } catch (e) {
             if (e.constructor.name === 'FileError' && e.code === 1)
                 ga('send', 'event', 'CDDAload', 'NOT_FOUND_ERR');
@@ -64,7 +73,7 @@ export class IOSCDDACache implements CDDACache {
             let reloadToast = this.reloadToast = addToast(clone, 'error');
             return new Promise(resolve => {
                 reloadToast.querySelector('.cdda-reload-button')!.addEventListener('click', () => {
-                    loader.reloadImage().then(() => {
+                    this.imageReader.reloadImage().then(() => {
                         ga('send', 'event', 'CDDAload', 'reloaded');
                         (<HTMLElement>reloadToast.querySelector('.btn-clear')).click();
                         resolve(this.getCDDA(track));
@@ -78,7 +87,8 @@ export class IOSCDDACache implements CDDACache {
         if (this.cache.length <= size)
             return;
         this.cache.sort((a, b) => b.time - a.time);
-        this.cache.length = size;
+        while (this.cache.length > size)
+            URL.revokeObjectURL(this.cache.pop()!.url);
     }
 
     private onVisibilityChange() {

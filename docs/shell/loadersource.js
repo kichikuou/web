@@ -1,9 +1,9 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import { startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, JSZIP_SCRIPT, JSZipOptions } from './util.js';
+import { startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, isMobileSafari, JSZIP_SCRIPT, JSZipOptions } from './util.js';
 import * as cdimage from './cdimage.js';
+import { BasicCDDACache, IOSCDDACache } from './cddacache.js';
 import { registerDataFile } from './datafile.js';
-import { openFileInput } from './widgets.js';
 import { loadModule, saveDirReady } from './moduleloader.js';
 import { message } from './strings.js';
 export class NoGamedataError {
@@ -18,9 +18,6 @@ export class NoGamedataError {
 export class LoaderSource {
     constructor() {
         this.hasMidi = false;
-    }
-    reloadImage() {
-        return Promise.resolve();
     }
     createGr(files) {
         const resourceType = {
@@ -59,6 +56,7 @@ export class CDImageSource extends LoaderSource {
     }
     async startLoad() {
         this.imageReader = await cdimage.createReader(this.imageFile, this.metadataFile);
+        this.cddaCache = isMobileSafari() ? new IOSCDDACache(this.imageReader) : new BasicCDDACache(this.imageReader);
         let isofs = await cdimage.ISO9660FileSystem.create(this.imageReader);
         // this.walk(isofs, isofs.rootDir(), '/');
         let gamedata = await this.findGameDir(isofs);
@@ -96,12 +94,7 @@ export class CDImageSource extends LoaderSource {
         endMeasure();
     }
     getCDDA(track) {
-        return this.imageReader.extractTrack(track);
-    }
-    reloadImage() {
-        return openFileInput().then((file) => {
-            this.imageReader.resetImage(file);
-        });
+        return this.cddaCache.getCDDA(track);
     }
     async findGameDir(isofs) {
         for (let e of await isofs.readDir(isofs.rootDir())) {
@@ -145,6 +138,7 @@ export class FileSource extends LoaderSource {
     constructor(fs) {
         super();
         this.tracks = [];
+        this.trackURLs = [];
         this.files = [];
         for (let i = 0; i < fs.length; i++) {
             this.files.push(fs[i]);
@@ -174,8 +168,13 @@ export class FileSource extends LoaderSource {
             FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
         }
     }
-    getCDDA(track) {
-        return Promise.resolve(this.tracks[track]);
+    async getCDDA(track) {
+        if (!this.trackURLs[track]) {
+            if (!this.tracks[track])
+                throw new Error('FileSource: Invalid track ' + track);
+            this.trackURLs[track] = URL.createObjectURL(this.tracks[track]);
+        }
+        return this.trackURLs[track];
     }
 }
 export class ZipSource extends LoaderSource {
@@ -183,6 +182,7 @@ export class ZipSource extends LoaderSource {
         super();
         this.zipFile = zipFile;
         this.tracks = [];
+        this.trackURLs = [];
     }
     async startLoad() {
         await loadScript(JSZIP_SCRIPT);
@@ -216,7 +216,13 @@ export class ZipSource extends LoaderSource {
             FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
         }
     }
-    getCDDA(track) {
-        return this.tracks[track].async('blob');
+    async getCDDA(track) {
+        if (!this.trackURLs[track]) {
+            if (!this.tracks[track])
+                throw new Error('ZipSource: Invalid track ' + track);
+            const blob = await this.tracks[track].async('blob');
+            this.trackURLs[track] = URL.createObjectURL(blob);
+        }
+        return this.trackURLs[track];
     }
 }

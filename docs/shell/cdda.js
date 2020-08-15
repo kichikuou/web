@@ -1,9 +1,8 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 import { $, gaException, isMobileSafari } from './util.js';
+import * as loader from './loader.js';
 import * as volumeControl from './volume.js';
-import { BasicCDDACache, IOSCDDACache } from './cddacache.js';
-let cddaCache;
 const audio = $('audio');
 let currentTrack = null;
 let isVolumeSupported;
@@ -11,7 +10,6 @@ let unmute = null; // Non-null if emulating mute by pause
 function init() {
     // Volume control of <audio> is not supported in iOS
     isVolumeSupported = !isMobileSafari();
-    cddaCache = isVolumeSupported ? new BasicCDDACache() : new IOSCDDACache();
     volumeControl.addEventListener(onVolumeChanged);
     audio.volume = volumeControl.volume();
     audio.addEventListener('error', onAudioError);
@@ -30,8 +28,8 @@ export async function play(track, loop) {
     }
     audio.currentTime = 0;
     try {
-        let blob = await cddaCache.getCDDA(track);
-        startPlayback(blob, loop);
+        const url = await loader.getCDDA(track);
+        startPlayback(url, loop);
     }
     catch (err) {
         ga('send', 'event', 'CDDA', 'InvalidTrack');
@@ -51,8 +49,8 @@ export function getPosition() {
         time += 750; // unblock Kichikuou OP
     return currentTrack | time << 8;
 }
-function startPlayback(blob, loop) {
-    audio.setAttribute('src', URL.createObjectURL(blob));
+function startPlayback(url, loop) {
+    audio.setAttribute('src', url);
     audio.loop = (loop !== 0);
     audio.load();
     let p = audio.play(); // Edge returns undefined

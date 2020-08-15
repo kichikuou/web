@@ -19,12 +19,8 @@ function init() {
     document.body.ondrop = handleDrop;
 }
 
-export function getCDDA(track: number): Promise<Blob> {
+export function getCDDA(track: number): Promise<string> {
     return source!.getCDDA(track);
-}
-
-export function reloadImage(): Promise<any> {
-    return source!.reloadImage();
 }
 
 function handleFileSelect(evt: Event) {

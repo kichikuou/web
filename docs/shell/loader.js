@@ -19,9 +19,6 @@ function init() {
 export function getCDDA(track) {
     return source.getCDDA(track);
 }
-export function reloadImage() {
-    return source.reloadImage();
-}
 function handleFileSelect(evt) {
     let input = evt.target;
     handleFiles(input.files);

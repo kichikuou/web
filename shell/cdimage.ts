@@ -1,6 +1,7 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 import {readFileAsArrayBuffer, readFileAsText} from './util.js';
+import {openFileInput} from './widgets.js';
 
 export class ISO9660FileSystem {
     private decoder: TextDecoder;
@@ -151,7 +152,7 @@ export interface Reader {
     readSequentialSectors(startSector: number, length: number): Promise<Uint8Array[]>;
     maxTrack(): number;
     extractTrack(track: number): Promise<Blob>;
-    resetImage(image: File): void;
+    reloadImage(): Promise<any>;
 }
 
 export async function createReader(img: File, metadata?: File) {
@@ -193,8 +194,10 @@ class ImageReaderBase {
         return bufs;
     }
 
-    resetImage(image: File) {
-        this.image = image;
+    reloadImage(): Promise<any> {
+        return openFileInput().then((file) => {
+            this.image = file;
+        });
     }
 }
 

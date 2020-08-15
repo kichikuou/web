@@ -1,6 +1,7 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 import { readFileAsArrayBuffer, readFileAsText } from './util.js';
+import { openFileInput } from './widgets.js';
 export class ISO9660FileSystem {
     constructor(sectorReader, vd) {
         this.sectorReader = sectorReader;
@@ -177,8 +178,10 @@ class ImageReaderBase {
         }
         return bufs;
     }
-    resetImage(image) {
-        this.image = image;
+    reloadImage() {
+        return openFileInput().then((file) => {
+            this.image = file;
+        });
     }
 }
 class IsoReader extends ImageReaderBase {
