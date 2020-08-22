@@ -184,6 +184,8 @@ class ImageReaderBase {
         });
     }
     async calculateCacheKey(metadataFile) {
+        if (!crypto.subtle)
+            return;
         const buf = await readFileAsArrayBuffer(metadataFile);
         const hash = await crypto.subtle.digest('SHA-1', buf);
         this.cddaCacheKey = btoa(String.fromCharCode(...new Uint8Array(hash)));
