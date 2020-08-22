@@ -32,8 +32,10 @@ export class IOSCDDACache {
     constructor(imageReader) {
         this.imageReader = imageReader;
         this.mp3Urls = [];
-        if (imageReader.cddaCacheKey)
+        if (imageReader.cddaCacheKey) {
             this.mp3Cache = new MP3Cache(imageReader.cddaCacheKey);
+            this.mp3Cache.startSpeculativeCache(this.imageReader);
+        }
     }
     async getCDDA(track) {
         if (this.mp3Urls[track])
@@ -68,6 +70,8 @@ export class IOSCDDACache {
                     this.imageReader.reloadImage().then(() => {
                         ga('send', 'event', 'CDDAload', 'reloaded');
                         reloadToast.querySelector('.btn-clear').click();
+                        if (this.mp3Cache)
+                            this.mp3Cache.startSpeculativeCache(this.imageReader);
                         resolve(this.getCDDA(track));
                     });
                 });
@@ -77,9 +81,12 @@ export class IOSCDDACache {
 }
 const DB_NAME = 'cdda';
 const STORE_NAME = 'tracks';
+const SPECULATIVE_CACHE_INTERVAL = 15000;
 // A helper class of IOSCDDACache that encodes audio data to MP3 and store into IndexedDB.
 class MP3Cache {
     constructor(key) {
+        this.cachedTracks = [];
+        this.pendingEncodes = 0;
         this.worker = new Worker('worker/cddacacheworker.js');
         this.worker.addEventListener('message', (msg) => this.handleWorkerMessage(msg.data));
         this.dbp = new Promise((resolve, reject) => {
@@ -95,6 +102,8 @@ class MP3Cache {
     }
     convertAndStore(track, data) {
         this.worker.postMessage({ track, data }, [data]);
+        this.pendingEncodes++;
+        this.cachedTracks.push(track);
     }
     async getTrack(track) {
         try {
@@ -104,9 +113,31 @@ class MP3Cache {
             return null;
         }
     }
+    startSpeculativeCache(imageReader) {
+        setTimeout(async () => {
+            if (this.pendingEncodes) {
+                this.startSpeculativeCache(imageReader);
+                return;
+            }
+            for (let t = 2; t < imageReader.maxTrack(); t++) {
+                if (this.cachedTracks.includes(t))
+                    continue;
+                try {
+                    let blob = await imageReader.extractTrack(t);
+                    let buf = await readFileAsArrayBuffer(blob);
+                    this.convertAndStore(t, buf);
+                    ga('send', 'event', 'MP3Cache', 'speculativeCache');
+                    this.startSpeculativeCache(imageReader);
+                }
+                catch (err) { }
+                return;
+            }
+        }, SPECULATIVE_CACHE_INTERVAL);
+    }
     handleWorkerMessage(msg) {
         const blob = new Blob(msg.data, { type: 'audio/mp3' });
         this.put(msg.track, blob);
+        this.pendingEncodes--;
     }
     async init(key) {
         const oldKey = await this.get('key');
@@ -115,6 +146,11 @@ class MP3Cache {
                 ga('send', 'event', 'MP3Cache', 'purged');
             await this.clear();
             await this.put('key', key);
+        }
+        else {
+            let req;
+            await this.withStore('readonly', (s) => { req = s.getAllKeys(); });
+            this.cachedTracks = req.result;
         }
     }
     async get(key) {
