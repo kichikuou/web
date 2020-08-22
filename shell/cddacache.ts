@@ -39,29 +39,33 @@ export class BasicCDDACache implements CDDACache {
 // Mobile Safari issue where files become unreadable after 1-2 minutes.
 // https://bugs.webkit.org/show_bug.cgi?id=203806
 export class IOSCDDACache implements CDDACache {
-    private cache: {track: number, url: string, time: number}[];
+    private mp3Cache: MP3Cache | undefined;
+    private mp3Urls: string[] = [];
     private reloadToast: HTMLElement | undefined;
 
     constructor(private imageReader: Reader) {
-        this.cache = [];
-        document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this));
+        if (imageReader.cddaCacheKey)
+            this.mp3Cache = new MP3Cache(imageReader.cddaCacheKey);
     }
 
     async getCDDA(track: number): Promise<string> {
-        for (let entry of this.cache) {
-            if (entry.track === track) {
-                entry.time = performance.now();
-                return entry.url;
+        if (this.mp3Urls[track])
+            return this.mp3Urls[track];
+        if (this.mp3Cache) {
+            const mp3 = await this.mp3Cache.getTrack(track);
+            if (mp3) {
+                const url = URL.createObjectURL(mp3);
+                this.mp3Urls[track] = url;
+                return url;
             }
         }
-        this.shrink(3);
         let blob = await this.imageReader.extractTrack(track);
         try {
-            let buf = await readFileAsArrayBuffer(blob);
-            blob = new Blob([buf], { type: 'audio/wav' });
-            const url = URL.createObjectURL(blob);
-            this.cache.unshift({track, url, time: performance.now()});
-            return url;
+            if (this.mp3Cache) {
+                let buf = await readFileAsArrayBuffer(blob);
+                this.mp3Cache.convertAndStore(track, buf);
+            }
+            return URL.createObjectURL(blob);
         } catch (e) {
             if (e.constructor.name === 'FileError' && e.code === 1)
                 ga('send', 'event', 'CDDAload', 'NOT_FOUND_ERR');
@@ -82,17 +86,87 @@ export class IOSCDDACache implements CDDACache {
             });
         }
     }
+}
 
-    private shrink(size: number) {
-        if (this.cache.length <= size)
-            return;
-        this.cache.sort((a, b) => b.time - a.time);
-        while (this.cache.length > size)
-            URL.revokeObjectURL(this.cache.pop()!.url);
+const DB_NAME = 'cdda';
+const STORE_NAME = 'tracks';
+
+// A helper class of IOSCDDACache that encodes audio data to MP3 and store into IndexedDB.
+class MP3Cache {
+    private dbp: Promise<IDBDatabase>;
+    private worker: Worker;
+
+    constructor(key: string) {
+        this.worker = new Worker('worker/cddacacheworker.js');
+        this.worker.addEventListener('message', (msg) => this.handleWorkerMessage(msg.data));
+        this.dbp = new Promise((resolve, reject) => {
+            const req = indexedDB.open(DB_NAME, 1);
+            req.onupgradeneeded = () => req.result.createObjectStore(STORE_NAME);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => {
+                gaException({type: 'IDBOpen', err: req.error});
+                reject(req.error);
+            }
+        });
+        this.dbp.then(() => this.init(key));
     }
 
-    private onVisibilityChange() {
-        if (document.hidden)
-            this.shrink(1);
+    convertAndStore(track: number, data: ArrayBuffer) {
+        this.worker.postMessage({track, data}, [data]);
+    }
+
+    async getTrack(track: number): Promise<Blob | null> {
+        try {
+            return await this.get(track);
+        } catch (err) {
+            return null;
+        }
+    }
+
+    private handleWorkerMessage(msg: {track: number, time: number, data: ArrayBuffer[]}) {
+        const blob = new Blob(msg.data, {type: 'audio/mp3'});
+        this.put(msg.track, blob);
+    }
+
+    private async init(key: string): Promise<void> {
+        const oldKey = await this.get('key');
+        if (key != oldKey) {
+            if (oldKey)
+                ga('send', 'event', 'MP3Cache', 'purged');
+            await this.clear();
+            await this.put('key', key);
+        }
+    }
+
+    private async get(key: number | string): Promise<any> {
+        let req: IDBRequest;
+        await this.withStore('readonly', (s) => { req = s.get(key); });
+        return req!.result;
+    }
+
+    private put(key: number | string, val: any): Promise<void> {
+        return this.withStore('readwrite', (s) => s.put(val, key));
+    }
+
+    private clear(): Promise<void> {
+        return this.withStore('readwrite', (s) => s.clear());
+    }
+
+    private async withStore(mode: 'readonly' | 'readwrite', callback: (s: IDBObjectStore) => void): Promise<void> {
+        const db = await this.dbp;
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(STORE_NAME, mode);
+            transaction.oncomplete = () => resolve();
+            transaction.onabort = (ev) => {
+                gaException({type: 'IDBTransactionAbort', ev});
+                reject(ev);
+            }
+            transaction.onerror = () => {
+                gaException({type: 'IDBTransaction', err: transaction.error});
+                reject(transaction.error);
+            }
+            setTimeout(() => reject('IDB transaction timeout'), 1000);
+            callback(transaction.objectStore(STORE_NAME));
+        });
     }
 }

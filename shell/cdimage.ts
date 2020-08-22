@@ -148,6 +148,7 @@ export class DirEnt {
 }
 
 export interface Reader {
+    cddaCacheKey: string | undefined;
     readSector(sector: number): Promise<ArrayBuffer>;
     readSequentialSectors(startSector: number, length: number): Promise<Uint8Array[]>;
     maxTrack(): number;
@@ -176,6 +177,7 @@ export async function createReader(img: File, metadata?: File) {
 }
 
 class ImageReaderBase {
+    cddaCacheKey: string | undefined;
     constructor(public image: File) { }
 
     async readSequential(startOffset: number,
@@ -198,6 +200,12 @@ class ImageReaderBase {
         return openFileInput().then((file) => {
             this.image = file;
         });
+    }
+
+    async calculateCacheKey(metadataFile: File) {
+        const buf = await readFileAsArrayBuffer(metadataFile);
+        const hash = await crypto.subtle.digest('SHA-1', buf);
+        this.cddaCacheKey = btoa(String.fromCharCode(...new Uint8Array(hash)));
     }
 }
 
@@ -239,6 +247,7 @@ class ImgCueReader extends ImageReaderBase implements Reader {
     }
 
     async parseCue(cueFile: File) {
+        await this.calculateCacheKey(cueFile);
         let lines = (await readFileAsText(cueFile)).split('\n');
         let currentTrack: number | null = null;
         for (let line of lines) {
@@ -259,6 +268,7 @@ class ImgCueReader extends ImageReaderBase implements Reader {
     }
 
     async parseCcd(ccdFile: File) {
+        await this.calculateCacheKey(ccdFile);
         let lines = (await readFileAsText(ccdFile)).split('\n');
         let currentTrack: number | null = null;
         for (let line of lines) {
@@ -329,6 +339,7 @@ class MdfMdsReader extends ImageReaderBase implements Reader {
     }
 
     async parseMds(mdsFile: File) {
+        await this.calculateCacheKey(mdsFile);
         let buf = await readFileAsArrayBuffer(mdsFile);
 
         let signature = ASCIIArrayToString(new Uint8Array(buf, 0, 16));

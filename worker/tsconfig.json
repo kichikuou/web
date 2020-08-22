@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "target": "ES2017",
+        "outDir": "../docs/worker",
+        "lib": ["ES2017", "WebWorker"],
+        "types": ["emscripten"],
+        "newLine": "LF",
+        "sourceMap": false,
+        "strict": true
+    },
+    "files": [
+        "cddacacheworker.ts"
+    ]
+}

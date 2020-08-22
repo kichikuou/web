@@ -183,6 +183,11 @@ class ImageReaderBase {
             this.image = file;
         });
     }
+    async calculateCacheKey(metadataFile) {
+        const buf = await readFileAsArrayBuffer(metadataFile);
+        const hash = await crypto.subtle.digest('SHA-1', buf);
+        this.cddaCacheKey = btoa(String.fromCharCode(...new Uint8Array(hash)));
+    }
 }
 class IsoReader extends ImageReaderBase {
     readSector(sector) {
@@ -214,6 +219,7 @@ class ImgCueReader extends ImageReaderBase {
         return this.readSequential(startSector * 2352, length, 2352, 2048, 16);
     }
     async parseCue(cueFile) {
+        await this.calculateCacheKey(cueFile);
         let lines = (await readFileAsText(cueFile)).split('\n');
         let currentTrack = null;
         for (let line of lines) {
@@ -233,6 +239,7 @@ class ImgCueReader extends ImageReaderBase {
         }
     }
     async parseCcd(ccdFile) {
+        await this.calculateCacheKey(ccdFile);
         let lines = (await readFileAsText(ccdFile)).split('\n');
         let currentTrack = null;
         for (let line of lines) {
@@ -300,6 +307,7 @@ class MdfMdsReader extends ImageReaderBase {
         this.tracks = [];
     }
     async parseMds(mdsFile) {
+        await this.calculateCacheKey(mdsFile);
         let buf = await readFileAsArrayBuffer(mdsFile);
         let signature = ASCIIArrayToString(new Uint8Array(buf, 0, 16));
         if (signature !== 'MEDIA DESCRIPTOR')
