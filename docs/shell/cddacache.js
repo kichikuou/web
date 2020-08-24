@@ -13,16 +13,20 @@ export class BasicCDDACache {
             const blob = await this.imageReader.extractTrack(track);
             this.cache[track] = URL.createObjectURL(blob);
         }
+        this.lastTrack = track;
         return this.cache[track];
     }
     onVisibilityChange() {
-        if (document.hidden) {
-            for (const url of this.cache) {
-                if (url)
-                    URL.revokeObjectURL(url);
-            }
-            this.cache = [];
+        if (!document.hidden)
+            return;
+        for (let i = 0; i < this.cache.length; i++) {
+            if (i !== this.lastTrack && this.cache[i])
+                URL.revokeObjectURL(this.cache[i]);
         }
+        const newCache = [];
+        if (this.lastTrack)
+            newCache[this.lastTrack] = this.cache[this.lastTrack];
+        this.cache = newCache;
     }
 }
 // IOSCDDACache provides an interface to reload image file to address the

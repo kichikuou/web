@@ -10,6 +10,7 @@ export interface CDDACache {
 
 export class BasicCDDACache implements CDDACache {
     private cache: string[];
+    private lastTrack: number | undefined;
 
     constructor(private imageReader: Reader) {
         this.cache = [];
@@ -21,17 +22,21 @@ export class BasicCDDACache implements CDDACache {
             const blob = await this.imageReader.extractTrack(track);
             this.cache[track] = URL.createObjectURL(blob);
         }
+        this.lastTrack = track;
         return this.cache[track];
     }
 
     private onVisibilityChange() {
-        if (document.hidden) {
-            for (const url of this.cache) {
-                if (url)
-                    URL.revokeObjectURL(url);
-            }
-            this.cache = [];
+        if (!document.hidden)
+            return;
+        for (let i = 0; i < this.cache.length; i++) {
+            if (i !== this.lastTrack && this.cache[i])
+                URL.revokeObjectURL(this.cache[i]);
         }
+        const newCache: string[] = [];
+        if (this.lastTrack)
+            newCache[this.lastTrack] = this.cache[this.lastTrack];
+        this.cache = newCache;
     }
 }
 
