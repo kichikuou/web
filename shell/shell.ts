@@ -55,6 +55,17 @@ class System35Shell {
         return result;
     }
 
+    inputNumber(title: string, min: number, max: number, initial: number): number {
+        title += ` (${min}-${max})`;
+        const s = window.prompt(title, initial + '');
+        if (s) {
+            const val = parseInt(s);
+            if (min <= val && val <= max)
+                return val;
+        }
+        return -1;
+    }
+
     quit() {
         addToast(message.game_over);
         ga('send', 'event', 'Game', 'GameEnd');
