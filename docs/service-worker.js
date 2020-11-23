@@ -13,5 +13,8 @@ let cacheOptions = {
 // Cache-first for fonts, versioned libraries, and sound patches
 workbox.routing.registerRoute(/\/(fonts|lib|Tone_000|Drum_000)\//, new workbox.strategies.CacheFirst(cacheOptions));
 
+// Network first for help.html
+workbox.routing.registerRoute(/\/help.html/, new workbox.strategies.NetworkFirst(cacheOptions));
+
 // Stale-while-revalidate for other same-origin resources
 workbox.routing.registerRoute(/\//, new workbox.strategies.StaleWhileRevalidate(cacheOptions));
