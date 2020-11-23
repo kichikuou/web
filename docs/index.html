@@ -55,7 +55,7 @@
       <h1>鬼畜王 on Web</h1>
       <p>アリスソフトの <a href="https://www.alicesoft.com/about/#cont08">配布フリー宣言</a> に基づいて配布されている「鬼畜王ランス」、「闘神都市II」等のゲームをWebブラウザ上で遊べるようにしたものです。
       <a target="_blank" href="help.html">遊び方はこちら。</a></p>
-      <p><span class="label label-secondary">2019-09-02</span> 簡易バックログ機能を追加しました。</p>
+      <p><span class="label label-secondary">2020-11-23</span> 一部のゲームでFM音源でのBGM再生に対応しました。</p>
       <p><strong>(注意) 18歳未満の人は利用できません。</strong></p>
       <p>ゲームのCDイメージファイルをドラッグ＆ドロップするか、下の「ファイルを選択」ボタンを押して選択してください。</p>
       <ul class="hidden-while-loading">
@@ -118,6 +118,13 @@
               <input type="checkbox" id="unload-confirmation">
               <i class="form-icon"></i>ページを閉じる前に確認する
             </label>
+          </div>
+          <div class="form-group">
+            <span class="mr-2">音源:</span>
+            <select id="synthesizer" class="form-select">
+              <option value="fm">FM音源</option>
+              <option value="midi">MIDI音源</option>
+            </select>
           </div>
         </section>
         <div class="divider"></div>

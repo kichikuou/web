@@ -112,6 +112,7 @@ declare global {
     function _ald_freedata(data: number): void;
     function _sdl_getDisplaySurface(): number;
     function _audio_callback(ptr: number, len: number): number;
+    function _select_synthesizer(use_fm: number): void;
 
     var Module: EmscriptenModule;
     interface EmscriptenModule {

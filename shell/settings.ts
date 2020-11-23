@@ -8,6 +8,7 @@ import {openFileInput} from './widgets.js';
 // Settings Dialog
 
 const antialias = <HTMLInputElement>$('#antialias');
+const synthSelect = <HTMLInputElement>$('#synthesizer');
 const unloadConfirmation = <HTMLInputElement>$('#unload-confirmation');
 let saveDataManager: SaveDataManager | null = null;
 let keyDownHandler: (ev: KeyboardEvent) => void;
@@ -25,6 +26,8 @@ function init() {
     antialias.checked = config.antialias;
     unloadConfirmation.addEventListener('change', unloadConfirmationChanged);
     unloadConfirmation.checked = config.unloadConfirmation;
+    synthSelect.addEventListener('change', synthSelectChanged);
+    synthSelect.value = config.synthesizer;
 
     $('#downloadSaveData').addEventListener('click', downloadSaveData);
     $('#uploadSaveData').addEventListener('click', uploadSaveData);
@@ -53,6 +56,21 @@ function antialiasChanged() {
 function unloadConfirmationChanged() {
     config.unloadConfirmation = unloadConfirmation.checked;
     config.persist();
+}
+
+function synthSelectChanged() {
+    let value = synthSelect.value;
+    if (value != 'fm' && value != 'midi')
+        throw `Unexpected synth select value "${value}"`;
+    config.synthesizer = value;
+    config.persist();
+    if (!$('#xsystem35').hidden)
+        _select_synthesizer(value === 'fm' ? 1 : 0);
+}
+
+export function disableSynthSelect() {
+    synthSelect.value = 'midi';
+    synthSelect.setAttribute('disabled', '');
 }
 
 async function checkSaveData() {

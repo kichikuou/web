@@ -4,6 +4,7 @@ class Config {
     constructor() {
         this.antialias = true;
         this.pixelate = false;
+        this.synthesizer = 'fm';
         this.unloadConfirmation = true;
         this.volume = 1;
         this.zoom = 'fit';
@@ -14,6 +15,8 @@ class Config {
                 this.antialias = val.antialias;
             if (val.pixelate !== undefined)
                 this.pixelate = val.pixelate;
+            if (val.synthesizer !== undefined)
+                this.synthesizer = val.synthesizer;
             if (val.unloadConfirmation !== undefined)
                 this.unloadConfirmation = val.unloadConfirmation;
             if (val.volume !== undefined)
@@ -26,6 +29,7 @@ class Config {
         localStorage.setItem('KichikuouWeb.Config', JSON.stringify({
             antialias: this.antialias,
             pixelate: this.pixelate,
+            synthesizer: this.synthesizer,
             unloadConfirmation: this.unloadConfirmation,
             volume: this.volume,
             zoom: this.zoom,
