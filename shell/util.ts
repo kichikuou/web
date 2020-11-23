@@ -111,6 +111,7 @@ declare global {
     function _ald_getdata(type: number, no: number): number;
     function _ald_freedata(data: number): void;
     function _sdl_getDisplaySurface(): number;
+    function _audio_callback(ptr: number, len: number): number;
 
     var Module: EmscriptenModule;
     interface EmscriptenModule {
