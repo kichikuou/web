@@ -298,27 +298,32 @@ class PCMSoundMixLR extends PCMSound {
 
 let scriptNode: ScriptProcessorNode;
 
-export function enable_audio_hook() {
-    if (scriptNode)
-        return;
-    const BUFSIZE = 4096;
-    scriptNode = destNode.context.createScriptProcessor(BUFSIZE, 0, 2);
-    let bufptr = Module._malloc(BUFSIZE * 2 * 2);
-    scriptNode.addEventListener('audioprocess', (event) => {
-        const output0 = event.outputBuffer.getChannelData(0);
-        const output1 = event.outputBuffer.getChannelData(1);
-        if (_audio_callback(bufptr, BUFSIZE)) {
-            for (let i = 0; i < BUFSIZE; i++) {
-                output0[i] = Module.HEAP16[(bufptr >> 1) + i * 2] / 0x8000;
-                output1[i] = Module.HEAP16[(bufptr >> 1) + i * 2 + 1] / 0x8000;
+export function enable_audio_hook(): number {
+    if (!scriptNode) {
+        const BUFSIZE = 4096;
+        scriptNode = destNode.context.createScriptProcessor(BUFSIZE, 0, 2);
+        let bufptr = Module._malloc(BUFSIZE * 2 * 2);
+        scriptNode.addEventListener('audioprocess', (event) => {
+            const output0 = event.outputBuffer.getChannelData(0);
+            const output1 = event.outputBuffer.getChannelData(1);
+            if (_audio_callback(bufptr, BUFSIZE)) {
+                for (let i = 0; i < BUFSIZE; i++) {
+                    output0[i] = Module.HEAP16[(bufptr >> 1) + i * 2] / 0x8000;
+                    output1[i] = Module.HEAP16[(bufptr >> 1) + i * 2 + 1] / 0x8000;
+                }
+            } else {
+                for (let i = 0; i < BUFSIZE; i++) {
+                    output0[i] = output1[i] = 0;
+                }
             }
-        } else {
-            for (let i = 0; i < BUFSIZE; i++) {
-                output0[i] = output1[i] = 0;
-            }
-        }
-    });
-    scriptNode.connect(destNode);
+        });
+        scriptNode.connect(destNode);
+    }
+    // If the AudioContext was not created inside a user-initiated event
+    // handler, then it will be suspended. Attempt to resume it.
+    scriptNode.context.resume();
+
+    return scriptNode.context.sampleRate;
 }
 
 init();
