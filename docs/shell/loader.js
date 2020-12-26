@@ -9,6 +9,7 @@ import * as volumeControl from './volume.js';
 import { message } from './strings.js';
 let imageFile;
 let metadataFile;
+let patchFiles = [];
 let source = null;
 let installing = false;
 function init() {
@@ -52,8 +53,9 @@ async function handleFiles(files) {
             $('#cueReady').textContent = file.name;
             recognized = true;
         }
-        else if (file.name.toLowerCase().endsWith('.ald') || file.name.toLowerCase() === 'adisk.dat') {
+        else if (file.name.match(/\.(ald|ain)$/i) || file.name.toLowerCase() === 'adisk.dat') {
             hasALD = true;
+            patchFiles.push(file);
         }
         else if (file.name.toLowerCase().endsWith('.rar')) {
             addToast(message.unextracted_rar, 'warning');
@@ -61,13 +63,13 @@ async function handleFiles(files) {
         }
     }
     if (imageFile && (metadataFile || imageFile.name.toLowerCase().endsWith('.iso'))) {
-        source = new CDImageSource(imageFile, metadataFile);
+        source = new CDImageSource(imageFile, metadataFile, patchFiles);
     }
     else if (!imageFile && !metadataFile) {
         if (files.length == 1 && files[0].name.toLowerCase().endsWith('.zip')) {
             source = new ZipSource(files[0]);
         }
-        else if (hasALD) {
+        else if (files.length > 2 && hasALD) {
             source = new FileSource(files);
         }
     }

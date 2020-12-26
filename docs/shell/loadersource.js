@@ -49,10 +49,11 @@ export class LoaderSource {
     }
 }
 export class CDImageSource extends LoaderSource {
-    constructor(imageFile, metadataFile) {
+    constructor(imageFile, metadataFile, patchFiles) {
         super();
         this.imageFile = imageFile;
         this.metadataFile = metadataFile;
+        this.patchFiles = patchFiles;
     }
     async startLoad() {
         this.imageReader = await cdimage.createReader(this.imageFile, this.metadataFile);
@@ -67,6 +68,8 @@ export class CDImageSource extends LoaderSource {
         let endMeasure = startMeasure('ImageLoad', 'Image load', this.imageFile.name);
         let aldFiles = [];
         for (let e of await isofs.readDir(gamedata)) {
+            if (this.patchFiles.some((f) => f.name.toLowerCase() === e.name.toLowerCase()))
+                continue;
             if (isSystem3) {
                 if (!e.name.toLowerCase().endsWith('.dat'))
                     continue;
@@ -81,6 +84,12 @@ export class CDImageSource extends LoaderSource {
             let chunks = await isofs.readFile(e);
             em();
             registerDataFile(e.name, e.size, chunks);
+        }
+        for (let f of this.patchFiles) {
+            let content = await readFileAsArrayBuffer(f);
+            registerDataFile(f.name, f.size, [new Uint8Array(content)]);
+            if (f.name.match(/\.(ald|ain)$/i))
+                aldFiles.push(f.name);
         }
         if (isSystem3) {
             this.hasMidi = true;
