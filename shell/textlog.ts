@@ -15,6 +15,8 @@ $('#textlog-button').addEventListener('click', openTextLog);
 $('#textlog-close').addEventListener('click', closeTextLog);
 $('#textlog-overlay').addEventListener('click', closeTextLog);
 
+document.addEventListener('keydown', keyDownHandler);
+
 function openTextLog() {
     let e = $('#textlog-content');
     render(e);
@@ -25,6 +27,14 @@ function openTextLog() {
 
 function closeTextLog() {
     $('#textlog-modal').classList.remove('active');
+}
+
+function keyDownHandler(e: KeyboardEvent) {
+    if (e.keyCode === 76) { // l
+        openTextLog();
+    } else if (e.keyCode === 27) { // esc
+        closeTextLog();
+    }
 }
 
 let currentPage = -1;
