@@ -63,7 +63,8 @@ function getScreenshotFilename(): string {
     let DD = ('0' + now.getDate()).slice(-2);
     let hh = ('0' + now.getHours()).slice(-2);
     let mm = ('0' + now.getMinutes()).slice(-2);
-    return 'Screenshot-' + now.getFullYear() + MM + DD + '-' + hh + mm + '.png';
+    let ss = ('0' + now.getSeconds()).slice(-2);
+    return 'Screenshot-' + now.getFullYear() + MM + DD + '-' + hh + mm + ss + '.png';
 }
 
 init();
