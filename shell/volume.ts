@@ -108,7 +108,7 @@ function onVolumeChanged(evt: CustomEvent) {
 }
 
 function keyDownHandler(e: KeyboardEvent) {
-    if (e.keyCode === 77) { // s
+    if (e.keyCode === 77) { // m
         onIconClicked(e);
     }
 }

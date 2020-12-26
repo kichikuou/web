@@ -91,7 +91,7 @@ function onVolumeChanged(evt) {
     masterGain.gain.value = evt.detail;
 }
 function keyDownHandler(e) {
-    if (e.keyCode === 77) { // s
+    if (e.keyCode === 77) { // m
         onIconClicked(e);
     }
 }
