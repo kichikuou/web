@@ -75,6 +75,15 @@ header {
 .navbar .btn.btn-link.active {
   color: #eee;
 }
+.navbar .btn-link.activated {
+  color: #08f;
+}
+.navbar .btn.btn-link.activated:focus,
+.navbar .btn.btn-link.activated:hover,
+.navbar .btn.btn-link.activated:active,
+.navbar .btn.btn-link.activated.active {
+  color: #05f;
+}
 
 #volume-control {
   float: right;

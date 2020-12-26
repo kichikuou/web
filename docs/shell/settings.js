@@ -8,6 +8,12 @@ import { openFileInput } from './widgets.js';
 const antialias = $('#antialias');
 const synthSelect = $('#synthesizer');
 const unloadConfirmation = $('#unload-confirmation');
+const messageSkipFlags = {
+    '#msgskip-skip-unseen': 1,
+    '#msgskip-stop-on-unseen': 2,
+    '#msgskip-stop-on-menu': 4,
+    '#msgskip-stop-on-click': 8,
+};
 let saveDataManager = null;
 let keyDownHandler;
 function init() {
@@ -24,8 +30,18 @@ function init() {
     unloadConfirmation.checked = config.unloadConfirmation;
     synthSelect.addEventListener('change', synthSelectChanged);
     synthSelect.value = config.synthesizer;
+    for (const id in messageSkipFlags) {
+        const e = $(id);
+        e.addEventListener('change', messageSkipFlagChanged);
+        e.checked = !!(config.messageSkipFlags & messageSkipFlags[id]);
+    }
+    $('#msgskip-stop-on-unseen').toggleAttribute('disabled', $('#msgskip-skip-unseen').checked);
     $('#downloadSaveData').addEventListener('click', downloadSaveData);
     $('#uploadSaveData').addEventListener('click', uploadSaveData);
+    document.addEventListener('gamestart', onGameStart);
+}
+function onGameStart() {
+    messageSkipFlagChanged(); // set the initial values
 }
 function openModal() {
     $('#settings-modal').classList.add('active');
@@ -46,6 +62,18 @@ function antialiasChanged() {
 }
 function unloadConfirmationChanged() {
     config.unloadConfirmation = unloadConfirmation.checked;
+    config.persist();
+}
+function messageSkipFlagChanged() {
+    let flags = 0;
+    for (const id in messageSkipFlags) {
+        if ($(id).checked)
+            flags |= messageSkipFlags[id];
+    }
+    $('#msgskip-stop-on-unseen').toggleAttribute('disabled', $('#msgskip-skip-unseen').checked);
+    if (window['_msgskip_setFlags'])
+        _msgskip_setFlags(flags, 0xffffffff);
+    config.messageSkipFlags = flags;
     config.persist();
 }
 function synthSelectChanged() {

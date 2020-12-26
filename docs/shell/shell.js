@@ -7,6 +7,7 @@ import * as zoom from './zoom.js';
 import * as cdPlayer from './cdda.js';
 import * as audio from './audio.js';
 import * as midiPlayer from './midi.js';
+import * as toolbar from './toolbar.js';
 import * as texthook from './textlog.js';
 import { addToast } from './widgets.js';
 import { message } from './strings.js';
@@ -60,6 +61,9 @@ class System35Shell {
                 return val;
         }
         return -1;
+    }
+    setSkipButtonState(enabled, activated) {
+        toolbar.setSkipButtonState(enabled, activated);
     }
     quit() {
         addToast(message.game_over);

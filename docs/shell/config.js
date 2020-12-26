@@ -8,6 +8,7 @@ class Config {
         this.unloadConfirmation = true;
         this.volume = 1;
         this.zoom = 'fit';
+        this.messageSkipFlags = 2 | 4 | 8; // STOP_ON_UNSEEN, STOP_ON_MENU, STOP_ON_CLICK
         let json = localStorage.getItem('KichikuouWeb.Config');
         if (json) {
             let val = JSON.parse(json);
@@ -23,6 +24,8 @@ class Config {
                 this.volume = val.volume;
             if (val.zoom !== undefined)
                 this.zoom = val.zoom;
+            if (val.messageSkipFlags != undefined)
+                this.messageSkipFlags = val.messageSkipFlags;
         }
     }
     persist() {
@@ -33,6 +36,7 @@ class Config {
             unloadConfirmation: this.unloadConfirmation,
             volume: this.volume,
             zoom: this.zoom,
+            messageSkipFlags: this.messageSkipFlags,
         }));
     }
 }

@@ -83,6 +83,17 @@ header {
     .btn.btn-link.active {
         color: #eee;
     }
+
+    .btn-link.activated {
+        color: #08f;
+    }
+
+    .btn.btn-link.activated:focus,
+    .btn.btn-link.activated:hover,
+    .btn.btn-link.activated:active,
+    .btn.btn-link.activated.active {
+        color: #05f;
+    }
 }
 
 #volume-control {

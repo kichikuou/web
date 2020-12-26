@@ -8,6 +8,7 @@ class Config {
     unloadConfirmation = true;
     volume = 1;
     zoom = 'fit';
+    messageSkipFlags = 2 | 4 | 8;  // STOP_ON_UNSEEN, STOP_ON_MENU, STOP_ON_CLICK
 
     constructor() {
         let json = localStorage.getItem('KichikuouWeb.Config');
@@ -19,6 +20,7 @@ class Config {
             if (val.unloadConfirmation !== undefined) this.unloadConfirmation = val.unloadConfirmation;
             if (val.volume !== undefined) this.volume = val.volume;
             if (val.zoom !== undefined) this.zoom = val.zoom;
+            if (val.messageSkipFlags != undefined) this.messageSkipFlags = val.messageSkipFlags;
         }
     }
 
@@ -30,6 +32,7 @@ class Config {
             unloadConfirmation: this.unloadConfirmation,
             volume: this.volume,
             zoom: this.zoom,
+            messageSkipFlags: this.messageSkipFlags,
         }));
     }
 }

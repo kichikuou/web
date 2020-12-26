@@ -113,6 +113,8 @@ declare global {
     function _sdl_getDisplaySurface(): number;
     function _audio_callback(ptr: number, len: number): number;
     function _select_synthesizer(use_fm: number): void;
+    function _msgskip_activate(enable: number): void;
+    function _msgskip_setFlags(flags: number, mask: number): void;
 
     var Module: EmscriptenModule;
     interface EmscriptenModule {

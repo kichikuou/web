@@ -39,7 +39,7 @@
         </div>
 
         <button id="screenshot-button" class="btn btn-link tooltip tooltip-bottom mr-2 hidden-until-game-start" data-tooltip="Take screenshot (p)"><i class="fa fa-camera"></i></button>
-
+        <button id="msgskip-button" class="btn btn-link tooltip tooltip-bottom mr-2 hidden-until-game-start" data-tooltip="Skip text (s)"><i class="fa fa-forward"></i></button>
         <button id="textlog-button" class="btn btn-link tooltip tooltip-bottom mr-2 hidden-until-game-start" data-tooltip="Text history (l)"><i class="fa fa-history"></i></button>
         <button id="settings-button" class="btn btn-link tooltip tooltip-bottom mr-2" data-tooltip="Settings"><i class="fa fa-cog"></i></button>
         <a class="btn btn-link tooltip tooltip-bottom" target="_blank" href="https://translate.google.com/translate?sl=ja&tl=en&u=https%3A%2F%2Fkichikuou.github.io/web/help.html" data-tooltip="Help"><i class="fa fa-question-circle mr-2"></i></a>
@@ -104,6 +104,34 @@
             <label for="antialias" class="form-checkbox">
               <input type="checkbox" id="antialias" checked>
               <i class="form-icon"></i>Font antialiasing
+            </label>
+          </div>
+        </section>
+        <div class="divider"></div>
+        <section>
+          <h5>Text Skip</h5>
+          <div>
+            <label for="msgskip-skip-unseen" class="form-checkbox">
+              <input type="checkbox" id="msgskip-skip-unseen">
+              <i class="form-icon"></i>Skip unread text
+            </label>
+          </div>
+          <div>
+            <label for="msgskip-stop-on-unseen" class="form-checkbox">
+              <input type="checkbox" id="msgskip-stop-on-unseen">
+              <i class="form-icon"></i>Turn off at unread text
+            </label>
+          </div>
+          <div>
+            <label for="msgskip-stop-on-menu" class="form-checkbox">
+              <input type="checkbox" id="msgskip-stop-on-menu">
+              <i class="form-icon"></i>Turn off at menu
+            </label>
+          </div>
+          <div>
+            <label for="msgskip-stop-on-click" class="form-checkbox">
+              <input type="checkbox" id="msgskip-stop-on-click">
+              <i class="form-icon"></i>Click to turn off
             </label>
           </div>
         </section>

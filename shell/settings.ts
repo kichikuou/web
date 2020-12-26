@@ -10,6 +10,12 @@ import {openFileInput} from './widgets.js';
 const antialias = <HTMLInputElement>$('#antialias');
 const synthSelect = <HTMLInputElement>$('#synthesizer');
 const unloadConfirmation = <HTMLInputElement>$('#unload-confirmation');
+const messageSkipFlags: { [id: string]: number } = {
+    '#msgskip-skip-unseen': 1,
+    '#msgskip-stop-on-unseen': 2,
+    '#msgskip-stop-on-menu': 4,
+    '#msgskip-stop-on-click': 8,
+};
 let saveDataManager: SaveDataManager | null = null;
 let keyDownHandler: (ev: KeyboardEvent) => void;
 
@@ -28,9 +34,22 @@ function init() {
     unloadConfirmation.checked = config.unloadConfirmation;
     synthSelect.addEventListener('change', synthSelectChanged);
     synthSelect.value = config.synthesizer;
+    for (const id in messageSkipFlags) {
+        const e = $(id) as HTMLInputElement;
+        e.addEventListener('change', messageSkipFlagChanged);
+        e.checked = !!(config.messageSkipFlags & messageSkipFlags[id]);
+    }
+    $('#msgskip-stop-on-unseen').toggleAttribute(
+        'disabled', ($('#msgskip-skip-unseen') as HTMLInputElement).checked);
 
     $('#downloadSaveData').addEventListener('click', downloadSaveData);
     $('#uploadSaveData').addEventListener('click', uploadSaveData);
+
+    document.addEventListener('gamestart', onGameStart);
+}
+
+function onGameStart() {
+    messageSkipFlagChanged();  // set the initial values
 }
 
 function openModal() {
@@ -55,6 +74,20 @@ function antialiasChanged() {
 
 function unloadConfirmationChanged() {
     config.unloadConfirmation = unloadConfirmation.checked;
+    config.persist();
+}
+
+function messageSkipFlagChanged() {
+    let flags = 0;
+    for (const id in messageSkipFlags) {
+        if (($(id) as HTMLInputElement).checked)
+            flags |= messageSkipFlags[id];
+    }
+    $('#msgskip-stop-on-unseen').toggleAttribute(
+        'disabled', ($('#msgskip-skip-unseen') as HTMLInputElement).checked);
+    if ((window as any)['_msgskip_setFlags'])
+        _msgskip_setFlags(flags, 0xffffffff);
+    config.messageSkipFlags = flags;
     config.persist();
 }
 

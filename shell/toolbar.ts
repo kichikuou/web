@@ -3,8 +3,11 @@
 import {$} from './util.js';
 import {downloadAs} from './widgets.js';
 
+const msgskip_button = $('#msgskip-button');
+
 function init() {
     $('#screenshot-button').addEventListener('click', saveScreenshot);
+    msgskip_button.addEventListener('click', toggleMessageSkip);
     document.addEventListener('gamestart', () => {
         document.addEventListener('keydown', keyDownHandler);
     });
@@ -26,9 +29,23 @@ function close() {
 }
 
 function keyDownHandler(e: KeyboardEvent) {
-    if (e.keyCode === 80) { // p
-        saveScreenshot();
+    switch (e.keyCode) {
+        case 80: // 'p'
+            saveScreenshot();
+            break;
+        case 83: // 's'
+            toggleMessageSkip();
+            break;
     }
+}
+
+export function setSkipButtonState(enabled: number, activated: number) {
+    msgskip_button.classList.toggle('disabled', !enabled);
+    msgskip_button.classList.toggle('activated', !!activated);
+}
+
+function toggleMessageSkip() {
+    _msgskip_activate(msgskip_button.classList.contains('activated') ? 0 : 1);
 }
 
 async function saveScreenshot() {

@@ -2,8 +2,10 @@
 // This source code is governed by the MIT License, see the LICENSE file.
 import { $ } from './util.js';
 import { downloadAs } from './widgets.js';
+const msgskip_button = $('#msgskip-button');
 function init() {
     $('#screenshot-button').addEventListener('click', saveScreenshot);
+    msgskip_button.addEventListener('click', toggleMessageSkip);
     document.addEventListener('gamestart', () => {
         document.addEventListener('keydown', keyDownHandler);
     });
@@ -21,9 +23,21 @@ function close() {
     $('#toolbar').classList.add('closed');
 }
 function keyDownHandler(e) {
-    if (e.keyCode === 80) { // p
-        saveScreenshot();
+    switch (e.keyCode) {
+        case 80: // 'p'
+            saveScreenshot();
+            break;
+        case 83: // 's'
+            toggleMessageSkip();
+            break;
     }
+}
+export function setSkipButtonState(enabled, activated) {
+    msgskip_button.classList.toggle('disabled', !enabled);
+    msgskip_button.classList.toggle('activated', !!activated);
+}
+function toggleMessageSkip() {
+    _msgskip_activate(msgskip_button.classList.contains('activated') ? 0 : 1);
 }
 async function saveScreenshot() {
     let pixels = _sdl_getDisplaySurface();

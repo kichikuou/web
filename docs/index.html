@@ -39,7 +39,7 @@
         </div>
 
         <button id="screenshot-button" class="btn btn-link tooltip tooltip-bottom mr-2 hidden-until-game-start" data-tooltip="スクリーンショット (p)"><i class="fa fa-camera"></i></button>
-
+        <button id="msgskip-button" class="btn btn-link tooltip tooltip-bottom mr-2 hidden-until-game-start" data-tooltip="スキップ (s)"><i class="fa fa-forward"></i></button>
         <button id="textlog-button" class="btn btn-link tooltip tooltip-bottom mr-2 hidden-until-game-start" data-tooltip="テキスト履歴 (l)"><i class="fa fa-history"></i></button>
         <button id="settings-button" class="btn btn-link tooltip tooltip-bottom mr-2" data-tooltip="設定"><i class="fa fa-cog"></i></button>
         <a class="btn btn-link tooltip tooltip-bottom" target="_blank" href="help.html" data-tooltip="ヘルプ"><i class="fa fa-question-circle mr-2"></i></a>
@@ -107,6 +107,34 @@
             <label for="antialias" class="form-checkbox">
               <input type="checkbox" id="antialias" checked>
               <i class="form-icon"></i>文字をなめらかに表示する
+            </label>
+          </div>
+        </section>
+        <div class="divider"></div>
+        <section>
+          <h5>メッセージスキップ</h5>
+          <div>
+            <label for="msgskip-skip-unseen" class="form-checkbox">
+              <input type="checkbox" id="msgskip-skip-unseen">
+              <i class="form-icon"></i>未読メッセージもスキップする
+            </label>
+          </div>
+          <div>
+            <label for="msgskip-stop-on-unseen" class="form-checkbox">
+              <input type="checkbox" id="msgskip-stop-on-unseen">
+              <i class="form-icon"></i>未読メッセージで解除する
+            </label>
+          </div>
+          <div>
+            <label for="msgskip-stop-on-menu" class="form-checkbox">
+              <input type="checkbox" id="msgskip-stop-on-menu">
+              <i class="form-icon"></i>選択肢で解除する
+            </label>
+          </div>
+          <div>
+            <label for="msgskip-stop-on-click" class="form-checkbox">
+              <input type="checkbox" id="msgskip-stop-on-click">
+              <i class="form-icon"></i>クリックで解除する
             </label>
           </div>
         </section>
