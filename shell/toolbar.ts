@@ -24,7 +24,7 @@ function close() {
 }
 
 function keyDownHandler(e: KeyboardEvent) {
-    if (e.keyCode === 83) { // s
+    if (e.keyCode === 80) { // p
         saveScreenshot();
     }
 }

@@ -19,7 +19,7 @@ function close() {
     $('#toolbar').classList.add('closed');
 }
 function keyDownHandler(e) {
-    if (e.keyCode === 83) { // s
+    if (e.keyCode === 80) { // p
         saveScreenshot();
     }
 }
