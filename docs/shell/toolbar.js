@@ -4,6 +4,7 @@ import { $ } from './util.js';
 import { downloadAs } from './widgets.js';
 function init() {
     $('#screenshot-button').addEventListener('click', saveScreenshot);
+    document.addEventListener('keydown', keyDownHandler);
 }
 export function setCloseable() {
     $('#toolbar-handler').addEventListener('click', open);
@@ -16,6 +17,11 @@ function open() {
 }
 function close() {
     $('#toolbar').classList.add('closed');
+}
+function keyDownHandler(e) {
+    if (e.keyCode === 80) { // p
+        saveScreenshot();
+    }
 }
 async function saveScreenshot() {
     let pixels = _sdl_getDisplaySurface();
@@ -57,6 +63,7 @@ function getScreenshotFilename() {
     let DD = ('0' + now.getDate()).slice(-2);
     let hh = ('0' + now.getHours()).slice(-2);
     let mm = ('0' + now.getMinutes()).slice(-2);
-    return 'Screenshot-' + now.getFullYear() + MM + DD + '-' + hh + mm + '.png';
+    let ss = ('0' + now.getSeconds()).slice(-2);
+    return 'Screenshot-' + now.getFullYear() + MM + DD + '-' + hh + mm + ss + '.png';
 }
 init();

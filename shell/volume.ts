@@ -30,6 +30,8 @@ function init() {
     masterGain.connect(audioContext.destination);
     addEventListener(onVolumeChanged);
     masterGain.gain.value = volume();
+
+    document.addEventListener('keydown', keyDownHandler);
 }
 
 export function audioNode(): AudioNode {
@@ -103,6 +105,12 @@ function dispatchEvent() {
 
 function onVolumeChanged(evt: CustomEvent) {
     masterGain.gain.value = evt.detail;
+}
+
+function keyDownHandler(e: KeyboardEvent) {
+    if (e.keyCode === 77) { // m
+        onIconClicked(e);
+    }
 }
 
 init();
