@@ -5,7 +5,9 @@ import {downloadAs} from './widgets.js';
 
 function init() {
     $('#screenshot-button').addEventListener('click', saveScreenshot);
-    document.addEventListener('keydown', keyDownHandler)
+    document.addEventListener('gamestart', () => {
+        document.addEventListener('keydown', keyDownHandler);
+    });
 }
 
 export function setCloseable() {

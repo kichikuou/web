@@ -123,6 +123,7 @@ function loaded(hasMidi: boolean) {
         if (config.synthesizer === 'fm')
             Module.arguments.push('-fm');
         Module.removeRunDependency('gameFiles');
+        document.dispatchEvent(new Event('gamestart'));
     }, 0);
 }
 

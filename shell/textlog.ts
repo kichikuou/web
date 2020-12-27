@@ -15,7 +15,9 @@ $('#textlog-button').addEventListener('click', openTextLog);
 $('#textlog-close').addEventListener('click', closeTextLog);
 $('#textlog-overlay').addEventListener('click', closeTextLog);
 
-document.addEventListener('keydown', keyDownHandler);
+document.addEventListener('gamestart', () => {
+    document.addEventListener('keydown', keyDownHandler);
+});
 
 function openTextLog() {
     let e = $('#textlog-content');

@@ -116,6 +116,7 @@ function loaded(hasMidi) {
         if (config.synthesizer === 'fm')
             Module.arguments.push('-fm');
         Module.removeRunDependency('gameFiles');
+        document.dispatchEvent(new Event('gamestart'));
     }, 0);
 }
 function onBeforeUnload(e) {

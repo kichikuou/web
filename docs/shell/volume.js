@@ -25,7 +25,9 @@ function init() {
     masterGain.connect(audioContext.destination);
     addEventListener(onVolumeChanged);
     masterGain.gain.value = volume();
-    document.addEventListener('keydown', keyDownHandler);
+    document.addEventListener('gamestart', () => {
+        document.addEventListener('keydown', keyDownHandler);
+    });
 }
 export function audioNode() {
     return masterGain;
