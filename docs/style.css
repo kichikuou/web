@@ -47,6 +47,11 @@ header {
     top: -44px;
   }
 }
+@media all and (max-width: 480px) {
+  .hidden-in-narrow-screen {
+    display: none;
+  }
+}
 .navbar {
   max-width: 640px;
   margin: 0 auto;
