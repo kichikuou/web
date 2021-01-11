@@ -9,7 +9,7 @@ import {disableSynthSelect} from './settings.js';
 const FontGothic = 'MTLc3m.ttf';
 const FontMincho = 'mincho.otf';
 
-let fsReady: () => void;
+let fsReady: (_?: any) => void;
 export let fileSystemReady: Promise<any> = new Promise((resolve) => { fsReady = resolve; });
 let idbfsReady: (fs: typeof FS) => void;
 export let saveDirReady: Promise<typeof FS> = new Promise((resolve) => { idbfsReady = resolve; });

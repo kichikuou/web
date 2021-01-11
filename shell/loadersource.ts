@@ -211,27 +211,27 @@ export class ZipSource extends LoaderSource {
 
     async startLoad() {
         await loadScript(JSZIP_SCRIPT);
-        let zip = new JSZip();
+        const zip = new JSZip();
         await zip.loadAsync(await readFileAsArrayBuffer(this.zipFile), JSZipOptions());
-        let aldFiles = [];
-        let isSystem3 = zip.file(/adisk.dat/i).length > 0;
-        for (let name in zip.files) {
-            let match = /(\d+)\.(wav|mp3|ogg)$/.exec(name.toLowerCase());
-            if (match) {
-                this.tracks[Number(match[1])] = zip.files[name];
-                continue;
-            }
-            if (!name.match(/\.(ald|ain|dat|mda)$/i))
-                continue;
-            if (aldFiles.length === 0)
-                await loadModule(isSystem3 ? 'system3' : 'xsystem35');
-            let content: ArrayBuffer = await zip.files[name].async('arraybuffer');
-            let basename = name.split('/').pop()!;
+
+        const dataFiles = zip.file(/\.(ald|ain|dat|mda)$/i);
+        if (dataFiles.length === 0)
+            throw new NoGamedataError(message.no_ald_in_zip);
+        const isSystem3 = zip.file(/adisk.dat/i).length > 0;
+        await loadModule(isSystem3 ? 'system3' : 'xsystem35');
+
+        const aldFiles = [];
+        for (const f of dataFiles) {
+            const content: ArrayBuffer = await zip.files[f.name].async('arraybuffer');
+            const basename = f.name.split('/').pop()!;
             registerDataFile(basename, content.byteLength, [new Uint8Array(content)]);
             aldFiles.push(basename);
         }
-        if (aldFiles.length === 0)
-            throw new NoGamedataError(message.no_ald_in_zip);
+        for (const f of zip.file(/\d+\.(wav|mp3|ogg)$/i)) {
+            const n = Number(/(\d+)\.\w+$/.exec(f.name)![1]);
+            this.tracks[n] = f;
+        }
+
         if (isSystem3) {
             this.hasMidi = true;
             Module.arguments.push('-savedir', '/save/@');
