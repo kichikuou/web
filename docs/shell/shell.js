@@ -37,7 +37,7 @@ class System35Shell {
     setWindowTitle(title) {
         let colon = title.indexOf(':');
         if (colon !== -1) {
-            title = title.slice(colon + 1);
+            title = title.slice(colon + 1).trim();
             texthook.setTitle(title);
             $('.navbar-brand').textContent = title;
             ga('set', 'dimension1', title);

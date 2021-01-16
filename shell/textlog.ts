@@ -7,8 +7,8 @@ const textLogMaxLines = 2000;
 // Text from these scenario pages won't be shown in the text log.
 const quietPagesTable: {[key:string] : number[]} = {
     '鬼畜王ランス': [7, 11, 15, 16, 17, 18, 23, 24, 32, 33, 197],
-    'Ｒａｎｃｅ４　－教団の遺産－　Ｆｏｒ　Ｗｉｎ９５　': [10, 11, 16, 88, 90],
-    '闘神都市Ⅱ　ｆｏｒ　Ｗｉｎ９５　': [4, 5, 6, 7, 8]
+    'Ｒａｎｃｅ４　－教団の遺産－　Ｆｏｒ　Ｗｉｎ９５': [10, 11, 16, 88, 90],
+    '闘神都市Ⅱ　ｆｏｒ　Ｗｉｎ９５': [4, 5, 6, 7, 8]
 }
 
 $('#textlog-button').addEventListener('click', openTextLog);
@@ -43,7 +43,7 @@ let currentPage = -1;
 let linebuf = '';
 let lines: string[] = [];
 let quietPages: number[] = [];
-let consoleLog = false;
+let consoleLog = urlParams.get('consoleTextLog') === '1';
 
 export function message(s: string, page: number) {
     if (linebuf === '')
@@ -81,8 +81,6 @@ function render(e: HTMLElement) {
 
 export function setTitle(title: string) {
     quietPages = quietPagesTable[title] || [];
-    if (urlParams.get('consoleTextLog') === '1')
-        consoleLog = true;
 }
 
 function addLine(s: string) {
