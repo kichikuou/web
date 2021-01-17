@@ -112,10 +112,10 @@ export class CDImageSource extends LoaderSource {
     async findGameDir(isofs) {
         for (let e of await isofs.readDir(isofs.rootDir())) {
             if (e.isDirectory) {
-                if (e.name.toLowerCase() === 'gamedata' || await isofs.getDirEnt('system3.exe', e))
+                if (e.name.toLowerCase() === 'gamedata' || await isofs.getDirEnt('adisk.dat', e))
                     return e;
             }
-            if (e.name.toLowerCase() === 'system3.exe')
+            if (e.name.toLowerCase() === 'adisk.dat')
                 return isofs.rootDir();
         }
         return null;
