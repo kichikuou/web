@@ -4,7 +4,6 @@ import { $, urlParams, readFileAsArrayBuffer, startMeasure, Status } from './uti
 import { addToast } from './widgets.js';
 import * as toolbar from './toolbar.js';
 import { message } from './strings.js';
-import { disableSynthSelect } from './settings.js';
 const FontGothic = 'MTLc3m.ttf';
 const FontMincho = 'mincho.otf';
 let fsReady;
@@ -50,8 +49,6 @@ function init() {
 }
 export function loadModule(name) {
     $('#loader').classList.add('module-loading');
-    if (name === 'xsystem35')
-        disableSynthSelect();
     let src = name + '.js';
     let script = document.createElement('script');
     script.src = src;

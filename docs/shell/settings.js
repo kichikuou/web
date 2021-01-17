@@ -6,7 +6,6 @@ import { SaveDataManager } from './savedata.js';
 import { openFileInput } from './widgets.js';
 // Settings Dialog
 const antialias = $('#antialias');
-const synthSelect = $('#synthesizer');
 const unloadConfirmation = $('#unload-confirmation');
 const messageSkipFlags = {
     '#msgskip-skip-unseen': 1,
@@ -28,8 +27,6 @@ function init() {
     antialias.checked = config.antialias;
     unloadConfirmation.addEventListener('change', unloadConfirmationChanged);
     unloadConfirmation.checked = config.unloadConfirmation;
-    synthSelect.addEventListener('change', synthSelectChanged);
-    synthSelect.value = config.synthesizer;
     for (const id in messageSkipFlags) {
         const e = $(id);
         e.addEventListener('change', messageSkipFlagChanged);
@@ -75,19 +72,6 @@ function messageSkipFlagChanged() {
         _msgskip_setFlags(flags, 0xffffffff);
     config.messageSkipFlags = flags;
     config.persist();
-}
-function synthSelectChanged() {
-    let value = synthSelect.value;
-    if (value != 'fm' && value != 'midi')
-        throw `Unexpected synth select value "${value}"`;
-    config.synthesizer = value;
-    config.persist();
-    if (!$('#xsystem35').hidden)
-        _select_synthesizer(value === 'fm' ? 1 : 0);
-}
-export function disableSynthSelect() {
-    synthSelect.value = 'midi';
-    synthSelect.setAttribute('disabled', '');
 }
 async function checkSaveData() {
     if ($('#downloadSaveData').hasAttribute('disabled') &&

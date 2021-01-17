@@ -120,8 +120,7 @@ function loaded(hasMidi: boolean) {
     window.onbeforeunload = onBeforeUnload;
     setTimeout(() => {
         Module.arguments.push(config.antialias ? '-antialias' : '-noantialias');
-        if (config.synthesizer === 'fm')
-            Module.arguments.push('-fm');
+        Module.arguments.push('-fm');
         Module.removeRunDependency('gameFiles');
         document.dispatchEvent(new Event('gamestart'));
     }, 0);

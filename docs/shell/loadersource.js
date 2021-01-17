@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import { $, startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, isMobileSafari, JSZIP_SCRIPT, JSZipOptions } from './util.js';
+import { startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, isMobileSafari, JSZIP_SCRIPT, JSZipOptions } from './util.js';
 import * as cdimage from './cdimage.js';
 import { BasicCDDACache, IOSCDDACache } from './cddacache.js';
 import { registerDataFile } from './datafile.js';
@@ -45,10 +45,7 @@ export class LoaderSource {
             let id = String.fromCharCode(65 + i);
             lines.push('Save' + id + ' save/' + basename + 's' + id.toLowerCase() + '.asd');
         }
-        if (window._msgskip_activate) // TODO: remove this condition after a while
-            lines.push(`MsgSkip save/${basename}.msgskip`);
-        else
-            $('#msgskip-button').style.display = 'none';
+        lines.push(`MsgSkip save/${basename}.msgskip`);
         return lines.join('\n') + '\n';
     }
 }
@@ -96,7 +93,6 @@ export class CDImageSource extends LoaderSource {
                 aldFiles.push(f.name);
         }
         if (isSystem3) {
-            this.hasMidi = true;
             let savedir = await this.saveDir(isofs);
             Module.arguments.push('-savedir', savedir + '/');
             saveDirReady.then(() => { mkdirIfNotExist(savedir); });
@@ -173,7 +169,6 @@ export class FileSource extends LoaderSource {
                 aldFiles.push(f.name);
         }
         if (isSystem3) {
-            this.hasMidi = true;
             Module.arguments.push('-savedir', '/save/@');
             saveDirReady.then(() => { mkdirIfNotExist('/save'); });
         }
@@ -218,7 +213,6 @@ export class ZipSource extends LoaderSource {
             this.tracks[n] = f;
         }
         if (isSystem3) {
-            this.hasMidi = true;
             Module.arguments.push('-savedir', '/save/@');
             saveDirReady.then(() => { mkdirIfNotExist('/save'); });
         }
