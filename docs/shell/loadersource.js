@@ -30,6 +30,9 @@ export class LoaderSource {
                 lines.push('Ain ' + name);
                 continue;
             }
+            if (!name.toLowerCase().endsWith('.ald')) {
+                continue;
+            }
             let type = name.charAt(name.length - 6).toLowerCase();
             let id = name.charAt(name.length - 5);
             basename = name.slice(0, -6);
@@ -196,7 +199,7 @@ export class ZipSource extends LoaderSource {
         await loadScript(JSZIP_SCRIPT);
         const zip = new JSZip();
         await zip.loadAsync(await readFileAsArrayBuffer(this.zipFile), JSZipOptions());
-        const dataFiles = zip.file(/\.(ald|ain|dat|mda)$/i);
+        const dataFiles = zip.file(/\.(ald|ain|dat|mda|ttf|otf)$|^\.xsys35rc$/i);
         if (dataFiles.length === 0)
             throw new NoGamedataError(message.no_ald_in_zip);
         const isSystem3 = zip.file(/adisk.dat/i).length > 0;
