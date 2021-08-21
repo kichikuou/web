@@ -66,18 +66,13 @@ async function saveScreenshot() {
     }
     ctx.putImageData(image, 0, 0);
 
-    ga('send', 'event', 'Toolbar', 'Screenshot');
-
     let url;
     if (canvas.toBlob) {
         let blob = await new Promise((resolve) => canvas.toBlob(resolve));
         url = URL.createObjectURL(blob);
-    } else if ((canvas as any).msToBlob) {  // Edge
-        let blob = (canvas as any).msToBlob();
-        navigator.msSaveBlob(blob, getScreenshotFilename());
-        return;
     } else {  // Safari
         url = canvas.toDataURL();
+        ga('send', 'event', 'Toolbar', 'Screenshot', 'NoCanvasToDataURL');
     }
     // Unless target="_blank", iOS safari replaces current page
     downloadAs(getScreenshotFilename(), url, '_blank');

@@ -1,6 +1,6 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import { $, gaException, loadScript, Status } from './util.js';
+import { $, gaException, Status } from './util.js';
 import './settings.js';
 import { syncfs, load_mincho_font } from './moduleloader.js';
 import * as zoom from './zoom.js';
@@ -74,17 +74,6 @@ class System35Shell {
         syncfs(timeout);
     }
 }
-function loadPolyfills() {
-    if (typeof TextDecoder === 'undefined') {
-        const scripts = [
-            'https://cdn.jsdelivr.net/gh/inexorabletash/text-encoding@3f330964/lib/encoding-indexes.js',
-            'https://cdn.jsdelivr.net/gh/inexorabletash/text-encoding@3f330964/lib/encoding.js'
-        ];
-        for (let src of scripts)
-            loadScript(src);
-    }
-}
-window.addEventListener('load', loadPolyfills);
 let shell = new System35Shell();
 let xsystem35 = { Status, shell, cdPlayer, midiPlayer, audio, texthook, load_mincho_font };
 window.xsystem35 = xsystem35;

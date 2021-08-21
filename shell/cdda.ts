@@ -59,22 +59,19 @@ function startPlayback(url: string, loop: number) {
     audio.setAttribute('src', url);
     audio.loop = (loop !== 0);
     audio.load();
-    let p: any = audio.play();  // Edge returns undefined
-    if (p instanceof Promise) {
-        p.catch((err) => {
-            if (err.message.startsWith('The play() request was interrupted') ||  // Chrome
-                err.name === 'AbortError') {  // Safari
-                // These errors are harmless, do nothing
-            } else if (err.name === 'NotAllowedError' || err.message.indexOf('gesture') >= 0) {
-                // Audio still locked?
-                removeUserGestureRestriction(false);
-                ga('send', 'event', 'CDDA', 'UnlockAgain');
-            } else {
-                let {name, message} = err;
-                gaException({type: 'CDDA', name, message});
-            }
-        });
-    }
+    audio.play().catch((err) => {
+        if (err.message.startsWith('The play() request was interrupted') ||  // Chrome
+            err.name === 'AbortError') {  // Safari
+            // These errors are harmless, do nothing
+        } else if (err.name === 'NotAllowedError' || err.message.indexOf('gesture') >= 0) {
+            // Audio still locked?
+            removeUserGestureRestriction(false);
+            ga('send', 'event', 'CDDA', 'UnlockAgain');
+        } else {
+            let {name, message} = err;
+            gaException({type: 'CDDA', name, message});
+        }
+    });
 }
 
 function onVolumeChanged(evt: CustomEvent) {

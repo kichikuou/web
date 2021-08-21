@@ -38,12 +38,7 @@ export class SaveDataManager {
         let zip = new JSZip();
         storeZip(await this.FSready, '/save', zip.folder('save'));
         let blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
-        if (navigator.msSaveBlob) { // Edge
-            navigator.msSaveBlob(blob, 'savedata.zip');
-        }
-        else {
-            downloadAs('savedata.zip', URL.createObjectURL(blob));
-        }
+        downloadAs('savedata.zip', URL.createObjectURL(blob));
         ga('send', 'event', 'Savedata', 'Downloaded');
     }
     async extract(file) {
@@ -70,7 +65,7 @@ export class SaveDataManager {
                     if (err)
                         reject(err);
                     else
-                        resolve();
+                        resolve(undefined);
                 });
             });
             addToast(message.restore_success, 'success');

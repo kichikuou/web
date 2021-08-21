@@ -316,13 +316,10 @@ class ImgCueReader extends ImageReaderBase implements Reader {
         } else {
             end = this.image.size;
         }
-        let size = end - start;
-        let pcm: BlobPart = this.image.slice(start, start + size);
-        if (navigator.userAgent.match(/Firefox\/6[234]/)) {
-            console.log('Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1514581');
-            pcm = await readFileAsArrayBuffer(pcm);
-        }
-        return new Blob([createWaveHeader(size), pcm], { type: 'audio/wav' });
+        return new Blob([
+            createWaveHeader(end - start),
+            this.image.slice(start, end)
+        ], { type: 'audio/wav' });
     }
 
     private indexToSector(index: string): number {

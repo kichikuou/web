@@ -145,15 +145,4 @@ async function importSaveDataFromLocalFileSystem() {
     catch (err) {
     }
 }
-// Workaround for Safari 13 bug (?) where WebAssembly.instantiate() replaces window.Module
-const originalInstantiate = WebAssembly.instantiate;
-WebAssembly.instantiate = function (bytes, importObject) {
-    const originalModule = Module;
-    return originalInstantiate.call(this, bytes, importObject).then((obj) => {
-        if (Module !== originalModule)
-            ga('send', 'event', 'Loader', 'InstantiateBug');
-        Module = originalModule;
-        return obj;
-    });
-};
 init();
