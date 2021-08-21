@@ -196,12 +196,12 @@ abstract class PCMSound {
         this.gain.gain.linearRampToValueAtTime(0, this.context.currentTime + msec / 1000);
     }
     getPosition(): number {
-        if (!this.startTime)
+        if (this.startTime === null)
             return 0;
         return this.context.currentTime - this.startTime;
     }
     isPlaying(): boolean {
-        return !!this.startTime;
+        return this.startTime !== null;
     }
     abstract get duration(): number;
 
@@ -236,7 +236,7 @@ class PCMSoundSimple extends PCMSound {
     }
 
     stop() {
-        if (this.startTime) {
+        if (this.startTime !== null) {
             this.node.stop();
             this.startTime = null;
         }
@@ -278,7 +278,7 @@ class PCMSoundMixLR extends PCMSound {
     }
 
     stop() {
-        if (this.startTime) {
+        if (this.startTime !== null) {
             this.lsrc.stop();
             this.rsrc.stop();
             this.startTime = null;
