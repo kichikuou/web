@@ -15,16 +15,7 @@ function load(no) {
     // If the AudioContext was not created inside a user-initiated event
     // handler, then it will be suspended. Attempt to resume it.
     destNode.context.resume();
-    let decoded;
-    if (typeof (webkitAudioContext) !== 'undefined') { // Safari
-        decoded = new Promise((resolve, reject) => {
-            destNode.context.decodeAudioData(buf, resolve, reject);
-        });
-    }
-    else {
-        decoded = destNode.context.decodeAudioData(buf);
-    }
-    return decoded.then((audioBuf) => {
+    return destNode.context.decodeAudioData(buf).then((audioBuf) => {
         bufCache[no] = audioBuf;
         return audioBuf;
     });
@@ -87,12 +78,6 @@ export function pcm_start(slot, loop) {
     let sound = slots[slot];
     if (!sound) {
         console.log('pcm_start: invalid slot', slot);
-        return Status.NG;
-    }
-    if (typeof (webkitAudioContext) !== 'undefined' &&
-        destNode.context.state === 'suspended') {
-        // Safari: The audio context is still locked. If we attempt to play
-        // a sound on it, it will start later when the context is unlocked.
         return Status.NG;
     }
     sound.start(loop);
