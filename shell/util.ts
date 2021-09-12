@@ -140,16 +140,3 @@ interface StorageManager {
     persist: () => Promise<boolean>;
     // estimate: () => Promise<StorageEstimate>;
 }
-
-export function supportsWorkerType(): boolean {
-    let supports = false;
-    const tester = {
-        get type(): WorkerType { supports = true; return 'module'; }
-    };
-    try {
-        const worker = new Worker('data:,', tester);
-        worker.terminate();
-    } finally {
-        return supports;
-    }
-}

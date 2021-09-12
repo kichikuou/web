@@ -1,10 +1,12 @@
-//@ts-ignore
-import SevenZipFactory from "https://unpkg.com/7z-wasm@1.0.0-beta.5/7zz.es6.js";
+"use strict";
+const sevenZipBaseURL = 'https://unpkg.com/7z-wasm@1.0.0-beta.5/';
+importScripts(sevenZipBaseURL + '7zz.umd.js');
 onmessage = async (e) => {
     try {
         const { file } = e.data;
         let stdout = [];
-        const sevenZip = await SevenZipFactory({
+        const sevenZip = await SevenZip({
+            locateFile: (path, prefix) => sevenZipBaseURL + path,
             print: (s) => stdout.push(s)
         });
         sevenZip.FS.mkdir('/archive');

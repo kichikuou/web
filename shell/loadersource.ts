@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {$, startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, isMobileSafari, JSZIP_SCRIPT, JSZipOptions, supportsWorkerType} from './util.js';
+import {$, startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, isMobileSafari, JSZIP_SCRIPT, JSZipOptions} from './util.js';
 import * as cdimage from './cdimage.js';
 import {CDDACache, BasicCDDACache, IOSCDDACache} from './cddacache.js';
 import {registerDataFile} from './datafile.js';
@@ -259,10 +259,7 @@ export class SevenZipSource extends LoaderSource {
     }
 
     async startLoad() {
-        if (!supportsWorkerType()) {
-            throw new Error('module scripts not supported for workers');
-        }
-        const worker = new Worker('worker/archiveworker.js', {type: 'module'});
+        const worker = new Worker('worker/archiveworker.js');
         worker.postMessage({ file: this.file });
         $('#loader').classList.add('module-loading');  // Show the spinner
         const e = await new Promise<MessageEvent<SevenZipWorkerResponse>>((resolve) => {
