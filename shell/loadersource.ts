@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, isMobileSafari, JSZIP_SCRIPT, JSZipOptions} from './util.js';
+import {$, startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, isMobileSafari, JSZIP_SCRIPT, JSZipOptions, supportsWorkerType} from './util.js';
 import * as cdimage from './cdimage.js';
 import {CDDACache, BasicCDDACache, IOSCDDACache} from './cddacache.js';
 import {registerDataFile} from './datafile.js';
@@ -244,6 +244,62 @@ export class ZipSource extends LoaderSource {
                 throw new Error('ZipSource: Invalid track ' + track);
             const blob = await this.tracks[track].async('blob');
             this.trackURLs[track] = URL.createObjectURL(blob);
+        }
+        return this.trackURLs[track];
+    }
+}
+
+type SevenZipWorkerResponse = { files: { name: string, content: Uint8Array }[] } | { error: string };
+export class SevenZipSource extends LoaderSource {
+    private tracks: Blob[] = [];
+    private trackURLs: string[] = [];
+
+    constructor(private file: File) {
+        super();
+    }
+
+    async startLoad() {
+        if (!supportsWorkerType()) {
+            throw new Error('module scripts not supported for workers');
+        }
+        const worker = new Worker('worker/archiveworker.js', {type: 'module'});
+        worker.postMessage({ file: this.file });
+        $('#loader').classList.add('module-loading');  // Show the spinner
+        const e = await new Promise<MessageEvent<SevenZipWorkerResponse>>((resolve) => {
+            worker.addEventListener('message', (e) => resolve(e));
+        });
+        if ('error' in e.data) {
+            $('#loader').classList.remove('module-loading');
+            throw new Error(e.data.error);
+        }
+        const { files } = e.data;
+        const isSystem3 = files.some(f => f.name.toLowerCase() === 'adisk.dat');
+        await loadModule(isSystem3 ? 'system3' : 'xsystem35');
+
+        const aldFiles = [];
+        for (const f of files) {
+            let match = /(\d+)\.(wav|mp3|ogg)$/i.exec(f.name);
+            if (match) {
+                this.tracks[Number(match[1])] = new Blob([f.content]);
+                continue;
+            }
+            registerDataFile(f.name, f.content.byteLength, [f.content]);
+            aldFiles.push(f.name);
+        }
+
+        if (isSystem3) {
+            Module.arguments.push('-savedir', '/save/@');
+            saveDirReady.then(() => { mkdirIfNotExist('/save'); });
+        } else {
+            FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
+        }
+    }
+
+    async getCDDA(track: number): Promise<string> {
+        if (!this.trackURLs[track]) {
+            if (!this.tracks[track])
+                throw new Error('SevenZipSource: Invalid track ' + track);
+            this.trackURLs[track] = URL.createObjectURL(this.tracks[track]);
         }
         return this.trackURLs[track];
     }

@@ -96,3 +96,16 @@ export var Bool;
     Bool[Bool["FALSE"] = 0] = "FALSE";
     Bool[Bool["TRUE"] = 1] = "TRUE";
 })(Bool || (Bool = {}));
+export function supportsWorkerType() {
+    let supports = false;
+    const tester = {
+        get type() { supports = true; return 'module'; }
+    };
+    try {
+        const worker = new Worker('data:,', tester);
+        worker.terminate();
+    }
+    finally {
+        return supports;
+    }
+}

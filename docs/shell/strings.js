@@ -10,7 +10,6 @@ const dictionary_en = {
     no_gamedata_dir: 'No GAMEDATA folder in the image.',
     restore_success: 'Save files has been restored successfully.',
     restore_failure: 'Save files could not be restored.',
-    unextracted_rar: 'Unextracted RAR archive cannot be loaded.',
     unload_confirmation: 'Unsaved data will be lost.',
     unrecognized_format: 'Unrecognized format.',
 };
@@ -24,7 +23,6 @@ const dictionary_ja = {
     no_gamedata_dir: 'イメージ内にGAMEDATAフォルダが見つかりません。',
     restore_success: 'セーブデータの復元に成功しました。',
     restore_failure: 'セーブデータを復元できませんでした。',
-    unextracted_rar: '展開前のrarファイルは読み込めません。',
     unload_confirmation: 'セーブしていないデータは失われます。',
     unrecognized_format: '認識できない形式です。',
 };

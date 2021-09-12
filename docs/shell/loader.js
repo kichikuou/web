@@ -2,7 +2,7 @@
 // This source code is governed by the MIT License, see the LICENSE file.
 import { $ } from './util.js';
 import { config } from './config.js';
-import { CDImageSource, FileSource, ZipSource, NoGamedataError } from './loadersource.js';
+import { CDImageSource, FileSource, ZipSource, SevenZipSource, NoGamedataError } from './loadersource.js';
 import { addToast } from './widgets.js';
 import * as midiPlayer from './midi.js';
 import * as volumeControl from './volume.js';
@@ -57,10 +57,6 @@ async function handleFiles(files) {
             hasALD = true;
             patchFiles.push(file);
         }
-        else if (file.name.toLowerCase().endsWith('.rar')) {
-            addToast(message.unextracted_rar, 'warning');
-            recognized = true;
-        }
     }
     if (imageFile && (metadataFile || imageFile.name.toLowerCase().endsWith('.iso'))) {
         source = new CDImageSource(imageFile, metadataFile, patchFiles);
@@ -68,6 +64,9 @@ async function handleFiles(files) {
     else if (!imageFile && !metadataFile) {
         if (files.length == 1 && files[0].name.toLowerCase().endsWith('.zip')) {
             source = new ZipSource(files[0]);
+        }
+        else if (files.length == 1 && files[0].name.match(/\.(rar|7z)$/i)) {
+            source = new SevenZipSource(files[0]);
         }
         else if (files.length > 2 && hasALD) {
             source = new FileSource(files);
