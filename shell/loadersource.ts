@@ -17,18 +17,43 @@ export class NoGamedataError implements Error {
 }
 
 export abstract class LoaderSource {
-    abstract startLoad(): Promise<void>;
     abstract getCDDA(track: number): Promise<string>;
+    protected abstract doLoad(): Promise<void>;
 
     public hasMidi = false;
+    private aldFiles: string[] | null = null;
 
-    protected createGr(files: string[]): string {
+    async startLoad() {
+        await this.doLoad();
+        this.createGr();
+    }
+
+    protected async loadSystem3(savedir: string) {
+        await loadModule('system3');
+        Module.arguments.push('-savedir', savedir);
+        saveDirReady.then(() => { mkdirIfNotExist(savedir.replace(/\/@$/, '')); });
+    }
+
+    protected async loadXsystem35() {
+        await loadModule('xsystem35');
+        this.aldFiles = [];
+    }
+
+    protected addFile(fname: string, size: number, chunks: Uint8Array[]) {
+        registerDataFile(fname, size, chunks);
+        this.aldFiles?.push(fname);
+    }
+
+    private createGr() {
+        if (!this.aldFiles) {
+            return;
+        }
         const resourceType: { [ch: string]: string } = {
             d: 'Data', g: 'Graphics', m: 'Midi', r: 'Resource', s: 'Scenario', w: 'Wave',
         };
         let basename = '';
         let lines: string[] = [];
-        for (let name of files) {
+        for (let name of this.aldFiles) {
             if (name.toLowerCase() === 'system39.ain') {
                 lines.push('Ain ' + name);
                 continue;
@@ -52,7 +77,7 @@ export abstract class LoaderSource {
             lines.push('Save' + id + ' save/' + basename + 's' + id.toLowerCase() + '.asd');
         }
         lines.push(`MsgSkip save/${basename}.msgskip`);
-        return lines.join('\n') + '\n';
+        FS.writeFile('xsystem35.gr', lines.join('\n') + '\n');
     }
 }
 
@@ -64,7 +89,7 @@ export class CDImageSource extends LoaderSource {
         super();
     }
 
-    async startLoad() {
+    protected async doLoad() {
         this.imageReader = await cdimage.createReader(this.imageFile, this.metadataFile);
         this.cddaCache = isMobileSafari() ? new IOSCDDACache(this.imageReader) : new BasicCDDACache(this.imageReader);
         let isofs = await cdimage.ISO9660FileSystem.create(this.imageReader);
@@ -74,10 +99,13 @@ export class CDImageSource extends LoaderSource {
             throw new NoGamedataError(message.no_gamedata_dir);
 
         let isSystem3 = !!await isofs.getDirEnt('system3.exe', gamedata);
-        await loadModule(isSystem3 ? 'system3' : 'xsystem35');
+        if (isSystem3) {
+            await this.loadSystem3(await this.saveDir(isofs));
+        } else {
+            await this.loadXsystem35();
+        }
 
         let endMeasure = startMeasure('ImageLoad', 'Image load', this.imageFile.name);
-        let aldFiles = [];
         for (let e of await isofs.readDir(gamedata)) {
             if (this.patchFiles.some((f) => f.name.toLowerCase() === e.name.toLowerCase()))
                 continue;
@@ -87,26 +115,15 @@ export class CDImageSource extends LoaderSource {
             } else {
                 if (e.name.match(/^\.|\.(exe|dll|txt|ini)$/i))
                     continue;
-                if (e.name.match(/\.(ald|ain)$/i))
-                    aldFiles.push(e.name);
             }
             let em = startMeasure(e.name);
             let chunks = await isofs.readFile(e);
             em();
-            registerDataFile(e.name, e.size, chunks);
+            this.addFile(e.name, e.size, chunks);
         }
         for (let f of this.patchFiles) {
             let content = await readFileAsArrayBuffer(f);
-            registerDataFile(f.name, f.size, [new Uint8Array(content)]);
-            if (f.name.match(/\.(ald|ain)$/i))
-                aldFiles.push(f.name);
-        }
-        if (isSystem3) {
-            let savedir = await this.saveDir(isofs);
-            Module.arguments.push('-savedir', savedir + '/');
-            saveDirReady.then(() => { mkdirIfNotExist(savedir); });
-        } else {
-            FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
+            this.addFile(f.name, f.size, [new Uint8Array(content)]);
         }
         endMeasure();
     }
@@ -166,10 +183,12 @@ export class FileSource extends LoaderSource {
         }
     }
 
-    async startLoad() {
-        let aldFiles = [];
-        let isSystem3 = this.files.some(f => f.name.toLowerCase() === 'adisk.dat');
-        await loadModule(isSystem3 ? 'system3' : 'xsystem35');
+    protected async doLoad() {
+        if (this.files.some(f => f.name.toLowerCase() === 'adisk.dat')) {
+            await this.loadSystem3('/save/@');
+        } else {
+            await this.loadXsystem35();
+        }
         for (let f of this.files) {
             let match = /(\d+)\.(wav|mp3|ogg)$/.exec(f.name.toLowerCase());
             if (match) {
@@ -177,15 +196,7 @@ export class FileSource extends LoaderSource {
                 continue;
             }
             let content = await readFileAsArrayBuffer(f);
-            registerDataFile(f.name, f.size, [new Uint8Array(content)]);
-            if (f.name.match(/\.(ald|ain)$/i))
-                aldFiles.push(f.name);
-        }
-        if (isSystem3) {
-            Module.arguments.push('-savedir', '/save/@');
-            saveDirReady.then(() => { mkdirIfNotExist('/save'); });
-        } else {
-           FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
+            this.addFile(f.name, f.size, [new Uint8Array(content)]);
         }
     }
 
@@ -207,7 +218,7 @@ export class ZipSource extends LoaderSource {
         super();
     }
 
-    async startLoad() {
+    protected async doLoad() {
         await loadScript(JSZIP_SCRIPT);
         const zip = new JSZip();
         await zip.loadAsync(await readFileAsArrayBuffer(this.zipFile), JSZipOptions());
@@ -215,26 +226,20 @@ export class ZipSource extends LoaderSource {
         const dataFiles = zip.file(/\.(ald|ain|dat|mda|ttf|otf|ini|xsys35rc)$/i);
         if (dataFiles.length === 0)
             throw new NoGamedataError(message.no_ald_in_zip);
-        const isSystem3 = zip.file(/adisk.dat/i).length > 0;
-        await loadModule(isSystem3 ? 'system3' : 'xsystem35');
+        if (zip.file(/adisk.dat/i).length > 0) {
+            await this.loadSystem3('/save/@');
+        } else {
+            await this.loadXsystem35();
+        }
 
-        const aldFiles = [];
         for (const f of dataFiles) {
             const content: ArrayBuffer = await zip.files[f.name].async('arraybuffer');
             const basename = f.name.split('/').pop()!;
-            registerDataFile(basename, content.byteLength, [new Uint8Array(content)]);
-            aldFiles.push(basename);
+            this.addFile(basename, content.byteLength, [new Uint8Array(content)]);
         }
         for (const f of zip.file(/\d+\.(wav|mp3|ogg)$/i)) {
             const n = Number(/(\d+)\.\w+$/.exec(f.name)![1]);
             this.tracks[n] = f;
-        }
-
-        if (isSystem3) {
-            Module.arguments.push('-savedir', '/save/@');
-            saveDirReady.then(() => { mkdirIfNotExist('/save'); });
-        } else {
-            FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
         }
     }
 
@@ -258,7 +263,7 @@ export class SevenZipSource extends LoaderSource {
         super();
     }
 
-    async startLoad() {
+    protected async doLoad() {
         const worker = new Worker('worker/archiveworker.js');
         worker.postMessage({ file: this.file });
         $('#loader').classList.add('module-loading');  // Show the spinner
@@ -270,25 +275,19 @@ export class SevenZipSource extends LoaderSource {
             throw new Error(e.data.error);
         }
         const { files } = e.data;
-        const isSystem3 = files.some(f => f.name.toLowerCase() === 'adisk.dat');
-        await loadModule(isSystem3 ? 'system3' : 'xsystem35');
+        if (files.some(f => f.name.toLowerCase() === 'adisk.dat')) {
+            await this.loadSystem3('/save/@');
+        } else {
+            await this.loadXsystem35();
+        }
 
-        const aldFiles = [];
         for (const f of files) {
             let match = /(\d+)\.(wav|mp3|ogg)$/i.exec(f.name);
             if (match) {
                 this.tracks[Number(match[1])] = new Blob([f.content]);
                 continue;
             }
-            registerDataFile(f.name, f.content.byteLength, [f.content]);
-            aldFiles.push(f.name);
-        }
-
-        if (isSystem3) {
-            Module.arguments.push('-savedir', '/save/@');
-            saveDirReady.then(() => { mkdirIfNotExist('/save'); });
-        } else {
-            FS.writeFile('xsystem35.gr', this.createGr(aldFiles));
+            this.addFile(f.name, f.content.byteLength, [f.content]);
         }
     }
 
