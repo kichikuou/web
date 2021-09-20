@@ -2,7 +2,7 @@
 // This source code is governed by the MIT License, see the LICENSE file.
 import { $, startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, isMobileSafari, JSZIP_SCRIPT, JSZipOptions } from './util.js';
 import * as cdimage from './cdimage.js';
-import { BasicCDDACache, IOSCDDACache } from './cddacache.js';
+import { BasicCDDALoader, IOSCDDALoader } from './cddaloader.js';
 import { registerDataFile } from './datafile.js';
 import { loadModule, saveDirReady } from './moduleloader.js';
 import { message } from './strings.js';
@@ -83,7 +83,6 @@ export class CDImageSource extends LoaderSource {
     }
     async doLoad() {
         this.imageReader = await cdimage.createReader(this.imageFile, this.metadataFile);
-        this.cddaCache = isMobileSafari() ? new IOSCDDACache(this.imageReader) : new BasicCDDACache(this.imageReader);
         let isofs = await cdimage.ISO9660FileSystem.create(this.imageReader);
         // this.walk(isofs, isofs.rootDir(), '/');
         let gamedata = await this.findGameDir(isofs);
@@ -119,8 +118,8 @@ export class CDImageSource extends LoaderSource {
         }
         endMeasure();
     }
-    getCDDA(track) {
-        return this.cddaCache.getCDDA(track);
+    getCDDALoader() {
+        return isMobileSafari() ? new IOSCDDALoader(this.imageReader) : new BasicCDDALoader(this.imageReader);
     }
     async findGameDir(isofs) {
         for (let e of await isofs.readDir(isofs.rootDir())) {
@@ -164,7 +163,6 @@ export class FileSource extends LoaderSource {
     constructor(fs) {
         super();
         this.tracks = [];
-        this.trackURLs = [];
         this.files = [];
         for (let i = 0; i < fs.length; i++) {
             this.files.push(fs[i]);
@@ -187,13 +185,13 @@ export class FileSource extends LoaderSource {
             this.addFile(f.name, f.size, [new Uint8Array(content)]);
         }
     }
-    async getCDDA(track) {
-        if (!this.trackURLs[track]) {
-            if (!this.tracks[track])
-                throw new Error('FileSource: Invalid track ' + track);
-            this.trackURLs[track] = URL.createObjectURL(this.tracks[track]);
-        }
-        return this.trackURLs[track];
+    getCDDALoader() {
+        return new BasicCDDALoader(this);
+    }
+    async extractTrack(track) {
+        if (!this.tracks[track])
+            throw new Error('FileSource: Invalid track ' + track);
+        return this.tracks[track];
     }
 }
 export class ZipSource extends LoaderSource {
@@ -201,7 +199,6 @@ export class ZipSource extends LoaderSource {
         super();
         this.zipFile = zipFile;
         this.tracks = [];
-        this.trackURLs = [];
     }
     async doLoad() {
         await loadScript(JSZIP_SCRIPT);
@@ -226,14 +223,13 @@ export class ZipSource extends LoaderSource {
             this.tracks[n] = f;
         }
     }
-    async getCDDA(track) {
-        if (!this.trackURLs[track]) {
-            if (!this.tracks[track])
-                throw new Error('ZipSource: Invalid track ' + track);
-            const blob = await this.tracks[track].async('blob');
-            this.trackURLs[track] = URL.createObjectURL(blob);
-        }
-        return this.trackURLs[track];
+    getCDDALoader() {
+        return new BasicCDDALoader(this);
+    }
+    async extractTrack(track) {
+        if (!this.tracks[track])
+            throw new Error('ZipSource: Invalid track ' + track);
+        return this.tracks[track].async('blob');
     }
 }
 export class SevenZipSource extends LoaderSource {
@@ -241,7 +237,6 @@ export class SevenZipSource extends LoaderSource {
         super();
         this.file = file;
         this.tracks = [];
-        this.trackURLs = [];
     }
     async doLoad() {
         const worker = new Worker('worker/archiveworker.js');
@@ -270,12 +265,12 @@ export class SevenZipSource extends LoaderSource {
             this.addFile(f.name, f.content.byteLength, [f.content]);
         }
     }
-    async getCDDA(track) {
-        if (!this.trackURLs[track]) {
-            if (!this.tracks[track])
-                throw new Error('SevenZipSource: Invalid track ' + track);
-            this.trackURLs[track] = URL.createObjectURL(this.tracks[track]);
-        }
-        return this.trackURLs[track];
+    getCDDALoader() {
+        return new BasicCDDALoader(this);
+    }
+    async extractTrack(track) {
+        if (!this.tracks[track])
+            throw new Error('SevenZipSource: Invalid track ' + track);
+        return this.tracks[track];
     }
 }

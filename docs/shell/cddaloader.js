@@ -1,61 +1,47 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {$, readFileAsArrayBuffer, gaException} from './util.js';
-import {Reader} from './cdimage.js';
-import {addToast} from './widgets.js';
-
-export interface CDDACache {
-    getCDDA(track: number): Promise<string>;
-}
-
-export class BasicCDDACache implements CDDACache {
-    private cache: string[];
-    private lastTrack: number | undefined;
-
-    constructor(private imageReader: Reader) {
+import { $, readFileAsArrayBuffer, gaException } from './util.js';
+import { addToast } from './widgets.js';
+export class BasicCDDALoader {
+    constructor(source) {
+        this.source = source;
         this.cache = [];
         document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this));
     }
-
-    async getCDDA(track: number): Promise<string> {
+    async getCDDA(track) {
         if (!this.cache[track]) {
-            const blob = await this.imageReader.extractTrack(track);
+            const blob = await this.source.extractTrack(track);
             this.cache[track] = URL.createObjectURL(blob);
         }
         this.lastTrack = track;
         return this.cache[track];
     }
-
-    private onVisibilityChange() {
+    onVisibilityChange() {
         if (!document.hidden)
             return;
         for (let i = 0; i < this.cache.length; i++) {
             if (i !== this.lastTrack && this.cache[i])
                 URL.revokeObjectURL(this.cache[i]);
         }
-        const newCache: string[] = [];
+        const newCache = [];
         if (this.lastTrack)
             newCache[this.lastTrack] = this.cache[this.lastTrack];
         this.cache = newCache;
     }
 }
-
-// IOSCDDACache provides an interface to reload image file to address the
+// IOSCDDALoader provides an interface to reload image file to address the
 // Mobile Safari issue where files become unreadable after 1-2 minutes.
 // https://bugs.webkit.org/show_bug.cgi?id=203806
-export class IOSCDDACache implements CDDACache {
-    private mp3Cache: MP3Cache | undefined;
-    private mp3Urls: string[] = [];
-    private reloadToast: HTMLElement | undefined;
-
-    constructor(private imageReader: Reader) {
+export class IOSCDDALoader {
+    constructor(imageReader) {
+        this.imageReader = imageReader;
+        this.mp3Urls = [];
         if (imageReader.cddaCacheKey) {
             this.mp3Cache = new MP3Cache(imageReader.cddaCacheKey);
             this.mp3Cache.startSpeculativeCache(this.imageReader);
         }
     }
-
-    async getCDDA(track: number): Promise<string> {
+    async getCDDA(track) {
         if (this.mp3Urls[track])
             return this.mp3Urls[track];
         if (this.mp3Cache) {
@@ -73,20 +59,21 @@ export class IOSCDDACache implements CDDACache {
                 this.mp3Cache.convertAndStore(track, buf);
             }
             return URL.createObjectURL(blob);
-        } catch (e) {
+        }
+        catch (e) {
             if (e.constructor.name === 'FileError' && e.code === 1)
                 ga('send', 'event', 'CDDAload', 'NOT_FOUND_ERR');
             else
-                gaException({type: 'CDDAload', name: e.constructor.name, code: e.code});
-            let clone = document.importNode((<HTMLTemplateElement>$('#cdda-error')).content, true);
+                gaException({ type: 'CDDAload', name: e.constructor.name, code: e.code });
+            let clone = document.importNode($('#cdda-error').content, true);
             if (this.reloadToast && this.reloadToast.parentElement)
-                (<HTMLElement>this.reloadToast.querySelector('.btn-clear')).click();
+                this.reloadToast.querySelector('.btn-clear').click();
             let reloadToast = this.reloadToast = addToast(clone, 'error');
             return new Promise(resolve => {
-                reloadToast.querySelector('.cdda-reload-button')!.addEventListener('click', () => {
+                reloadToast.querySelector('.cdda-reload-button').addEventListener('click', () => {
                     this.imageReader.reloadImage().then(() => {
                         ga('send', 'event', 'CDDAload', 'reloaded');
-                        (<HTMLElement>reloadToast.querySelector('.btn-clear')).click();
+                        reloadToast.querySelector('.btn-clear').click();
                         if (this.mp3Cache)
                             this.mp3Cache.startSpeculativeCache(this.imageReader);
                         resolve(this.getCDDA(track));
@@ -96,19 +83,14 @@ export class IOSCDDACache implements CDDACache {
         }
     }
 }
-
 const DB_NAME = 'cdda';
 const STORE_NAME = 'tracks';
 const SPECULATIVE_CACHE_INTERVAL = 15000;
-
-// A helper class of IOSCDDACache that encodes audio data to MP3 and store into IndexedDB.
+// A helper class of IOSCDDALoader that encodes audio data to MP3 and store into IndexedDB.
 class MP3Cache {
-    private dbp: Promise<IDBDatabase>;
-    private worker: Worker;
-    private cachedTracks: number[] = [];
-    private pendingEncodes = 0;
-
-    constructor(key: string) {
+    constructor(key) {
+        this.cachedTracks = [];
+        this.pendingEncodes = 0;
         this.worker = new Worker('worker/cddacacheworker.js');
         this.worker.addEventListener('message', (msg) => this.handleWorkerMessage(msg.data));
         this.dbp = new Promise((resolve, reject) => {
@@ -116,28 +98,26 @@ class MP3Cache {
             req.onupgradeneeded = () => req.result.createObjectStore(STORE_NAME);
             req.onsuccess = () => resolve(req.result);
             req.onerror = () => {
-                gaException({type: 'IDBOpen', err: req.error});
+                gaException({ type: 'IDBOpen', err: req.error });
                 reject(req.error);
-            }
+            };
         });
         this.dbp.then(() => this.init(key));
     }
-
-    convertAndStore(track: number, data: ArrayBuffer) {
-        this.worker.postMessage({track, data}, [data]);
+    convertAndStore(track, data) {
+        this.worker.postMessage({ track, data }, [data]);
         this.pendingEncodes++;
         this.cachedTracks.push(track);
     }
-
-    async getTrack(track: number): Promise<Blob | null> {
+    async getTrack(track) {
         try {
             return await this.get(track);
-        } catch (err) {
+        }
+        catch (err) {
             return null;
         }
     }
-
-    startSpeculativeCache(imageReader: Reader) {
+    startSpeculativeCache(imageReader) {
         setTimeout(async () => {
             if (this.pendingEncodes) {
                 this.startSpeculativeCache(imageReader);
@@ -152,59 +132,55 @@ class MP3Cache {
                     this.convertAndStore(t, buf);
                     ga('send', 'event', 'MP3Cache', 'speculativeCache');
                     this.startSpeculativeCache(imageReader);
-                } catch (err) {}
+                }
+                catch (err) { }
                 return;
             }
         }, SPECULATIVE_CACHE_INTERVAL);
     }
-
-    private handleWorkerMessage(msg: {track: number, time: number, data: ArrayBuffer[]}) {
-        const blob = new Blob(msg.data, {type: 'audio/mp3'});
+    handleWorkerMessage(msg) {
+        const blob = new Blob(msg.data, { type: 'audio/mp3' });
         this.put(msg.track, blob);
         this.pendingEncodes--;
     }
-
-    private async init(key: string): Promise<void> {
+    async init(key) {
         const oldKey = await this.get('key');
         if (key != oldKey) {
             if (oldKey)
                 ga('send', 'event', 'MP3Cache', 'purged');
             await this.clear();
             await this.put('key', key);
-        } else {
-            let req: IDBRequest;
+        }
+        else {
+            let req;
             await this.withStore('readonly', (s) => { req = s.getAllKeys(); });
-            this.cachedTracks = req!.result;
+            this.cachedTracks = req.result;
         }
     }
-
-    private async get(key: number | string): Promise<any> {
-        let req: IDBRequest;
+    async get(key) {
+        let req;
         await this.withStore('readonly', (s) => { req = s.get(key); });
-        return req!.result;
+        return req.result;
     }
-
-    private put(key: number | string, val: any): Promise<void> {
+    put(key, val) {
         return this.withStore('readwrite', (s) => s.put(val, key));
     }
-
-    private clear(): Promise<void> {
+    clear() {
         return this.withStore('readwrite', (s) => s.clear());
     }
-
-    private async withStore(mode: 'readonly' | 'readwrite', callback: (s: IDBObjectStore) => void): Promise<void> {
+    async withStore(mode, callback) {
         const db = await this.dbp;
         return new Promise((resolve, reject) => {
             const transaction = db.transaction(STORE_NAME, mode);
             transaction.oncomplete = () => resolve();
             transaction.onabort = (ev) => {
-                gaException({type: 'IDBTransactionAbort', ev});
+                gaException({ type: 'IDBTransactionAbort', ev });
                 reject(ev);
-            }
+            };
             transaction.onerror = () => {
-                gaException({type: 'IDBTransaction', err: transaction.error});
+                gaException({ type: 'IDBTransaction', err: transaction.error });
                 reject(transaction.error);
-            }
+            };
             setTimeout(() => reject('IDB transaction timeout'), 1000);
             callback(transaction.objectStore(STORE_NAME));
         });

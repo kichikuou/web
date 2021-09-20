@@ -3,6 +3,7 @@
 import {$} from './util.js';
 import {config} from './config.js';
 import {LoaderSource, CDImageSource, FileSource, ZipSource, SevenZipSource, NoGamedataError} from './loadersource.js';
+import {setCDDALoader} from './cdda.js';
 import {addToast} from './widgets.js';
 import * as midiPlayer from './midi.js';
 import * as volumeControl from './volume.js';
@@ -11,17 +12,12 @@ import {message} from './strings.js';
 let imageFile: File | undefined;
 let metadataFile: File | undefined;
 let patchFiles: File[] = [];
-let source: LoaderSource | null = null;
 let installing = false;
 
 function init() {
     $('#fileselect').addEventListener('change', handleFileSelect, false);
     document.body.ondragover = handleDragOver;
     document.body.ondrop = handleDrop;
-}
-
-export function getCDDA(track: number): Promise<string> {
-    return source!.getCDDA(track);
 }
 
 function handleFileSelect(evt: Event) {
@@ -65,6 +61,7 @@ async function handleFiles(files: FileList) {
         }
     }
 
+    let source: LoaderSource | null = null;
     if (imageFile && (metadataFile || imageFile.name.toLowerCase().endsWith('.iso'))) {
         source = new CDImageSource(imageFile, metadataFile, patchFiles);
     } else if (!imageFile && !metadataFile) {
@@ -86,16 +83,16 @@ async function handleFiles(files: FileList) {
     installing = true;
     try {
         await source.startLoad();
+        setCDDALoader(source.getCDDALoader());
         loaded(source.hasMidi);
     } catch (err) {
         if (err instanceof NoGamedataError) {
             ga('send', 'event', 'Loader', 'NoGamedata', err.message);
             addToast(`${message.cannot_install}: ${err.message}`, 'warning');
-        } else {
+        } else if (err instanceof Error) {
             ga('send', 'event', 'Loader', 'LoadFailed', err.message);
             addToast(`${message.cannot_install}: ${message.unrecognized_format}`, 'warning');
         }
-        source = null;
     }
     installing = false;
 }

@@ -2,6 +2,7 @@
 // This source code is governed by the MIT License, see the LICENSE file.
 import {$, gaException, Status} from './util.js';
 import './settings.js';
+import './loader.js';
 import {syncfs, load_mincho_font} from './moduleloader.js';
 import * as zoom from './zoom.js';
 import * as cdPlayer from './cdda.js';

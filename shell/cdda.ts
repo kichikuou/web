@@ -1,10 +1,11 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 import {$, gaException, isMobileSafari} from './util.js';
-import * as loader from './loader.js';
+import {CDDALoader} from './cddaloader.js';
 import * as volumeControl from './volume.js';
 
 const audio = <HTMLAudioElement>$('audio');
+let cddaLoader: CDDALoader | undefined;
 let currentTrack: number | null = null;
 let isVolumeSupported: boolean;
 let unmute: (() => void) | null = null;  // Non-null if emulating mute by pause
@@ -24,6 +25,10 @@ function init() {
     }
 }
 
+export function setCDDALoader(loader: CDDALoader) {
+    cddaLoader = loader;
+}
+
 export async function play(track: number, loop: number) {
     currentTrack = track;
     if (unmute) {
@@ -32,7 +37,7 @@ export async function play(track: number, loop: number) {
     }
     audio.currentTime = 0;
     try {
-        const url = await loader.getCDDA(track)
+        const url = await cddaLoader!.getCDDA(track)
         startPlayback(url, loop);
     } catch (err) {
         ga('send', 'event', 'CDDA', 'InvalidTrack');

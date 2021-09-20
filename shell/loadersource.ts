@@ -2,7 +2,7 @@
 // This source code is governed by the MIT License, see the LICENSE file.
 import {$, startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, isMobileSafari, JSZIP_SCRIPT, JSZipOptions} from './util.js';
 import * as cdimage from './cdimage.js';
-import {CDDACache, BasicCDDACache, IOSCDDACache} from './cddacache.js';
+import {CDDALoader, BasicCDDALoader, IOSCDDALoader} from './cddaloader.js';
 import {registerDataFile} from './datafile.js';
 import {loadModule, saveDirReady} from './moduleloader.js';
 import {message} from './strings.js';
@@ -17,7 +17,7 @@ export class NoGamedataError implements Error {
 }
 
 export abstract class LoaderSource {
-    abstract getCDDA(track: number): Promise<string>;
+    abstract getCDDALoader(): CDDALoader;
     protected abstract doLoad(): Promise<void>;
 
     public hasMidi = false;
@@ -83,7 +83,6 @@ export abstract class LoaderSource {
 
 export class CDImageSource extends LoaderSource {
     private imageReader!: cdimage.Reader;
-    private cddaCache!: CDDACache;
 
     constructor(private imageFile: File, private metadataFile: File | undefined, private patchFiles: File[]) {
         super();
@@ -91,7 +90,6 @@ export class CDImageSource extends LoaderSource {
 
     protected async doLoad() {
         this.imageReader = await cdimage.createReader(this.imageFile, this.metadataFile);
-        this.cddaCache = isMobileSafari() ? new IOSCDDACache(this.imageReader) : new BasicCDDACache(this.imageReader);
         let isofs = await cdimage.ISO9660FileSystem.create(this.imageReader);
         // this.walk(isofs, isofs.rootDir(), '/');
         let gamedata = await this.findGameDir(isofs);
@@ -128,8 +126,8 @@ export class CDImageSource extends LoaderSource {
         endMeasure();
     }
 
-    getCDDA(track: number): Promise<string> {
-        return this.cddaCache.getCDDA(track);
+    getCDDALoader(): CDDALoader {
+        return isMobileSafari() ? new IOSCDDALoader(this.imageReader) : new BasicCDDALoader(this.imageReader);
     }
 
     private async findGameDir(isofs: cdimage.ISO9660FileSystem): Promise<cdimage.DirEnt | null> {
@@ -173,7 +171,6 @@ export class CDImageSource extends LoaderSource {
 
 export class FileSource extends LoaderSource {
     private tracks: File[] = [];
-    private trackURLs: string[] = [];
     private files: File[] = []
 
     constructor(fs: FileList) {
@@ -200,19 +197,19 @@ export class FileSource extends LoaderSource {
         }
     }
 
-    async getCDDA(track: number): Promise<string> {
-        if (!this.trackURLs[track]) {
-            if (!this.tracks[track])
-                throw new Error('FileSource: Invalid track ' + track);
-            this.trackURLs[track] = URL.createObjectURL(this.tracks[track]);
-        }
-        return this.trackURLs[track];
+    getCDDALoader(): CDDALoader {
+        return new BasicCDDALoader(this);
+    }
+
+    async extractTrack(track: number): Promise<Blob> {
+        if (!this.tracks[track])
+            throw new Error('FileSource: Invalid track ' + track);
+        return this.tracks[track];
     }
 }
 
 export class ZipSource extends LoaderSource {
     private tracks: JSZipObject[] = [];
-    private trackURLs: string[] = [];
 
     constructor(private zipFile: File) {
         super();
@@ -243,21 +240,20 @@ export class ZipSource extends LoaderSource {
         }
     }
 
-    async getCDDA(track: number): Promise<string> {
-        if (!this.trackURLs[track]) {
-            if (!this.tracks[track])
-                throw new Error('ZipSource: Invalid track ' + track);
-            const blob = await this.tracks[track].async('blob');
-            this.trackURLs[track] = URL.createObjectURL(blob);
-        }
-        return this.trackURLs[track];
+    getCDDALoader(): CDDALoader {
+        return new BasicCDDALoader(this);
+    }
+
+    async extractTrack(track: number): Promise<Blob> {
+        if (!this.tracks[track])
+            throw new Error('ZipSource: Invalid track ' + track);
+        return this.tracks[track].async('blob');
     }
 }
 
 type SevenZipWorkerResponse = { files: { name: string, content: Uint8Array }[] } | { error: string };
 export class SevenZipSource extends LoaderSource {
     private tracks: Blob[] = [];
-    private trackURLs: string[] = [];
 
     constructor(private file: File) {
         super();
@@ -291,12 +287,13 @@ export class SevenZipSource extends LoaderSource {
         }
     }
 
-    async getCDDA(track: number): Promise<string> {
-        if (!this.trackURLs[track]) {
-            if (!this.tracks[track])
-                throw new Error('SevenZipSource: Invalid track ' + track);
-            this.trackURLs[track] = URL.createObjectURL(this.tracks[track]);
-        }
-        return this.trackURLs[track];
+    getCDDALoader(): CDDALoader {
+        return new BasicCDDALoader(this);
+    }
+
+    async extractTrack(track: number): Promise<Blob> {
+        if (!this.tracks[track])
+            throw new Error('SevenZipSource: Invalid track ' + track);
+        return this.tracks[track];
     }
 }
