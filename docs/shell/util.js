@@ -63,6 +63,20 @@ export function JSZipOptions() {
         }
     }
 }
+export class Deferred {
+    constructor() {
+        this.promise = new Promise((resolve, reject) => {
+            this._resolve = resolve;
+            this._reject = reject;
+        });
+    }
+    resolve(value) {
+        this._resolve(value);
+    }
+    reject(reason) {
+        this._reject(reason);
+    }
+}
 export function startMeasure(name, gaName, gaParam) {
     let startMark = name + '-start';
     let endMark = name + '-end';
@@ -96,3 +110,23 @@ export var Bool;
     Bool[Bool["FALSE"] = 0] = "FALSE";
     Bool[Bool["TRUE"] = 1] = "TRUE";
 })(Bool || (Bool = {}));
+export var DRIType;
+(function (DRIType) {
+    DRIType[DRIType["SCO"] = 0] = "SCO";
+    DRIType[DRIType["CG"] = 1] = "CG";
+    DRIType[DRIType["WAVE"] = 2] = "WAVE";
+    DRIType[DRIType["MIDI"] = 3] = "MIDI";
+    DRIType[DRIType["DATA"] = 4] = "DATA";
+    DRIType[DRIType["RSC"] = 5] = "RSC";
+    DRIType[DRIType["BGM"] = 6] = "BGM";
+})(DRIType || (DRIType = {}));
+export function ald_getdata(type, no) {
+    let dfile = _ald_getdata(type, no);
+    if (!dfile)
+        return null;
+    let ptr = Module.getValue(dfile + 8, '*');
+    let size = Module.getValue(dfile, 'i32');
+    let buf = Module.HEAPU8.buffer.slice(ptr, ptr + size);
+    _ald_freedata(dfile);
+    return buf;
+}

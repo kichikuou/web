@@ -2,7 +2,7 @@
 // This source code is governed by the MIT License, see the LICENSE file.
 import { $, startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, isMobileSafari, JSZIP_SCRIPT, JSZipOptions } from './util.js';
 import * as cdimage from './cdimage.js';
-import { BasicCDDALoader, IOSCDDALoader } from './cddaloader.js';
+import { BasicCDDALoader, IOSCDDALoader, BGMLoader } from './cddaloader.js';
 import { registerDataFile } from './datafile.js';
 import { loadModule, saveDirReady } from './moduleloader.js';
 import { message } from './strings.js';
@@ -18,11 +18,17 @@ export class NoGamedataError {
 export class LoaderSource {
     constructor() {
         this.hasMidi = false;
+        this.hasBGM = false;
         this.aldFiles = null;
     }
     async startLoad() {
         await this.doLoad();
         this.createGr();
+    }
+    getCDDALoader() {
+        if (this.hasBGM)
+            return new BasicCDDALoader(new BGMLoader());
+        return this.createCDDALoader();
     }
     async loadSystem3(savedir) {
         await loadModule('system3');
@@ -43,7 +49,7 @@ export class LoaderSource {
             return;
         }
         const resourceType = {
-            d: 'Data', g: 'Graphics', m: 'Midi', r: 'Resource', s: 'Scenario', w: 'Wave',
+            b: 'BGM', d: 'Data', g: 'Graphics', m: 'Midi', r: 'Resource', s: 'Scenario', w: 'Wave',
         };
         let basename = '';
         let lines = [];
@@ -65,6 +71,8 @@ export class LoaderSource {
             lines.push(resourceType[type] + id.toUpperCase() + ' ' + name);
             if (type == 'm')
                 this.hasMidi = true;
+            if (type == 'b')
+                this.hasBGM = true;
         }
         for (let i = 0; i < 26; i++) {
             let id = String.fromCharCode(65 + i);
@@ -118,7 +126,7 @@ export class CDImageSource extends LoaderSource {
         }
         endMeasure();
     }
-    getCDDALoader() {
+    createCDDALoader() {
         return isMobileSafari() ? new IOSCDDALoader(this.imageReader) : new BasicCDDALoader(this.imageReader);
     }
     async findGameDir(isofs) {
@@ -185,7 +193,7 @@ export class FileSource extends LoaderSource {
             this.addFile(f.name, f.size, [new Uint8Array(content)]);
         }
     }
-    getCDDALoader() {
+    createCDDALoader() {
         return new BasicCDDALoader(this);
     }
     async extractTrack(track) {
@@ -223,7 +231,7 @@ export class ZipSource extends LoaderSource {
             this.tracks[n] = f;
         }
     }
-    getCDDALoader() {
+    createCDDALoader() {
         return new BasicCDDALoader(this);
     }
     async extractTrack(track) {
@@ -265,7 +273,7 @@ export class SevenZipSource extends LoaderSource {
             this.addFile(f.name, f.content.byteLength, [f.content]);
         }
     }
-    getCDDALoader() {
+    createCDDALoader() {
         return new BasicCDDALoader(this);
     }
     async extractTrack(track) {

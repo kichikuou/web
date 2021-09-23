@@ -1,6 +1,6 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {$, gaException, isMobileSafari} from './util.js';
+import {$, Deferred, gaException, isMobileSafari} from './util.js';
 import {CDDALoader} from './cddaloader.js';
 import * as volumeControl from './volume.js';
 
@@ -8,7 +8,40 @@ const audio = <HTMLAudioElement>$('audio');
 let cddaLoader: CDDALoader | undefined;
 let currentTrack: number | null = null;
 let isVolumeSupported: boolean;
+let fadeVolume = 1.0;
+let fader: Fader | undefined;
 let unmute: (() => void) | null = null;  // Non-null if emulating mute by pause
+
+class Fader {
+    private done: Deferred<void>;
+    private timer: number | undefined;
+
+    constructor(duration: number, target: number) {
+        const start = performance.now();
+        const initial = fadeVolume;
+        this.done = new Deferred();
+        this.timer = setInterval(() => {
+            const t = performance.now() - start;
+            fadeVolume = t >= duration ? target : initial + (t / duration) * (target - initial);
+            audio.volume = volumeControl.volume() * fadeVolume;
+            if (t >= duration) {
+                clearInterval(this.timer);
+                this.timer = undefined;
+                this.done.resolve();
+            }
+        }, 10);
+    }
+
+    cancel() {
+        clearInterval(this.timer);
+        this.timer = undefined;
+        this.done.resolve();
+    }
+
+    wait(): Promise<void> {
+        return this.done.promise;
+    }
+}
 
 function init() {
     // Volume control of <audio> is not supported in iOS
@@ -44,11 +77,31 @@ export async function play(track: number, loop: number) {
     }
 }
 
-export function stop() {
+export async function stop(fadeout_ms?: number) {
+    if (fadeout_ms) {
+        await fade(fadeout_ms, 0);
+    }
     audio.pause();
     currentTrack = null;
     if (unmute)
         unmute = () => {};
+}
+
+export async function fade(duration: number, target: number): Promise<void> {
+    if (!isVolumeSupported) {
+        return;
+    }
+    if (fader) {
+        fader.cancel();
+        fader = undefined;
+    }
+    if (duration <= 0) {
+        fadeVolume = target;
+        audio.volume = volumeControl.volume() * fadeVolume;
+        return;
+    }
+    fader = new Fader(duration, target);
+    return fader.wait();
 }
 
 export function getPosition(): number {

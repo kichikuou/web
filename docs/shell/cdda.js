@@ -1,12 +1,39 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import { $, gaException, isMobileSafari } from './util.js';
+import { $, Deferred, gaException, isMobileSafari } from './util.js';
 import * as volumeControl from './volume.js';
 const audio = $('audio');
 let cddaLoader;
 let currentTrack = null;
 let isVolumeSupported;
+let fadeVolume = 1.0;
+let fader;
 let unmute = null; // Non-null if emulating mute by pause
+class Fader {
+    constructor(duration, target) {
+        const start = performance.now();
+        const initial = fadeVolume;
+        this.done = new Deferred();
+        this.timer = setInterval(() => {
+            const t = performance.now() - start;
+            fadeVolume = t >= duration ? target : initial + (t / duration) * (target - initial);
+            audio.volume = volumeControl.volume() * fadeVolume;
+            if (t >= duration) {
+                clearInterval(this.timer);
+                this.timer = undefined;
+                this.done.resolve();
+            }
+        }, 10);
+    }
+    cancel() {
+        clearInterval(this.timer);
+        this.timer = undefined;
+        this.done.resolve();
+    }
+    wait() {
+        return this.done.promise;
+    }
+}
 function init() {
     // Volume control of <audio> is not supported in iOS
     isVolumeSupported = !isMobileSafari();
@@ -38,11 +65,30 @@ export async function play(track, loop) {
         ga('send', 'event', 'CDDA', 'InvalidTrack');
     }
 }
-export function stop() {
+export async function stop(fadeout_ms) {
+    if (fadeout_ms) {
+        await fade(fadeout_ms, 0);
+    }
     audio.pause();
     currentTrack = null;
     if (unmute)
         unmute = () => { };
+}
+export async function fade(duration, target) {
+    if (!isVolumeSupported) {
+        return;
+    }
+    if (fader) {
+        fader.cancel();
+        fader = undefined;
+    }
+    if (duration <= 0) {
+        fadeVolume = target;
+        audio.volume = volumeControl.volume() * fadeVolume;
+        return;
+    }
+    fader = new Fader(duration, target);
+    return fader.wait();
 }
 export function getPosition() {
     if (!currentTrack)

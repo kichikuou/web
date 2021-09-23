@@ -1,6 +1,6 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import { gaException, Bool, Status } from './util.js';
+import { gaException, Bool, Status, DRIType, ald_getdata } from './util.js';
 import * as volumeControl from './volume.js';
 const slots = [];
 let bufCache = [];
@@ -9,7 +9,7 @@ function init() {
     document.addEventListener('visibilitychange', onVisibilityChange);
 }
 function load(no) {
-    const buf = getWave(no);
+    const buf = ald_getdata(DRIType.WAVE, no - 1);
     if (!buf)
         return Promise.reject('Failed to open wave ' + no);
     // If the AudioContext was not created inside a user-initiated event
@@ -19,16 +19,6 @@ function load(no) {
         bufCache[no] = audioBuf;
         return audioBuf;
     });
-}
-function getWave(no) {
-    let dfile = _ald_getdata(2 /* DRIFILE_WAVE */, no - 1);
-    if (!dfile)
-        return null;
-    let ptr = Module.getValue(dfile + 8, '*');
-    let size = Module.getValue(dfile, 'i32');
-    let buf = Module.HEAPU8.buffer.slice(ptr, ptr + size);
-    _ald_freedata(dfile);
-    return buf;
 }
 export function pcm_load(slot, no) {
     return Asyncify.handleSleep((wakeUp) => {
@@ -40,7 +30,7 @@ export function pcm_load(slot, no) {
         load(no).then((audioBuf) => {
             slots[slot] = new PCMSoundSimple(destNode, audioBuf);
             wakeUp(Status.OK);
-        }).catch((err) => {
+        }, (err) => {
             gaException({ type: 'PCM', err });
             wakeUp(Status.NG);
         });

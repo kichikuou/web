@@ -1,6 +1,6 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {gaException, Bool, Status} from './util.js';
+import {gaException, Bool, Status, DRIType, ald_getdata} from './util.js';
 import * as volumeControl from './volume.js';
 
 declare global {
@@ -18,7 +18,7 @@ function init() {
 }
 
 function load(no: number): Promise<AudioBuffer> {
-    const buf = getWave(no);
+    const buf = ald_getdata(DRIType.WAVE, no - 1);
     if (!buf)
         return Promise.reject('Failed to open wave ' + no);
 
@@ -32,17 +32,6 @@ function load(no: number): Promise<AudioBuffer> {
     });
 }
 
-function getWave(no: number): ArrayBuffer | null {
-    let dfile = _ald_getdata(2 /* DRIFILE_WAVE */, no - 1);
-    if (!dfile)
-        return null;
-    let ptr = Module.getValue(dfile + 8, '*');
-    let size = Module.getValue(dfile, 'i32');
-    let buf = Module.HEAPU8.buffer.slice(ptr, ptr + size);
-    _ald_freedata(dfile);
-    return buf;
-}
-
 export function pcm_load(slot: number, no: number) {
     return Asyncify.handleSleep((wakeUp: (result: Status) => void) => {
         pcm_stop(slot);
@@ -53,7 +42,7 @@ export function pcm_load(slot: number, no: number) {
         load(no).then((audioBuf) => {
             slots[slot] = new PCMSoundSimple(destNode, audioBuf);
             wakeUp(Status.OK);
-        }).catch((err) => {
+        }, (err) => {
             gaException({type: 'PCM', err});
             wakeUp(Status.NG);
         });

@@ -2,7 +2,7 @@
 // This source code is governed by the MIT License, see the LICENSE file.
 import {$, startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, isMobileSafari, JSZIP_SCRIPT, JSZipOptions} from './util.js';
 import * as cdimage from './cdimage.js';
-import {CDDALoader, BasicCDDALoader, IOSCDDALoader} from './cddaloader.js';
+import {CDDALoader, BasicCDDALoader, IOSCDDALoader, BGMLoader} from './cddaloader.js';
 import {registerDataFile} from './datafile.js';
 import {loadModule, saveDirReady} from './moduleloader.js';
 import {message} from './strings.js';
@@ -17,15 +17,22 @@ export class NoGamedataError implements Error {
 }
 
 export abstract class LoaderSource {
-    abstract getCDDALoader(): CDDALoader;
+    protected abstract createCDDALoader(): CDDALoader;
     protected abstract doLoad(): Promise<void>;
 
     public hasMidi = false;
+    private hasBGM = false;
     private aldFiles: string[] | null = null;
 
     async startLoad() {
         await this.doLoad();
         this.createGr();
+    }
+
+    getCDDALoader(): CDDALoader {
+        if (this.hasBGM)
+            return new BasicCDDALoader(new BGMLoader());
+        return this.createCDDALoader();
     }
 
     protected async loadSystem3(savedir: string) {
@@ -49,7 +56,7 @@ export abstract class LoaderSource {
             return;
         }
         const resourceType: { [ch: string]: string } = {
-            d: 'Data', g: 'Graphics', m: 'Midi', r: 'Resource', s: 'Scenario', w: 'Wave',
+            b: 'BGM', d: 'Data', g: 'Graphics', m: 'Midi', r: 'Resource', s: 'Scenario', w: 'Wave',
         };
         let basename = '';
         let lines: string[] = [];
@@ -71,6 +78,8 @@ export abstract class LoaderSource {
             lines.push(resourceType[type] + id.toUpperCase() + ' ' + name);
             if (type == 'm')
                 this.hasMidi = true;
+            if (type == 'b')
+                this.hasBGM = true;
         }
         for (let i = 0; i < 26; i++) {
             let id = String.fromCharCode(65 + i);
@@ -126,7 +135,7 @@ export class CDImageSource extends LoaderSource {
         endMeasure();
     }
 
-    getCDDALoader(): CDDALoader {
+    createCDDALoader(): CDDALoader {
         return isMobileSafari() ? new IOSCDDALoader(this.imageReader) : new BasicCDDALoader(this.imageReader);
     }
 
@@ -197,7 +206,7 @@ export class FileSource extends LoaderSource {
         }
     }
 
-    getCDDALoader(): CDDALoader {
+    createCDDALoader(): CDDALoader {
         return new BasicCDDALoader(this);
     }
 
@@ -240,7 +249,7 @@ export class ZipSource extends LoaderSource {
         }
     }
 
-    getCDDALoader(): CDDALoader {
+    createCDDALoader(): CDDALoader {
         return new BasicCDDALoader(this);
     }
 
@@ -287,7 +296,7 @@ export class SevenZipSource extends LoaderSource {
         }
     }
 
-    getCDDALoader(): CDDALoader {
+    createCDDALoader(): CDDALoader {
         return new BasicCDDALoader(this);
     }
 

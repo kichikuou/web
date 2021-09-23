@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {$, readFileAsArrayBuffer, gaException} from './util.js';
+import {$, readFileAsArrayBuffer, DRIType, ald_getdata, gaException} from './util.js';
 import {Reader} from './cdimage.js';
 import {addToast} from './widgets.js';
 
@@ -212,5 +212,14 @@ class MP3Cache {
             setTimeout(() => reject('IDB transaction timeout'), 1000);
             callback(transaction.objectStore(STORE_NAME));
         });
+    }
+}
+
+export class BGMLoader implements CDDALoaderSource {
+    async extractTrack(track: number): Promise<Blob> {
+        const buf = ald_getdata(DRIType.BGM, track - 1);
+        if (!buf)
+            throw new Error('BGMLoader: Invalid track ' + track);
+        return new Blob([buf]);
     }
 }

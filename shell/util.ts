@@ -71,6 +71,25 @@ export function JSZipOptions(): JSZipLoadOptions {
     }
 }
 
+export class Deferred<T> {
+    public promise: Promise<T>;
+    private _resolve!: (value: T) => void;
+    private _reject!: (reason?: any) => void;
+
+    constructor() {
+        this.promise = new Promise((resolve, reject) => {
+            this._resolve = resolve;
+            this._reject = reject;
+        });
+    }
+    resolve(value: T) {
+        this._resolve(value);
+    }
+    reject(reason?: any) {
+        this._reject(reason);
+    }
+}
+
 export function startMeasure(name: string, gaName?: string, gaParam?: string): () => void {
     let startMark = name + '-start';
     let endMark = name + '-end';
@@ -103,6 +122,27 @@ export enum Status {
 export enum Bool {
     FALSE = 0,
     TRUE = 1,
+}
+
+export enum DRIType {
+    SCO = 0,
+    CG = 1,
+    WAVE = 2,
+    MIDI = 3,
+    DATA = 4,
+    RSC = 5,
+    BGM = 6,
+}
+
+export function ald_getdata(type: DRIType, no: number): ArrayBuffer | null {
+    let dfile = _ald_getdata(type, no);
+    if (!dfile)
+        return null;
+    let ptr = Module.getValue(dfile + 8, '*');
+    let size = Module.getValue(dfile, 'i32');
+    let buf = Module.HEAPU8.buffer.slice(ptr, ptr + size);
+    _ald_freedata(dfile);
+    return buf;
 }
 
 declare global {
