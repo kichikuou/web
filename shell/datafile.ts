@@ -32,10 +32,22 @@ export function registerDataFile(fname: string, size: number, chunks: Uint8Array
         break;
     }
 
-    let dev = FS.makedev(major, entryCount++);
-    let ops = new NodeOps(size, chunks, patch);
-    FS.registerDevice(dev, ops);
-    FS.mkdev('/' + fname, dev);
+    const path = '/' + fname;
+    if (fname.match(/\.(ald|ain|alk|kld)$/i)) {
+        // Put the file content in the WASM memory space, so that it won't
+        // consume additional heap space when mmaped.
+        const dev = FS.makedev(major, entryCount++);
+        const ops = new NodeOps(size, chunks, patch);
+        FS.registerDevice(dev, ops);
+        FS.mkdev(path, dev);
+    } else {
+        // Store as a regular file.
+        var f = FS.open(path, 'w');
+        for (const chunk of chunks) {
+            FS.write(f, chunk, 0, chunk.byteLength);
+        }
+        FS.close(f);
+    }
 }
 
 class NodeOps {
