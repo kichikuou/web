@@ -95,8 +95,9 @@ function onPlaying(playbackTime) {
     // Reset volume to 100% at the start of playback
     gain.gain.setValueAtTime(1, playbackTime);
 }
-function onError() {
-    console.log('onError');
+function onError(err) {
+    console.warn(err);
+    ga('send', 'event', 'MIDI', err.message);
 }
 function onEnd() {
     if (playing)

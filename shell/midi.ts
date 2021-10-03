@@ -8,6 +8,7 @@ declare class Timidity {
     play(): void;
     pause(): void;
     on(event: 'playing', callback: (playbackTime: number) => void): void;
+    on(event: 'error', callback: (err: Error) => void): void;
     on(event: string, callback: () => void): void;
     currentTime: number;
 }
@@ -120,8 +121,9 @@ function onPlaying(playbackTime: number) {
     gain.gain.setValueAtTime(1, playbackTime);
 }
 
-function onError() {
-    console.log('onError');
+function onError(err: Error) {
+    console.warn(err);
+    ga('send', 'event', 'MIDI', err.message);
 }
 
 function onEnd() {
