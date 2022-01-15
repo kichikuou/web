@@ -8,29 +8,41 @@ const quietPagesTable = {
     'Ｒａｎｃｅ４　－教団の遺産－　Ｆｏｒ　Ｗｉｎ９５': [10, 11, 16, 88, 90],
     '闘神都市Ⅱ　ｆｏｒ　Ｗｉｎ９５': [4, 5, 6, 7, 8]
 };
+const textlogContent = $('#textlog-content');
 $('#textlog-button').addEventListener('click', openTextLog);
 $('#textlog-close').addEventListener('click', closeTextLog);
 $('#textlog-overlay').addEventListener('click', closeTextLog);
 document.addEventListener('gamestart', () => {
-    document.addEventListener('keydown', keyDownHandler);
+    document.addEventListener('keydown', (e) => {
+        if (e.keyCode === 76) { // l
+            openTextLog();
+        }
+        else if (e.keyCode === 27) { // esc
+            closeTextLog();
+        }
+    });
+});
+$('#canvas').addEventListener('wheel', (e) => {
+    if (e.deltaY <= 0) {
+        openTextLog();
+    }
+});
+textlogContent.addEventListener('wheel', (e) => {
+    if (e.deltaY > 0 && textlogContent.scrollTop + textlogContent.clientHeight >= textlogContent.scrollHeight) {
+        closeTextLog();
+    }
 });
 function openTextLog() {
-    let e = $('#textlog-content');
-    render(e);
-    $('#textlog-modal').classList.add('active');
-    e.scrollTop = e.scrollHeight;
-    ga('send', 'event', 'Toolbar', 'Textlog');
+    const classes = $('#textlog-modal').classList;
+    if (classes.contains('active')) {
+        return;
+    }
+    render(textlogContent);
+    classes.add('active');
+    textlogContent.scrollTop = textlogContent.scrollHeight;
 }
 function closeTextLog() {
     $('#textlog-modal').classList.remove('active');
-}
-function keyDownHandler(e) {
-    if (e.keyCode === 76) { // l
-        openTextLog();
-    }
-    else if (e.keyCode === 27) { // esc
-        closeTextLog();
-    }
 }
 let currentPage = -1;
 let linebuf = '';
