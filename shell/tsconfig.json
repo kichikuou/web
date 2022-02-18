@@ -1,10 +1,10 @@
 {
     "compilerOptions": {
         "target": "ES2017",
-        "outDir": "../docs/shell",
-        "newLine": "LF",
-        "sourceMap": false,
-        "strict": true
+        "noEmit": true,
+        "strict": true,
+        "isolatedModules": true,
+        "esModuleInterop": true
     },
     "files": [
         "shell.ts"
