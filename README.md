@@ -27,6 +27,13 @@ A dummy Emscripten program to allow access to save files stored in the Emscripte
 The directory published as https://kichikuou.github.io/web/. It contains static files such as HTML, and compiled JavaScript / WASM / CSS files.
 `system3.*` files are built from [system3-sdl2](https://github.com/kichikuou/system3-sdl2), and `xsystem35.*` files are built from [xsystem35-sdl2](https://github.com/kichikuou/xsystem35-sdl2).
 
+During development, serve this directory with any local http server.
+
+If you want to run a game that uses MIDI, one additional set up step is needed. Run this command in the `docs` directory:
+```
+git clone -b gh-pages https://github.com/kichikuou/timidity.git
+```
+
 ### Licenses
 Code under `shell/` and `fslib/` are licensed under the [MIT License](shell/LICENSE).
 
