@@ -18,6 +18,7 @@ const quietPagesTable: {[key:string] : number[]} = {
     '闘神都市': [1],
     '闘神都市Ⅱ　ｆｏｒ　Ｗｉｎ９５': [4, 5, 6, 7, 8],
     'あゆみちゃん物語': [6],
+    'グレイメルカ ver1.22': [1, 2, 5, 6],
 }
 
 const textlogContent = $('#textlog-content');
