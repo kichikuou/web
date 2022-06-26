@@ -154,6 +154,7 @@ declare global {
     function _audio_callback(ptr: number, len: number): number;
     function _msgskip_activate(enable: number): void;
     function _msgskip_setFlags(flags: number, mask: number): void;
+    function _sys_restart(): void;
 
     var Module: EmscriptenModule;
     interface EmscriptenModule {

@@ -2,10 +2,12 @@
 // This source code is governed by the MIT License, see the LICENSE file.
 import {$} from './util.js';
 import {downloadAs} from './widgets.js';
+import {message} from './strings.js';
 
 const msgskip_button = $('#msgskip-button');
 
 function init() {
+    $('#restart-button').addEventListener('click', restart);
     $('#screenshot-button').addEventListener('click', saveScreenshot);
     msgskip_button.addEventListener('click', toggleMessageSkip);
     document.addEventListener('gamestart', () => {
@@ -33,6 +35,9 @@ function keyDownHandler(e: KeyboardEvent) {
         case 80: // 'p'
             saveScreenshot();
             break;
+        case 82: // 'r'
+            restart();
+            break;
         case 83: // 's'
             toggleMessageSkip();
             break;
@@ -46,6 +51,13 @@ export function setSkipButtonState(enabled: number, activated: number) {
 
 function toggleMessageSkip() {
     _msgskip_activate(msgskip_button.classList.contains('activated') ? 0 : 1);
+}
+
+function restart() {
+    if (window.confirm(message.restart_confirmation)) {
+        ga('send', 'event', 'Toolbar', 'Restart');
+        _sys_restart();
+    }
 }
 
 async function saveScreenshot() {
@@ -66,16 +78,10 @@ async function saveScreenshot() {
     }
     ctx.putImageData(image, 0, 0);
 
-    let url;
-    if (canvas.toBlob) {
-        let blob = await new Promise((resolve) => canvas.toBlob(resolve));
-        url = URL.createObjectURL(blob);
-    } else {  // Safari
-        url = canvas.toDataURL();
-        ga('send', 'event', 'Toolbar', 'Screenshot', 'NoCanvasToDataURL');
-    }
+    let blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve));
+    if (!blob) return;
     // Unless target="_blank", iOS safari replaces current page
-    downloadAs(getScreenshotFilename(), url, '_blank');
+    downloadAs(getScreenshotFilename(), URL.createObjectURL(blob), '_blank');
 }
 
 function getScreenshotFilename(): string {

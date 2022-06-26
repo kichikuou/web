@@ -32,6 +32,12 @@ function load(no: number): Promise<AudioBuffer> {
     });
 }
 
+export function pcm_reset() {
+    for (let i = 0; i < slots.length; i++) {
+        pcm_unload(i);
+    }
+}
+
 export function pcm_load(slot: number, no: number) {
     return Asyncify.handleSleep((wakeUp: (result: Status) => void) => {
         pcm_stop(slot);
