@@ -4,6 +4,9 @@ import {$, urlParams} from './util.js';
 
 const textLogMaxLines = 2000;
 
+// Ignore mouse wheel events on the game canvas up to this timestamp.
+let wheelIgnoreTime = 0;
+
 // Text from these scenario pages won't be shown in the text log.
 const quietPagesTable: {[key:string] : number[]} = {
     'ＲＡＮＣＥ': [2],
@@ -38,6 +41,10 @@ document.addEventListener('gamestart', () => {
 });
 
 $('#canvas').addEventListener('wheel', (e: WheelEvent) => {
+    // Do not open text log if the game is actively checking mouse wheel state.
+    if (performance.now() < wheelIgnoreTime) {
+        return;
+    }
     if (e.deltaY <= 0) {
         openTextLog();
     }
@@ -115,4 +122,8 @@ function addLine(s: string) {
 
 function skiplog(page: number) {
     return quietPages.includes(page);
+}
+
+export function disableWheelEvent(duration: number) {
+    wheelIgnoreTime = performance.now() + duration;
 }
