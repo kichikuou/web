@@ -52,3 +52,4 @@ This site also uses the following opensource softwares.
 - [fmgen](http://retropc.net/cisc/m88/download.html) by cisc ([License](https://github.com/kichikuou/fmgen/blob/master/readme.txt))
 - [WebAssembly port of libTiMidity](https://github.com/feross/timidity) by Feross Aboukhadijeh ([License](https://github.com/kichikuou/timidity/blob/kichikuou/LICENSE))
 - [LAME MP3 encoder](https://lame.sourceforge.io/) ([License](https://github.com/kichikuou/lame-wasm/blob/master/lame/COPYING))
+- [stbvorbis.js](https://github.com/hajimehoshi/stbvorbis.js) ([License](https://github.com/hajimehoshi/stbvorbis.js/blob/v0.2.2/LICENSE))

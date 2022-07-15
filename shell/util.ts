@@ -170,6 +170,17 @@ declare global {
     namespace Asyncify {
         function handleSleep(op : (wakeUp: (result: any) => void) => void): void;
     }
+
+    // stbvorbis.js
+    namespace stbvorbis {
+        type DecodeResult = {
+            data: Float32Array[],
+            sampleRate: number,
+            eof: boolean,
+            error?: string
+        }
+        function decode(buf: ArrayBuffer|Uint8Array, callback: (event: DecodeResult) => void): void;
+    }
 }
 
 // https://storage.spec.whatwg.org

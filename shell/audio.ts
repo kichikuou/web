@@ -1,6 +1,6 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {gaException, Bool, Status, DRIType, ald_getdata} from './util.js';
+import {gaException, Bool, Status, DRIType, ald_getdata, loadScript} from './util.js';
 import * as volumeControl from './volume.js';
 
 declare global {
@@ -17,19 +17,55 @@ function init() {
     document.addEventListener('visibilitychange', onVisibilityChange);
 }
 
-function load(no: number): Promise<AudioBuffer> {
+async function load(no: number): Promise<AudioBuffer> {
     const buf = ald_getdata(DRIType.WAVE, no - 1);
     if (!buf)
-        return Promise.reject('Failed to open wave ' + no);
+        throw new Error('Failed to open wave ' + no);
 
     // If the AudioContext was not created inside a user-initiated event
     // handler, then it will be suspended. Attempt to resume it.
     destNode.context.resume();
 
-    return destNode.context.decodeAudioData(buf).then((audioBuf) => {
-        bufCache[no] = audioBuf;
-        return audioBuf;
-    });
+    const audioBuf = await decodeAudioData(buf);
+    bufCache[no] = audioBuf;
+    return audioBuf;
+}
+
+async function decodeAudioData(buf: ArrayBuffer): Promise<AudioBuffer> {
+    try {
+        return await destNode.context.decodeAudioData(buf);
+    } catch (err) {
+        const a = new Uint8Array(buf);
+        if (a[0] === 0x4f && a[1] === 0x67 && a[2] === 0x67 && a[3] === 0x53) { // 'OggS'
+            await loadScript('lib/stbvorbis-0.2.2.js');
+            const data: Float32Array[][] = [];
+            let sampleRate = 0;
+            return new Promise((resolve, reject) => {
+                stbvorbis.decode(buf, (event) => {
+                    if (event.error) {
+                        reject(event.error);
+                    } else if (!event.eof) {
+                        if (data.length === 0) sampleRate = event.sampleRate;
+                        data.push(event.data);
+                    } else {
+                        const nr_channels = data[0].length;
+                        const len = data.reduce((sum, channels) => sum + channels[0].length, 0);
+                        const audioBuf = destNode.context.createBuffer(nr_channels, len, sampleRate);
+                        for (let ch = 0; ch < nr_channels; ch++) {
+                            const b = audioBuf.getChannelData(ch);
+                            let offset = 0;
+                            for (const chunks of data) {
+                                b.set(chunks[ch], offset);
+                                offset += chunks[ch].length;
+                            }
+                        }
+                        resolve(audioBuf);
+                    }
+                });
+            });
+        }
+        throw err;
+    }
 }
 
 export function pcm_reset() {
