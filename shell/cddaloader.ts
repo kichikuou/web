@@ -53,10 +53,7 @@ export class IOSCDDALoader implements CDDALoader {
     private reloadToast: HTMLElement | undefined;
 
     constructor(private imageReader: Reader) {
-        if (imageReader.cddaCacheKey) {
-            this.mp3Cache = new MP3Cache(imageReader.cddaCacheKey);
-            this.mp3Cache.startSpeculativeCache(this.imageReader);
-        }
+        // Temporarily disable MP3Cache
     }
 
     async getCDDA(track: number): Promise<string> {
