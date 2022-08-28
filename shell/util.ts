@@ -155,6 +155,8 @@ declare global {
     function _msgskip_activate(enable: number): void;
     function _msgskip_setFlags(flags: number, mask: number): void;
     function _sys_restart(): void;
+    function _nact_current_page(): number;
+    function _nact_current_addr(): number;
 
     var Module: EmscriptenModule;
     interface EmscriptenModule {

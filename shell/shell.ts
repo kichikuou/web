@@ -16,18 +16,20 @@ import {message} from './strings.js';
 class System35Shell {
     constructor() {
         window.onerror = (message, url, line, column, error) => {
-            gaException({type: 'onerror', message, url, line, column}, true);
+            const address = scenario_address();
+            gaException({type: 'onerror', message, url, line, column, address}, true);
             addToast('エラーが発生しました。', 'error');
             window.onerror = null;
         };
         window.addEventListener('unhandledrejection', (evt: any) => {
-            let reason = evt.reason;
-            console.log(reason);
+            const reason = evt.reason;
+            const address = scenario_address();
+            console.log(address, reason);
             if (reason instanceof Error) {
                 let {name, message, stack} = reason;
-                gaException({type: 'rejection', name, message, stack}, true);
+                gaException({type: 'rejection', name, message, stack, address}, true);
             } else {
-                gaException({type: 'rejection', name: reason.constructor.name, reason}, true);
+                gaException({type: 'rejection', name: reason.constructor.name, reason, address}, true);
             }
         });
     }
@@ -81,6 +83,11 @@ class System35Shell {
     syncfs(timeout = 100) {
         syncfs(timeout);
     }
+}
+
+function scenario_address(): string | undefined {
+    if (!window['_nact_current_page']) return undefined;
+    return _nact_current_page() + ':' + _nact_current_addr().toString(16);
 }
 
 let shell = new System35Shell();
