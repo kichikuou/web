@@ -1,8 +1,8 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {$, startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, isMobileSafari, JSZIP_SCRIPT, JSZipOptions} from './util.js';
+import {$, startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, JSZIP_SCRIPT, JSZipOptions} from './util.js';
 import * as cdimage from './cdimage.js';
-import {CDDALoader, BasicCDDALoader, IOSCDDALoader, BGMLoader} from './cddaloader.js';
+import {CDDALoader, BGMLoader} from './cddaloader.js';
 import {registerDataFile} from './datafile.js';
 import {loadModule, saveDirReady} from './moduleloader.js';
 import {message} from './strings.js';
@@ -31,7 +31,7 @@ export abstract class LoaderSource {
 
     getCDDALoader(): CDDALoader {
         if (this.hasBGM)
-            return new BasicCDDALoader(new BGMLoader());
+            return new CDDALoader(new BGMLoader());
         return this.createCDDALoader();
     }
 
@@ -136,7 +136,7 @@ export class CDImageSource extends LoaderSource {
     }
 
     createCDDALoader(): CDDALoader {
-        return isMobileSafari() ? new IOSCDDALoader(this.imageReader) : new BasicCDDALoader(this.imageReader);
+        return new CDDALoader(this.imageReader);
     }
 
     private async findGameDir(isofs: cdimage.ISO9660FileSystem): Promise<cdimage.DirEnt | null> {
@@ -207,7 +207,7 @@ export class FileSource extends LoaderSource {
     }
 
     createCDDALoader(): CDDALoader {
-        return new BasicCDDALoader(this);
+        return new CDDALoader(this);
     }
 
     async extractTrack(track: number): Promise<Blob> {
@@ -250,7 +250,7 @@ export class ZipSource extends LoaderSource {
     }
 
     createCDDALoader(): CDDALoader {
-        return new BasicCDDALoader(this);
+        return new CDDALoader(this);
     }
 
     async extractTrack(track: number): Promise<Blob> {
@@ -297,7 +297,7 @@ export class SevenZipSource extends LoaderSource {
     }
 
     createCDDALoader(): CDDALoader {
-        return new BasicCDDALoader(this);
+        return new CDDALoader(this);
     }
 
     async extractTrack(track: number): Promise<Blob> {

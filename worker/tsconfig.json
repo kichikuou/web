@@ -9,7 +9,6 @@
         "strict": true
     },
     "files": [
-        "archiveworker.ts",
-        "cddacacheworker.ts"
+        "archiveworker.ts"
     ]
 }
