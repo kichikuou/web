@@ -15,10 +15,11 @@ import {message} from './strings.js';
 
 class System35Shell {
     constructor() {
+        const message_ = message;
         window.onerror = (message, url, line, column, error) => {
             const address = scenario_address();
             gaException({type: 'onerror', message, url, line, column, address}, true);
-            addToast('エラーが発生しました。', 'error');
+            addToast(message_.error_occurred, 'error');
             window.onerror = null;
         };
         window.addEventListener('unhandledrejection', (evt: any) => {
@@ -28,6 +29,9 @@ class System35Shell {
             if (reason instanceof Error) {
                 let {name, message, stack} = reason;
                 gaException({type: 'rejection', name, message, stack, address}, true);
+                if (name === 'RuntimeError') {
+                    addToast(message_.error_occurred, 'error');
+                }
             } else {
                 gaException({type: 'rejection', name: reason.constructor.name, reason, address}, true);
             }

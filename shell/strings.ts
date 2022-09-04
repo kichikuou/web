@@ -3,6 +3,7 @@
 
 const dictionary_en = {
     cannot_install: 'Cannot install',
+    error_occurred: 'An error occurred.',
     game_over: 'The game is over.',
     import_savedata_confirm: 'Import save files from Kichikuou on Chrome?',
     input_char_limit: (maxLength: number) => `Up to ${maxLength} characters`,
@@ -19,6 +20,7 @@ type Dictionary = typeof dictionary_en;
 
 const dictionary_ja: Dictionary = {
     cannot_install: 'インストールできません',
+    error_occurred: 'エラーが発生しました。',
     game_over: 'ゲームは終了しました。',
     import_savedata_confirm: '鬼畜王 on Chrome のセーブデータを引き継ぎますか?',
     input_char_limit: (maxLength: number) => `全角${maxLength}文字まで`,
