@@ -37,10 +37,8 @@ function init() {
             FS.mount(IDBFS, {}, '/save');
             Module.addRunDependency('syncfs');
             FS.syncfs(true, (err) => {
-                importSaveDataFromLocalFileSystem().then(() => {
-                    Module.removeRunDependency('syncfs');
-                    idbfsReady(FS);
-                });
+                Module.removeRunDependency('syncfs');
+                idbfsReady(FS);
             });
         },
         () => {
@@ -110,49 +108,6 @@ export function load_mincho_font(): Promise<number> {
             resolve(Status.NG);
         });
     });
-}
-
-async function importSaveDataFromLocalFileSystem() {
-    function requestFileSystem(type: number, size: number): Promise<FileSystem> {
-        return new Promise((resolve, reject) => window.webkitRequestFileSystem(type, size, resolve, reject));
-    }
-    function getDirectory(dir: DirectoryEntry, path: string): Promise<DirectoryEntry> {
-        return new Promise((resolve, reject) => dir.getDirectory(path, {}, resolve, reject));
-    }
-    function readEntries(reader: DirectoryReader): Promise<Entry[]> {
-        return new Promise((resolve, reject) => reader.readEntries(resolve, reject));
-    }
-    function fileOf(entry: FileEntry): Promise<File> {
-        return new Promise((resolve, reject) => entry.file(resolve, reject));
-    }
-
-    if (FS.readdir('/save').length > 2)  // Are there any entries other than . and ..?
-        return;
-    if (!window.webkitRequestFileSystem)
-        return;
-    try {
-        let fs = await requestFileSystem(self.PERSISTENT, 0);
-        let savedir = (await getDirectory(fs.root, 'save')).createReader();
-        let entries: FileEntry[] = [];
-        while (true) {
-            let results = await readEntries(savedir);
-            if (!results.length)
-                break;
-            for (let e of results) {
-                if (e.isFile && e.name.toLowerCase().endsWith('.asd'))
-                    entries.push(e as FileEntry);
-            }
-        }
-        if (entries.length && window.confirm(message.import_savedata_confirm)) {
-            for (let e of entries) {
-                let content = await (await fileOf(e)).arrayBuffer();
-                FS.writeFile('/save/' + e.name, new Uint8Array(content));
-            }
-            syncfs(0);
-            ga('send', 'event', 'Game', 'SaveDataImported');
-        }
-    } catch (err) {
-    }
 }
 
 init();
