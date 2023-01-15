@@ -230,8 +230,11 @@ export class ZipSource extends LoaderSource {
         await zip.loadAsync(await readFileAsArrayBuffer(this.zipFile), JSZipOptions());
 
         const dataFiles = zip.file(/\.(ald|ain|dat|mda|ttf|otf|ini|xsys35rc)$/i);
-        if (dataFiles.length === 0)
-            throw new NoGamedataError(message.no_ald_in_zip);
+        if (dataFiles.length === 0) {
+            const msg = zip.file(/\.(d88|dsk|hdm|xdf)$/i).length > 0 ?
+                message.floppy_images_cant_be_used : message.no_ald_in_zip;
+            throw new NoGamedataError(msg);
+        }
         if (zip.file(/adisk.dat/i).length > 0) {
             await this.loadSystem3('/save/@');
         } else {
