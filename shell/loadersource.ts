@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {$, startMeasure, mkdirIfNotExist, readFileAsArrayBuffer, loadScript, JSZIP_SCRIPT, JSZipOptions} from './util.js';
+import {$, startMeasure, mkdirIfNotExist, loadScript, JSZIP_SCRIPT, JSZipOptions} from './util.js';
 import * as cdimage from './cdimage.js';
 import {CDDALoader, BGMLoader} from './cddaloader.js';
 import {registerDataFile} from './datafile.js';
@@ -129,7 +129,7 @@ export class CDImageSource extends LoaderSource {
             this.addFile(e.name, e.size, chunks);
         }
         for (let f of this.patchFiles) {
-            let content = await readFileAsArrayBuffer(f);
+            let content = await f.arrayBuffer();
             this.addFile(f.name, f.size, [new Uint8Array(content)]);
         }
         endMeasure();
@@ -201,7 +201,7 @@ export class FileSource extends LoaderSource {
                 this.tracks[Number(match[1])] = f;
                 continue;
             }
-            let content = await readFileAsArrayBuffer(f);
+            let content = await f.arrayBuffer();
             this.addFile(f.name, f.size, [new Uint8Array(content)]);
         }
     }
@@ -227,7 +227,7 @@ export class ZipSource extends LoaderSource {
     protected async doLoad() {
         await loadScript(JSZIP_SCRIPT);
         const zip = new JSZip();
-        await zip.loadAsync(await readFileAsArrayBuffer(this.zipFile), JSZipOptions());
+        await zip.loadAsync(await this.zipFile.arrayBuffer(), JSZipOptions());
 
         const dataFiles = zip.file(/\.(ald|ain|dat|mda|ttf|otf|ini|xsys35rc)$/i);
         if (dataFiles.length === 0) {

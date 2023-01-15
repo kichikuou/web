@@ -1,6 +1,6 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {loadScript, JSZIP_SCRIPT, readFileAsArrayBuffer, JSZipOptions, mkdirIfNotExist} from './util.js';
+import {loadScript, JSZIP_SCRIPT, JSZipOptions, mkdirIfNotExist} from './util.js';
 import {saveDirReady} from './moduleloader.js';
 import {addToast, downloadAs} from './widgets.js';
 import {message} from './strings.js';
@@ -53,11 +53,11 @@ export class SaveDataManager {
         try {
             let fs = await this.FSready;
             if (file.name.toLowerCase().endsWith('.asd')) {
-                addSaveFile(fs, '/save/' + file.name, await readFileAsArrayBuffer(file));
+                addSaveFile(fs, '/save/' + file.name, await file.arrayBuffer());
             } else {
                 await loadScript(JSZIP_SCRIPT);
                 let zip = new JSZip();
-                await zip.loadAsync(await readFileAsArrayBuffer(file), JSZipOptions());
+                await zip.loadAsync(await file.arrayBuffer(), JSZipOptions());
                 let entries: JSZipObject[] = [];
                 zip.folder('save').forEach((path, z) => { entries.push(z); });
                 for (let z of entries) {

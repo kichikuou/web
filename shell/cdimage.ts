@@ -1,6 +1,5 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {readFileAsArrayBuffer, readFileAsText} from './util.js';
 import {openFileInput} from './widgets.js';
 
 export class ISO9660FileSystem {
@@ -185,7 +184,7 @@ class ImageReaderBase {
                             sectorOffset: number): Promise<Uint8Array[]> {
         let sectors = Math.ceil(bytesToRead / sectorSize);
         let blob = this.image.slice(startOffset, startOffset + sectors * blockSize);
-        let buf = await readFileAsArrayBuffer(blob);
+        let buf = await blob.arrayBuffer();
         let bufs: Uint8Array[] = [];
         for (let i = 0; i < sectors; i++) {
             bufs.push(new Uint8Array(buf, i * blockSize + sectorOffset, Math.min(bytesToRead, sectorSize)));
@@ -203,12 +202,12 @@ class ImageReaderBase {
 
 class IsoReader extends ImageReaderBase implements Reader {
     readSector(sector: number): Promise<ArrayBuffer> {
-        return readFileAsArrayBuffer(this.image.slice(sector * 2048, (sector + 1) * 2048));
+        return this.image.slice(sector * 2048, (sector + 1) * 2048).arrayBuffer();
     }
 
     async readSequentialSectors(startSector: number, length: number): Promise<Uint8Array[]> {
         let start = startSector * 2048;
-        let buf = await readFileAsArrayBuffer(this.image.slice(start, start + length));
+        let buf = await this.image.slice(start, start + length).arrayBuffer();
         return [new Uint8Array(buf)];
     }
 
@@ -231,7 +230,7 @@ class ImgCueReader extends ImageReaderBase implements Reader {
     readSector(sector: number): Promise<ArrayBuffer> {
         let start = sector * 2352 + 16;
         let end = start + 2048;
-        return readFileAsArrayBuffer(this.image.slice(start, end));
+        return this.image.slice(start, end).arrayBuffer();
     }
 
     readSequentialSectors(startSector: number, length: number): Promise<Uint8Array[]> {
@@ -239,7 +238,7 @@ class ImgCueReader extends ImageReaderBase implements Reader {
     }
 
     async parseCue(cueFile: File) {
-        let lines = (await readFileAsText(cueFile)).split('\n');
+        let lines = (await cueFile.text()).split('\n');
         let currentTrack: number | null = null;
         for (let line of lines) {
             let fields = line.trim().split(/\s+/);
@@ -259,7 +258,7 @@ class ImgCueReader extends ImageReaderBase implements Reader {
     }
 
     async parseCcd(ccdFile: File) {
-        let lines = (await readFileAsText(ccdFile)).split('\n');
+        let lines = (await ccdFile.text()).split('\n');
         let currentTrack: number | null = null;
         for (let line of lines) {
             line = line.trim();
@@ -326,7 +325,7 @@ class MdfMdsReader extends ImageReaderBase implements Reader {
     }
 
     async parseMds(mdsFile: File) {
-        let buf = await readFileAsArrayBuffer(mdsFile);
+        let buf = await mdsFile.arrayBuffer();
 
         let signature = ASCIIArrayToString(new Uint8Array(buf, 0, 16));
         if (signature !== 'MEDIA DESCRIPTOR')
@@ -355,7 +354,7 @@ class MdfMdsReader extends ImageReaderBase implements Reader {
     readSector(sector: number): Promise<ArrayBuffer> {
         let start = sector * this.tracks[1].sectorSize + 16;
         let end = start + 2048;
-        return readFileAsArrayBuffer(this.image.slice(start, end));
+        return this.image.slice(start, end).arrayBuffer();
     }
 
     readSequentialSectors(startSector: number, length: number): Promise<Uint8Array[]> {

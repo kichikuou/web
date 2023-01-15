@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {$, urlParams, readFileAsArrayBuffer, startMeasure, Status} from './util.js';
+import {$, urlParams, startMeasure, Status} from './util.js';
 import {addToast} from './widgets.js';
 import * as toolbar from './toolbar.js';
 import {message} from './strings.js';
@@ -145,7 +145,7 @@ async function importSaveDataFromLocalFileSystem() {
         }
         if (entries.length && window.confirm(message.import_savedata_confirm)) {
             for (let e of entries) {
-                let content = await readFileAsArrayBuffer(await fileOf(e));
+                let content = await (await fileOf(e)).arrayBuffer();
                 FS.writeFile('/save/' + e.name, new Uint8Array(content));
             }
             syncfs(0);
