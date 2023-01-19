@@ -182,7 +182,7 @@ export class FileSource extends LoaderSource {
     private tracks: File[] = [];
     private files: File[] = []
 
-    constructor(fs: FileList) {
+    constructor(fs: FileList | File[]) {
         super()
         for (let i = 0; i < fs.length; i++) {
             this.files.push(fs[i]);

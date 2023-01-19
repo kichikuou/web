@@ -35,10 +35,38 @@ function handleDragOver(evt: DragEvent) {
 function handleDrop(evt: DragEvent) {
     evt.stopPropagation();
     evt.preventDefault();
-    handleFiles(evt.dataTransfer!.files);
+    const items = evt.dataTransfer?.items;
+    if (!items) return;
+    if (items.length === 1) {
+        const entry = items[0].webkitGetAsEntry();
+        if (entry?.isDirectory) {
+            handleDirectory(entry as FileSystemDirectoryEntry)
+            return;
+        }
+    }
+    handleFiles(evt.dataTransfer.files);
 }
 
-async function handleFiles(files: FileList) {
+async function handleDirectory(entry: FileSystemDirectoryEntry) {
+    const files: File[] = [];
+    async function walk(entry: FileSystemDirectoryEntry, depth: number) {
+        const entries = await new Promise<FileSystemEntry[]>(
+            (res, rej) => entry.createReader().readEntries(res, rej));
+        for (const e of entries) {
+            if (e.isDirectory && depth > 0) {
+                await walk(e as FileSystemDirectoryEntry, depth - 1);
+            } else if (e.isFile) {
+                const file = await new Promise<File>(
+                    (res, rej) => (e as FileSystemFileEntry).file(res, rej));
+                files.push(file);
+            }
+        }
+    }
+    await walk(entry, 1);
+    handleFiles(files);
+}
+
+async function handleFiles(files: FileList | File[]) {
     if (installing || files.length === 0)
         return;
 
