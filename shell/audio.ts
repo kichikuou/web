@@ -145,7 +145,11 @@ export function pcm_fadeout(slot: number, msec: number): Status {
     let sound = slots[slot];
     if (!sound)
         return Status.NG;
-    sound.fadeout(msec);
+    if (msec === 0) {
+        sound.stop();
+    } else {
+        sound.fadeout(msec);
+    }
     return Status.OK;
 }
 
@@ -204,12 +208,13 @@ abstract class PCMSound {
         this.gain.connect(dst);
     }
     abstract start(loop: number): void;
-    abstract stop(): void;
+    abstract stop(after_msec?: number): void;
     setGain(gain: number) {
         this.gain.gain.value = gain;
     }
     fadeout(msec: number) {
         this.gain.gain.linearRampToValueAtTime(0, this.context.currentTime + msec / 1000);
+        this.stop(msec);
     }
     getPosition(): number {
         if (this.startTime === null)
@@ -251,10 +256,9 @@ class PCMSoundSimple extends PCMSound {
         this.startTime = this.context.currentTime;
     }
 
-    stop() {
+    stop(after_msec?: number) {
         if (this.startTime !== null) {
-            this.node.stop();
-            this.startTime = null;
+            this.node.stop(after_msec ? this.context.currentTime + after_msec / 1000 : undefined);
         }
     }
 
@@ -293,11 +297,11 @@ class PCMSoundMixLR extends PCMSound {
         this.startTime = this.context.currentTime;
     }
 
-    stop() {
+    stop(after_msec?: number) {
         if (this.startTime !== null) {
-            this.lsrc.stop();
-            this.rsrc.stop();
-            this.startTime = null;
+            const when = after_msec ? this.context.currentTime + after_msec / 1000 : undefined;
+            this.lsrc.stop(when);
+            this.rsrc.stop(when);
         }
     }
 
