@@ -91,6 +91,19 @@ export function pcm_load(slot: number, no: number) {
     });
 }
 
+export function pcm_load_data(slot: number, buf: number, len: number) {
+    return Asyncify.handleSleep((wakeUp: (result: Status) => void) => {
+        pcm_stop(slot);
+        decodeAudioData(Module.HEAPU8.slice(buf, buf + len).buffer).then((audioBuf) => {
+            slots[slot] = new PCMSoundSimple(destNode, audioBuf);
+            wakeUp(Status.OK);
+        }, (err) => {
+            gaException({type: 'PCM', err});
+            wakeUp(Status.NG);
+        });
+    });
+}
+
 export function pcm_load_mixlr(slot: number, noL: number, noR: number) {
     return Asyncify.handleSleep((wakeUp: (result: Status) => void) => {
         pcm_stop(slot);
