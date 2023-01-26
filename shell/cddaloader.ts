@@ -51,3 +51,12 @@ export class BGMLoader implements CDDALoaderSource {
         return new Blob([buf]);
     }
 }
+
+export class Rance4v2BGMLoader implements CDDALoaderSource {
+    async extractTrack(track: number): Promise<Blob> {
+        const buf = ald_getdata(DRIType.WAVE, track - 2 + 1000);
+        if (!buf)
+            throw new Error('Rance4v2BGMLoader: Invalid track ' + track);
+        return new Blob([buf]);
+    }
+}
