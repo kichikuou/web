@@ -70,7 +70,7 @@ export async function play(track: number, loop: number) {
     }
     audio.currentTime = 0;
     try {
-        const url = await cddaLoader!.getCDDA(track)
+        const url = await cddaLoader!.getCDDA(track, audio)
         startPlayback(url, loop);
     } catch (err) {
         ga('send', 'event', 'CDDA', 'InvalidTrack');

@@ -65,6 +65,26 @@ export function JSZipOptions(): JSZipLoadOptions {
     }
 }
 
+export function createWaveFile(sampleRate: number, channels: number, dataSize: number, chunks: BlobPart[]): Blob {
+    let headerBuf = new ArrayBuffer(44);
+    let header = new DataView(headerBuf);
+    header.setUint32(0, 0x52494646, false); // 'RIFF'
+    header.setUint32(4, dataSize + 36, true); // filesize - 8
+    header.setUint32(8, 0x57415645, false); // 'WAVE'
+    header.setUint32(12, 0x666D7420, false); // 'fmt '
+    header.setUint32(16, 16, true); // size of fmt chunk
+    header.setUint16(20, 1, true); // PCM format
+    header.setUint16(22, channels, true); // stereo
+    header.setUint32(24, sampleRate, true); // sampling rate
+    header.setUint32(28, sampleRate * channels * 2, true); // bytes/sec
+    header.setUint16(32, channels * 2, true); // block size
+    header.setUint16(34, 16, true); // bit/sample
+    header.setUint32(36, 0x64617461, false); // 'data'
+    header.setUint32(40, dataSize, true); // data size
+    chunks.unshift(headerBuf);
+    return new Blob(chunks, { type: 'audio/wav' });
+}
+
 export class Deferred<T> {
     public promise: Promise<T>;
     private _resolve!: (value: T) => void;

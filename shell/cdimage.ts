@@ -1,5 +1,6 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
+import { createWaveFile } from './util.js';
 import {openFileInput} from './widgets.js';
 
 export class ISO9660FileSystem {
@@ -303,10 +304,7 @@ class ImgCueReader extends ImageReaderBase implements Reader {
         } else {
             end = this.image.size;
         }
-        return new Blob([
-            createWaveHeader(end - start),
-            this.image.slice(start, end)
-        ], { type: 'audio/wav' });
+        return createWaveFile(44100, 2, end - start, [this.image.slice(start, end)]);
     }
 
     private indexToSector(index: string): number {
@@ -374,29 +372,10 @@ class MdfMdsReader extends ImageReaderBase implements Reader {
         let size = this.tracks[track].sectors * 2352;
         let chunks = await this.readSequential(this.tracks[track].offset, size,
                                                 this.tracks[track].sectorSize, 2352, 0);
-        return new Blob([<any>createWaveHeader(size)].concat(chunks), { type: 'audio/wav' });
+        return createWaveFile(44100, 2, size, chunks);
     }
 }
 
 function ASCIIArrayToString(buffer: Uint8Array): string {
     return String.fromCharCode.apply(null, buffer as any);
-}
-
-function createWaveHeader(size: number): ArrayBuffer {
-    let buf = new ArrayBuffer(44);
-    let view = new DataView(buf);
-    view.setUint32(0, 0x52494646, false); // 'RIFF'
-    view.setUint32(4, size + 36, true); // filesize - 8
-    view.setUint32(8, 0x57415645, false); // 'WAVE'
-    view.setUint32(12, 0x666D7420, false); // 'fmt '
-    view.setUint32(16, 16, true); // size of fmt chunk
-    view.setUint16(20, 1, true); // PCM format
-    view.setUint16(22, 2, true); // stereo
-    view.setUint32(24, 44100, true); // sampling rate
-    view.setUint32(28, 176400, true); // bytes/sec
-    view.setUint16(32, 4, true); // block size
-    view.setUint16(34, 16, true); // bit/sample
-    view.setUint32(36, 0x64617461, false); // 'data'
-    view.setUint32(40, size, true); // data size
-    return buf;
 }
