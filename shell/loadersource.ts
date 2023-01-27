@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {$, startMeasure, mkdirIfNotExist, loadScript, JSZIP_SCRIPT, JSZipOptions} from './util.js';
+import {$, startMeasure, mkdirIfNotExist, loadScript, JSZIP_SCRIPT, JSZipOptions, createBlob} from './util.js';
 import * as cdimage from './cdimage.js';
 import {CDDALoader, BGMLoader, Rance4v2BGMLoader} from './cddaloader.js';
 import {registerDataFile} from './datafile.js';
@@ -262,9 +262,11 @@ export class ZipSource extends LoaderSource {
     }
 
     async extractTrack(track: number): Promise<Blob> {
-        if (!this.tracks[track])
+        const zobj = this.tracks[track];
+        if (!zobj)
             throw new Error('ZipSource: Invalid track ' + track);
-        return this.tracks[track].async('blob');
+        const buf: ArrayBuffer = await zobj.async('arraybuffer');
+        return createBlob(buf, zobj.name);
     }
 }
 
@@ -297,7 +299,7 @@ export class SevenZipSource extends LoaderSource {
         for (const f of files) {
             let match = /(\d+)\.(wav|mp3|ogg)$/i.exec(f.name);
             if (match) {
-                this.tracks[Number(match[1])] = new Blob([f.content]);
+                this.tracks[Number(match[1])] = createBlob(f.content, f.name);
                 continue;
             }
             this.addFile(f.name, f.content.byteLength, [f.content]);

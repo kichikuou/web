@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import { DRIType, ald_getdata, isMobileSafari } from './util.js';
+import { DRIType, ald_getdata, isMobileSafari, createBlob } from './util.js';
 
 export interface CDDALoaderSource {
     extractTrack(track: number): Promise<Blob>;
@@ -45,18 +45,18 @@ export class CDDALoader {
 
 export class BGMLoader implements CDDALoaderSource {
     async extractTrack(track: number): Promise<Blob> {
-        const buf = ald_getdata(DRIType.BGM, track - 1);
-        if (!buf)
+        const dfile = ald_getdata(DRIType.BGM, track - 1);
+        if (!dfile)
             throw new Error('BGMLoader: Invalid track ' + track);
-        return new Blob([buf]);
+        return createBlob(dfile.data, dfile.name);
     }
 }
 
 export class Rance4v2BGMLoader implements CDDALoaderSource {
     async extractTrack(track: number): Promise<Blob> {
-        const buf = ald_getdata(DRIType.WAVE, track - 2 + 1000);
-        if (!buf)
+        const dfile = ald_getdata(DRIType.WAVE, track - 2 + 1000);
+        if (!dfile)
             throw new Error('Rance4v2BGMLoader: Invalid track ' + track);
-        return new Blob([buf]);
+        return createBlob(dfile.data, dfile.name);
     }
 }

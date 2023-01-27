@@ -18,15 +18,15 @@ function init() {
 }
 
 async function load(no: number): Promise<AudioBuffer> {
-    const buf = ald_getdata(DRIType.WAVE, no - 1);
-    if (!buf)
+    const dfile = ald_getdata(DRIType.WAVE, no - 1);
+    if (!dfile)
         throw new Error('Failed to open wave ' + no);
 
     // If the AudioContext was not created inside a user-initiated event
     // handler, then it will be suspended. Attempt to resume it.
     destNode.context.resume();
 
-    const audioBuf = await decodeAudioData(buf);
+    const audioBuf = await decodeAudioData(dfile.data);
     bufCache[no] = audioBuf;
     return audioBuf;
 }

@@ -38,6 +38,18 @@ export function isMobileSafari(from?: string, to?: string): boolean {
     return (!from || from <= ver) && (!to || ver < to);
 }
 
+export function createBlob(data: BlobPart, name: string) {
+    return new Blob([data], { type: mimeTypeFromFilename(name) });
+}
+
+function mimeTypeFromFilename(name: string): string {
+    const lcname = name.toLowerCase();
+    if (lcname.endsWith('.wav')) return 'audio/wav';
+    if (lcname.endsWith('.ogg')) return 'audio/ogg';
+    if (lcname.endsWith('.mp3')) return 'audio/mpeg';
+    return '';
+}
+
 export function JSZipOptions(): JSZipLoadOptions {
     let opts: JSZipLoadOptions = {};
     if (typeof TextDecoder !== 'undefined')
@@ -116,15 +128,28 @@ export enum DRIType {
     BGM = 6,
 }
 
-export function ald_getdata(type: DRIType, no: number): ArrayBuffer | null {
+type AldEntry = { name: string, data: ArrayBuffer }
+
+export function ald_getdata(type: DRIType, no: number): AldEntry | null {
     let dfile = _ald_getdata(type, no);
     if (!dfile)
         return null;
     let ptr = Module.getValue(dfile + 8, '*');
     let size = Module.getValue(dfile, 'i32');
-    let buf = Module.HEAPU8.buffer.slice(ptr, ptr + size);
+    let name = ascii_to_string(Module.getValue(dfile + 12, '*'));  // TODO: Shift_JIS decoding
+    let data = Module.HEAPU8.buffer.slice(ptr, ptr + size);
     _ald_freedata(dfile);
-    return buf;
+    return { name, data };
+}
+
+function ascii_to_string(ptr: number): string {
+    let str = '';
+    while (1) {
+        const ch = Module.HEAPU8[ptr++];
+        if (!ch) break;
+        str += String.fromCharCode(ch);
+    }
+    return str;
 }
 
 declare global {
