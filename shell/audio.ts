@@ -9,7 +9,9 @@ declare global {
     }
 }
 
+const PCM_SLOTS = 1 + 128;
 const slots: (PCMSound | null)[] = [];
+const slotVolume: number[] = new Array(PCM_SLOTS).fill(1.0);
 let bufCache: AudioBuffer[] = [];
 const destNode = volumeControl.audioNode();
 
@@ -78,11 +80,11 @@ export function pcm_load(slot: number, no: number) {
     return Asyncify.handleSleep((wakeUp: (result: Status) => void) => {
         pcm_stop(slot);
         if (bufCache[no]) {
-            slots[slot] = new PCMSoundSimple(destNode, bufCache[no]);
+            slots[slot] = new PCMSoundSimple(destNode, bufCache[no], slotVolume[slot]);
             return wakeUp(Status.OK);
         }
         load(no).then((audioBuf) => {
-            slots[slot] = new PCMSoundSimple(destNode, audioBuf);
+            slots[slot] = new PCMSoundSimple(destNode, audioBuf, slotVolume[slot]);
             wakeUp(Status.OK);
         }, (err) => {
             gaException({type: 'PCM', err});
@@ -95,7 +97,7 @@ export function pcm_load_data(slot: number, buf: number, len: number) {
     return Asyncify.handleSleep((wakeUp: (result: Status) => void) => {
         pcm_stop(slot);
         decodeAudioData(Module.HEAPU8.slice(buf, buf + len).buffer).then((audioBuf) => {
-            slots[slot] = new PCMSoundSimple(destNode, audioBuf);
+            slots[slot] = new PCMSoundSimple(destNode, audioBuf, slotVolume[slot]);
             wakeUp(Status.OK);
         }, (err) => {
             gaException({type: 'PCM', err});
@@ -108,7 +110,7 @@ export function pcm_load_mixlr(slot: number, noL: number, noR: number) {
     return Asyncify.handleSleep((wakeUp: (result: Status) => void) => {
         pcm_stop(slot);
         if (bufCache[noL] && bufCache[noR]) {
-            slots[slot] = new PCMSoundMixLR(destNode, bufCache[noL], bufCache[noR]);
+            slots[slot] = new PCMSoundMixLR(destNode, bufCache[noL], bufCache[noR], slotVolume[slot]);
             return wakeUp(Status.OK);
         }
         let ps: [Promise<AudioBuffer>, Promise<AudioBuffer>] = [
@@ -116,7 +118,7 @@ export function pcm_load_mixlr(slot: number, noL: number, noR: number) {
             bufCache[noR] ? Promise.resolve(bufCache[noR]) : load(noR),
         ];
         Promise.all(ps).then((bufs) => {
-            slots[slot] = new PCMSoundMixLR(destNode, bufs[0], bufs[1]);
+            slots[slot] = new PCMSoundMixLR(destNode, bufs[0], bufs[1], slotVolume[slot]);
             wakeUp(Status.OK);
         }).catch((err) => {
             gaException({type: 'PCM', err});
@@ -174,10 +176,10 @@ export function pcm_getpos(slot: number): number {
 }
 
 export function pcm_setvol(slot: number, vol: number): Status {
+    slotVolume[slot] = vol / 100;
     let sound = slots[slot];
-    if (!sound)
-        return Status.NG;
-    sound.setGain(vol / 100);
+    if (sound)
+        sound.setGain(slotVolume[slot]);
     return Status.OK;
 }
 
@@ -215,9 +217,10 @@ abstract class PCMSound {
     protected gain: GainNode;
     protected startTime: number | null = null;
 
-    constructor(protected dst: AudioNode) {
+    constructor(protected dst: AudioNode, initialGain: number) {
         this.context = dst.context;
         this.gain = this.context.createGain();
+        this.setGain(initialGain);
         this.gain.connect(dst);
     }
     abstract start(loop: number): void;
@@ -251,8 +254,8 @@ abstract class PCMSound {
 class PCMSoundSimple extends PCMSound {
     private node!: AudioBufferSourceNode;
 
-    constructor(dst: AudioNode, private buf: AudioBuffer) {
-        super(dst);
+    constructor(dst: AudioNode, private buf: AudioBuffer, initialGain: number) {
+        super(dst, initialGain);
     }
 
     start(loop: number) {
@@ -289,8 +292,8 @@ class PCMSoundMixLR extends PCMSound {
     private rsrc: AudioBufferSourceNode;
     private endCount = 0;
 
-    constructor(dst: AudioNode, lbuf: AudioBuffer, rbuf: AudioBuffer) {
-        super(dst);
+    constructor(dst: AudioNode, lbuf: AudioBuffer, rbuf: AudioBuffer, initialGain: number) {
+        super(dst, initialGain);
         this.lsrc = this.context.createBufferSource();
         this.rsrc = this.context.createBufferSource();
         this.lsrc.buffer = lbuf;
