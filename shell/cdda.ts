@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 import {$, Deferred, gaException, isMobileSafari} from './util.js';
-import {CDDALoader} from './cddaloader.js';
+import {BGMLoader, CDDALoader} from './cddaloader.js';
 import * as volumeControl from './volume.js';
 
 const audio = <HTMLAudioElement>$('audio');
@@ -60,6 +60,10 @@ function init() {
 
 export function setCDDALoader(loader: CDDALoader) {
     cddaLoader = loader;
+}
+
+export function setBGMLoader(type: number, base_no: number) {
+    setCDDALoader(new CDDALoader(new BGMLoader(type, base_no)));
 }
 
 export async function play(track: number, loop: number) {

@@ -1,8 +1,8 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {$, startMeasure, mkdirIfNotExist, loadScript, JSZIP_SCRIPT, JSZipOptions, createBlob} from './util.js';
+import {$, startMeasure, mkdirIfNotExist, loadScript, JSZIP_SCRIPT, JSZipOptions, createBlob, DRIType} from './util.js';
 import * as cdimage from './cdimage.js';
-import {CDDALoader, BGMLoader, Rance4v2BGMLoader} from './cddaloader.js';
+import {CDDALoader, BGMLoader} from './cddaloader.js';
 import {registerDataFile} from './datafile.js';
 import {loadModule, saveDirReady} from './moduleloader.js';
 import {message} from './strings.js';
@@ -22,7 +22,6 @@ export abstract class LoaderSource {
 
     public hasMidi = false;
     private hasBGM = false;
-    private isRance4v2 = false;
     private aldFiles: string[] | null = null;
 
     async startLoad() {
@@ -31,10 +30,8 @@ export abstract class LoaderSource {
     }
 
     getCDDALoader(): CDDALoader {
-        if (this.isRance4v2)
-            return new CDDALoader(new Rance4v2BGMLoader());
         if (this.hasBGM)
-            return new CDDALoader(new BGMLoader());
+            return new CDDALoader(new BGMLoader(DRIType.BGM, 0));
         return this.createCDDALoader();
     }
 
@@ -83,8 +80,6 @@ export abstract class LoaderSource {
                 this.hasMidi = true;
             if (type == 'b')
                 this.hasBGM = true;
-            if (name.toLowerCase() === 'ﾗﾝｽ4wb.ald')  // XXX: hack
-                this.isRance4v2 = true;
         }
         for (let i = 0; i < 26; i++) {
             let id = String.fromCharCode(65 + i);

@@ -47,19 +47,12 @@ export class CDDALoader {
 }
 
 export class BGMLoader implements CDDALoaderSource {
+    constructor(private type: number, private base_no: number) {}
+
     async extractTrack(track: number): Promise<Blob> {
-        const dfile = ald_getdata(DRIType.BGM, track - 1);
+        const dfile = ald_getdata(this.type, track + this.base_no - 1);
         if (!dfile)
             throw new Error('BGMLoader: Invalid track ' + track);
-        return createBlob(dfile.data, dfile.name);
-    }
-}
-
-export class Rance4v2BGMLoader implements CDDALoaderSource {
-    async extractTrack(track: number): Promise<Blob> {
-        const dfile = ald_getdata(DRIType.WAVE, track - 2 + 1000);
-        if (!dfile)
-            throw new Error('Rance4v2BGMLoader: Invalid track ' + track);
         return createBlob(dfile.data, dfile.name);
     }
 }
