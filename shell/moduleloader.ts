@@ -55,11 +55,11 @@ export function loadModule(name: 'system3' | 'xsystem35'): Promise<any> {
     let script = document.createElement('script');
     script.src = src;
     script.onerror = () => {
-        ga('send', 'event', 'Game', 'ModuleLoadFailed', src);
+        gtag('event', 'ModuleLoadFailed', { event_category: 'Game', event_label: src });
         addToast(message.module_load_failed(src), 'error');
     };
     document.body.appendChild(script);
-    let endMeasure = startMeasure('ModuleLoad', 'Module load', src);
+    let endMeasure = startMeasure('ModuleLoad');
     return fileSystemReady.then(() => {
         endMeasure();
         $('#loader').hidden = true;
@@ -88,7 +88,6 @@ async function persistStorage() {
     if (await navigator.storage.persisted())
         return;
     let result = await navigator.storage.persist();
-    ga('send', 'event', 'Game', 'StoragePersist', result ? 'granted' : 'refused');
 }
 
 let mincho_loaded = false;
@@ -99,7 +98,7 @@ export function load_mincho_font(): Promise<number> {
 
     return new Promise((resolve) => {
         console.log('loading mincho font');
-        let endMeasure = startMeasure('FontLoad', 'Font load', FontMincho);
+        let endMeasure = startMeasure('FontLoad');
         readAsync('fonts/' + FontMincho, (buf: ArrayBuffer) => {
             endMeasure();
             FS.writeFile('/fonts/' + FontMincho, new Uint8Array(buf));

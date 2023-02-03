@@ -77,7 +77,7 @@ export async function play(track: number, loop: number) {
         const url = await cddaLoader!.getCDDA(track, audio)
         startPlayback(url, loop);
     } catch (err) {
-        ga('send', 'event', 'CDDA', 'InvalidTrack');
+        gtag('event', 'InvalidTrack', { event_category: 'CDDA' });
     }
 }
 
@@ -128,7 +128,7 @@ function startPlayback(url: string, loop: number) {
         } else if (err.name === 'NotAllowedError' || err.message.indexOf('gesture') >= 0) {
             // Audio still locked?
             removeUserGestureRestriction(false);
-            ga('send', 'event', 'CDDA', 'UnlockAgain');
+            gtag('event', 'UnlockAgain', { event_category: 'CDDA' });
         } else {
             let {name, message} = err;
             gaException({type: 'CDDA', name, message});

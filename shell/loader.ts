@@ -115,10 +115,10 @@ async function handleFiles(files: FileList | File[]) {
         loaded(source.hasMidi);
     } catch (err) {
         if (err instanceof NoGamedataError) {
-            ga('send', 'event', 'Loader', 'NoGamedata', err.message);
+            gtag('event', 'NoGamedata', { event_category: 'Loader', event_label: err.message });
             addToast(`${message.cannot_install}: ${err.message}`, 'warning');
         } else if (err instanceof Error) {
-            ga('send', 'event', 'Loader', 'LoadFailed', err.message);
+            gtag('event', 'LoadFailed', { event_category: 'Loader', event_label: err.message });
             addToast(`${message.cannot_install}: ${message.unrecognized_format}`, 'warning');
         }
     }

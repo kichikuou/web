@@ -112,7 +112,7 @@ export class CDImageSource extends LoaderSource {
             await this.loadXsystem35();
         }
 
-        let endMeasure = startMeasure('ImageLoad', 'Image load', this.imageFile.name);
+        let endMeasure = startMeasure('ImageLoad');
         for (let e of await isofs.readDir(gamedata)) {
             if (this.patchFiles.some((f) => f.name.toLowerCase() === e.name.toLowerCase()))
                 continue;
@@ -160,7 +160,7 @@ export class CDImageSource extends LoaderSource {
                 dirname = 'DPS_all';
             } else {
                 dirname = 'untitled';
-                ga('send', 'event', 'Loader', 'NoVolumeLabel');
+                gtag('event', 'NoVolumeLabel', { event_category: 'Loader', event_label: this.imageFile.name });
             }
         }
         return '/save/' + dirname;

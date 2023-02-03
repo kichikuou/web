@@ -49,8 +49,7 @@ class System35Shell {
             title = title.slice(colon + 1).trim();
             texthook.setTitle(title);
             $('.navbar-brand').textContent = title;
-            ga('set', 'dimension1', title);
-            ga('send', 'event', 'Game', 'GameStart', title);
+            gtag('event', 'GameStart', { GameTitle: title, event_category: 'Game', event_label: title });
         }
     }
 
@@ -80,7 +79,7 @@ class System35Shell {
 
     quit() {
         addToast(message.game_over);
-        ga('send', 'event', 'Game', 'GameEnd');
+        gtag('event', 'GameEnd', { event_category: 'Game' });
         window.onbeforeunload = null;
     }
 
@@ -111,6 +110,6 @@ if ('serviceWorker' in navigator) {
 
 window.addEventListener('beforeinstallprompt', (e: any) => {
     e.userChoice.then((choiceResult: any) => {
-        ga('send', 'event', 'App', 'InstallPrompt', choiceResult.outcome);
+        gtag('event', 'InstallPrompt', { event_category: 'App', event_label: choiceResult.outcome });
     });
 });

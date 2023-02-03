@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {loadScript} from './util.js';
+import {gaException, loadScript} from './util.js';
 
 declare class Timidity {
     constructor(dst: AudioNode, baseurl?: string);
@@ -123,7 +123,7 @@ function onPlaying(playbackTime: number) {
 
 function onError(err: Error) {
     console.warn(err);
-    ga('send', 'event', 'MIDI', err.message);
+    gaException(err);
 }
 
 function onEnd() {

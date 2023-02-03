@@ -46,7 +46,7 @@ export class SaveDataManager {
         storeZip(await this.FSready, '/save', zip.folder('save'));
         let blob = await zip.generateAsync({type: 'blob', compression: 'DEFLATE'});
         downloadAs('savedata.zip', URL.createObjectURL(blob));
-        ga('send', 'event', 'Savedata', 'Downloaded');
+        gtag('event', 'Downloaded', { event_category: 'Savedata' });
     }
 
     public async extract(file: File) {
@@ -76,12 +76,11 @@ export class SaveDataManager {
                 });
             });
             addToast(message.restore_success, 'success');
-            ga('send', 'event', 'Savedata', 'Restored');
+            gtag('event', 'Restored', { event_category: 'Savedata' });
         } catch (err) {
             addToast(message.restore_failure, 'error');
-            ga('send', 'event', 'Savedata', 'RestoreFailed', err.message);
+            gtag('event', 'RestoreFailed', { event_category: 'Savedata', event_label: err.message });
             console.warn(err);
-            ga('send', 'exception', {exDescription: err.stack, exFatal: false});
         }
     }
 }

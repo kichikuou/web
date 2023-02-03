@@ -15,12 +15,17 @@
     <link rel="icon" href="icon.png" type="image/png">
 
     <link rel="preload" as="font" type="font/woff2" href="lib/fontawesome-webfont.4.3.0.woff2" crossorigin>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KPPEHCDMLR"></script>
     <script>
-      window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
-      ga('create', 'UA-98461872-' + (location.host === 'kichikuou.github.io' ? 1 : 2), 'auto', {'alwaysSendReferrer': true});
-      ga('send', 'pageview');
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-KPPEHCDMLR', { debug_mode: location.host.startsWith('localhost:') });
+      gtag('config', 'UA-98461872-' + (location.host === 'kichikuou.github.io' ? 1 : 2), {
+        'custom_map': { 'dimension1': 'GameTitle' }
+      });
     </script>
-    <script async src="https://www.google-analytics.com/analytics.js"></script>
   </head>
   <body>
 

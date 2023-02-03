@@ -55,7 +55,7 @@ function toggleMessageSkip() {
 
 function restart() {
     if (window.confirm(message.restart_confirmation)) {
-        ga('send', 'event', 'Toolbar', 'Restart');
+        gtag('event', 'Restart', { event_category: 'Toolbar' });
         _sys_restart();
     }
 }

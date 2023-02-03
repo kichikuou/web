@@ -104,28 +104,24 @@ export class Deferred<T> {
     }
 }
 
-export function startMeasure(name: string, gaName?: string, gaParam?: string): () => void {
+export function startMeasure(name: string): () => void {
     let startMark = name + '-start';
     let endMark = name + '-end';
     performance.mark(startMark);
     return () => {
         performance.mark(endMark);
         performance.measure(name, startMark, endMark);
-        if (gaName) {
-            let duration = performance.getEntriesByName(name)[0].duration;
-            ga('send', 'timing', gaName, gaParam, Math.round(duration));
-        }
     };
 }
 
-export function gaException(description: any, exFatal: boolean = false) {
-    let exDescription = JSON.stringify(description, (_, value) => {
+export function gaException(description: any, fatal: boolean = false) {
+    let jsonDescription = JSON.stringify(description, (_, value) => {
         if (value instanceof DOMException) {
             return {DOMException: value.name, message: value.message};
         }
         return value;
     });
-    ga('send', 'exception', {exDescription, exFatal});
+    gtag('event', 'exception', { description: jsonDescription, fatal });
 }
 
 // xsystem35 constants
