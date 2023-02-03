@@ -66,19 +66,16 @@ export function setBGMLoader(type: number, base_no: number) {
     setCDDALoader(new CDDALoader(new BGMLoader(type, base_no)));
 }
 
-export async function play(track: number, loop: number) {
+export function play(track: number, loop: number) {
     currentTrack = track;
     if (unmute) {
         unmute = () => { play(track, loop); };
         return;
     }
     audio.currentTime = 0;
-    try {
-        const url = await cddaLoader!.getCDDA(track, audio)
-        startPlayback(url, loop);
-    } catch (err) {
-        gtag('event', 'InvalidTrack', { event_category: 'CDDA' });
-    }
+    cddaLoader!.getCDDA(track, audio).then(
+        (url) => startPlayback(url, loop),
+        (err) => gtag('event', 'InvalidTrack', { event_category: 'CDDA' }));
 }
 
 export async function stop(fadeout_ms?: number) {
