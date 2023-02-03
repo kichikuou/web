@@ -1,6 +1,6 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {loadScript, JSZIP_SCRIPT, JSZipOptions, mkdirIfNotExist} from './util.js';
+import {loadScript, JSZIP_SCRIPT, JSZipOptions, mkdirIfNotExist, gaException} from './util.js';
 import {saveDirReady} from './moduleloader.js';
 import {addToast, downloadAs} from './widgets.js';
 import {message} from './strings.js';
@@ -79,8 +79,12 @@ export class SaveDataManager {
             gtag('event', 'Restored', { event_category: 'Savedata' });
         } catch (err) {
             addToast(message.restore_failure, 'error');
-            gtag('event', 'RestoreFailed', { event_category: 'Savedata', event_label: err.message });
             console.warn(err);
+            if (err instanceof Error) {
+                gtag('event', 'RestoreFailed', { event_category: 'Savedata', event_label: err.message });
+            } else {
+                throw err;
+            }
         }
     }
 }
