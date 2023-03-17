@@ -50,6 +50,7 @@ function init() {
     volumeControl.addEventListener(onVolumeChanged);
     audio.volume = volumeControl.volume();
     audio.addEventListener('error', onAudioError);
+    audio.addEventListener('ended', onAudioEnded);
     removeUserGestureRestriction(true);
     if (!isVolumeSupported) {
         volumeControl.hideSlider();
@@ -149,6 +150,12 @@ function onVolumeChanged(evt: CustomEvent) {
         unmute = null;
         f();
     }
+}
+
+function onAudioEnded(e: Event) {
+    currentTrack = null;
+    if (unmute)
+        unmute = () => {};
 }
 
 function onAudioError(err: ErrorEvent) {
