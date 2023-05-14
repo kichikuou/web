@@ -1,5 +1,5 @@
-@import 'toolbar';
-@import 'loader';
+@import 'toolbar.css';
+@import 'loader.css';
 
 body {
     min-height: 100vh;
@@ -47,7 +47,7 @@ canvas.emscripten {
 }
 
 #xsystem35.fit.pillarbox {
-    canvas.emscripten {
+    & canvas.emscripten {
         height: 100%;
         max-height: 100vh;
         margin: auto;
@@ -58,7 +58,7 @@ canvas.emscripten {
     display: flex;
     align-items: center;
 
-    canvas.emscripten {
+    & canvas.emscripten {
         width: 100%;
     }
 }
@@ -77,21 +77,21 @@ canvas.emscripten {
 }
 
 .settings {
-    section > div {
+    & section > div {
         padding-left: 1rem;
     }
-    select {
+    & select {
         width: initial;
     }
 }
 
 #textlog-modal {
     .modal-container {
-	max-width: 90vw;
-	background-color: rgba(255, 255, 255, 0.85);
+        max-width: 90vw;
+        background-color: rgba(255, 255, 255, 0.85);
     }
-    pre {
-	margin: 0;
+    & pre {
+        margin: 0;
     }
 }
 

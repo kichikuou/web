@@ -1,27 +1,28 @@
+@charset "utf-8";
 #loader {
     max-width: 640px;
     margin: 2ex auto 0;
-    h1 {
+    & h1 {
         font-size: 1.6rem;
     }
-    ul {
+    & ul {
         list-style-type: none;
     }
-    li {
+    & li {
         color: #5764c6;
     }
-    li:before {
+    & li:before {
         font-family: FontAwesome;
         content: "\f15b";
         padding-right: 0.5em;
     }
-    li.notready {
+    & li.notready {
         color: #808080;
     }
-    li.notready:after {
+    & li.notready:after {
         content: " (unselected)";
     }
-    li[lang=ja].notready:after {
+    & li[lang=ja].notready:after {
         content: " (未選択)";
     }
     #unsupported {
@@ -30,7 +31,7 @@
         color: red;
     }
     .language-selector {
-	text-align: right;
+        text-align: right;
     }
 }
 

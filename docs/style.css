@@ -1,9 +1,10 @@
 @charset "UTF-8";
+
+/* css/toolbar.css */
 header {
-  background-color: #454d5d;
+  background-color: rgb(69, 77, 93);
   color: #ccc;
 }
-
 #toolbar-handler {
   display: none;
 }
@@ -16,11 +17,9 @@ header {
   -webkit-transform: rotate(135deg);
   transform: rotate(135deg);
 }
-
 #toolbar-close-button {
   display: none;
 }
-
 @media all and (max-height: 480px) {
   header.closeable .navbar {
     position: absolute;
@@ -33,7 +32,6 @@ header {
   header.closeable .navbar #toolbar-close-button {
     display: initial;
   }
-
   header.closeable.closed #toolbar-handler {
     display: initial;
     position: absolute;
@@ -74,40 +72,32 @@ header {
   padding-left: 0.5rem;
   padding-right: 0.5rem;
 }
-.navbar .btn.btn-link:focus,
-.navbar .btn.btn-link:hover,
-.navbar .btn.btn-link:active,
-.navbar .btn.btn-link.active {
+.navbar :is(.btn.btn-link:focus, .btn.btn-link:hover, .btn.btn-link:active, .btn.btn-link.active) {
   color: #eee;
 }
 .navbar .btn-link.activated {
   color: #08f;
 }
-.navbar .btn.btn-link.activated:focus,
-.navbar .btn.btn-link.activated:hover,
-.navbar .btn.btn-link.activated:active,
-.navbar .btn.btn-link.activated.active {
+.navbar :is(.btn.btn-link.activated:focus, .btn.btn-link.activated:hover, .btn.btn-link.activated:active, .btn.btn-link.activated.active) {
   color: #05f;
 }
-
 #volume-control {
   float: right;
   white-space: nowrap;
 }
-
 #volume-control-icon {
   font-size: 20px;
   width: 26px;
   padding: 5px;
   vertical-align: middle;
 }
-
 #volume-control-slider {
   width: 60px;
   height: 30px;
   vertical-align: middle;
 }
 
+/* css/loader.css */
 #loader {
   max-width: 640px;
   margin: 2ex auto 0;
@@ -123,7 +113,7 @@ header {
 }
 #loader li:before {
   font-family: FontAwesome;
-  content: "";
+  content: "\f15b";
   padding-right: 0.5em;
 }
 #loader li.notready {
@@ -133,7 +123,7 @@ header {
   content: " (unselected)";
 }
 #loader li[lang=ja].notready:after {
-  content: " (未選択)";
+  content: " (\672a\9078\629e)";
 }
 #loader #unsupported {
   max-width: 640px;
@@ -143,7 +133,6 @@ header {
 #loader .language-selector {
   text-align: right;
 }
-
 #loader.module-loading .hidden-while-loading {
   display: none;
 }
@@ -151,10 +140,10 @@ header {
   display: block;
 }
 
+/* css/style.css */
 body {
   min-height: 100vh;
 }
-
 body.game {
   position: fixed;
   left: 0;
@@ -165,44 +154,35 @@ body.game {
   display: flex;
   flex-direction: column;
 }
-
 .before-game-start .hidden-until-game-start {
   display: none;
 }
-
 .contents {
   flex: 1;
   display: flex;
 }
-
 .bgblack-fade {
   background-color: black;
   transition-property: background-color;
   transition-duration: 1s;
   transition-timing-function: linear;
 }
-
 #xsystem35 {
   margin: auto;
 }
-
 #xsystem35.fit {
   margin: 0;
   flex: 1;
 }
-
-/* the canvas *must not* have any border or padding, or mouse coords will be wrong */
 canvas.emscripten {
   border: 0px none;
 }
-
 #xsystem35.fit.pillarbox canvas.emscripten {
   height: 100%;
   max-height: 100vh;
   margin: auto;
   display: block;
 }
-
 #xsystem35.fit.letterbox {
   display: flex;
   align-items: center;
@@ -210,27 +190,22 @@ canvas.emscripten {
 #xsystem35.fit.letterbox canvas.emscripten {
   width: 100%;
 }
-
 .pixelated {
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
 }
-
 .modal-container {
   width: initial;
 }
-
 .modal.active .modal-overlay {
-  background-color: rgba(69, 77, 93, 0.5);
+  background-color: rgba(69, 77, 93, .5);
 }
-
 .settings section > div {
   padding-left: 1rem;
 }
 .settings select {
   width: initial;
 }
-
 #textlog-modal .modal-container {
   max-width: 90vw;
   background-color: rgba(255, 255, 255, 0.85);
@@ -238,7 +213,6 @@ canvas.emscripten {
 #textlog-modal pre {
   margin: 0;
 }
-
 .toast-container {
   position: fixed;
   bottom: 30px;
@@ -246,9 +220,8 @@ canvas.emscripten {
   width: 400px;
   z-index: 500;
 }
-
 .toast {
-  -webkit-animation: slide-down 0.2s ease 1;
-  animation: slide-down 0.2s ease 1;
+  -webkit-animation: slide-down .2s ease 1;
+  animation: slide-down .2s ease 1;
   margin: 5px;
 }
