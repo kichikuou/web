@@ -102,6 +102,20 @@ if (typeof WebAssembly !== 'object') {
     document.getElementById('unsupported')!.hidden = false;
 }
 
+document.addEventListener('gamestart', () => {
+    let container = $('#xsystem35');
+    container.addEventListener('touchstart', (e) => {
+        if (e.target === container) {
+            _simulate_right_button(1);
+        }
+    });
+    container.addEventListener('touchend', (e) => {
+        if (e.target === container) {
+            _simulate_right_button(0);
+        }
+    });
+});
+
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('service-worker.js');

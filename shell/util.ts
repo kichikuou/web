@@ -177,6 +177,7 @@ declare global {
     function _audio_callback(ptr: number, len: number): number;
     function _msgskip_activate(enable: number): void;
     function _msgskip_setFlags(flags: number, mask: number): void;
+    function _simulate_right_button(pressed: number): void;
     function _sys_restart(): void;
     function _nact_current_page(): number;
     function _nact_current_addr(): number;
