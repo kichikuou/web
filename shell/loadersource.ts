@@ -179,7 +179,7 @@ export class CDImageSource extends LoaderSource {
 }
 
 export class FileSource extends LoaderSource {
-    private tracks: File[] = [];
+    private tracks = new CDDATracks<File>();
     private files: File[] = []
 
     constructor(fs: FileList | File[]) {
@@ -195,10 +195,12 @@ export class FileSource extends LoaderSource {
         } else {
             await this.loadXsystem35();
         }
+        const playlist = this.files.find(f => f.name.toLowerCase() === 'playlist.txt');
+        if (playlist) {
+            this.tracks.load_playlist(await playlist.text());
+        }
         for (let f of this.files) {
-            let match = /(\d+)\.(wav|mp3|ogg)$/.exec(f.name.toLowerCase());
-            if (match) {
-                this.tracks[Number(match[1])] = f;
+            if (this.tracks.add(f, f.name)) {
                 continue;
             }
             let content = await f.arrayBuffer();
@@ -211,14 +213,12 @@ export class FileSource extends LoaderSource {
     }
 
     async extractTrack(track: number): Promise<Blob> {
-        if (!this.tracks[track])
-            throw new Error('FileSource: Invalid track ' + track);
-        return this.tracks[track];
+        return this.tracks.get(track);
     }
 }
 
 export class ZipSource extends LoaderSource {
-    private tracks: JSZipObject[] = [];
+    private tracks = new CDDATracks<JSZipObject>();
 
     constructor(private zipFile: File) {
         super();
@@ -246,9 +246,12 @@ export class ZipSource extends LoaderSource {
             const basename = f.name.split('/').pop()!;
             this.addFile(basename, content.byteLength, [new Uint8Array(content)]);
         }
-        for (const f of zip.file(/\d+\.(wav|mp3|ogg)$/i)) {
-            const n = Number(/(\d+)\.\w+$/.exec(f.name)![1]);
-            this.tracks[n] = f;
+        const playlist = zip.file(/playlist.txt/i);
+        if (playlist.length > 0) {
+            this.tracks.load_playlist(await playlist[0].async('text'));
+        }
+        for (const f of zip.file(/\.(wav|mp3|ogg)$/i)) {
+            this.tracks.add(f, f.name);
         }
     }
 
@@ -257,17 +260,16 @@ export class ZipSource extends LoaderSource {
     }
 
     async extractTrack(track: number): Promise<Blob> {
-        const zobj = this.tracks[track];
-        if (!zobj)
-            throw new Error('ZipSource: Invalid track ' + track);
+        const zobj = this.tracks.get(track);
         const buf: ArrayBuffer = await zobj.async('arraybuffer');
         return createBlob(buf, zobj.name);
     }
 }
 
-type SevenZipWorkerResponse = { files: { name: string, content: Uint8Array }[] } | { error: string };
+type SevenZipSourceItem = { name: string, content: Uint8Array };
+type SevenZipWorkerResponse = { files: SevenZipSourceItem[] } | { error: string };
 export class SevenZipSource extends LoaderSource {
-    private tracks: Blob[] = [];
+    private tracks = new CDDATracks<SevenZipSourceItem>();
 
     constructor(private file: File) {
         super();
@@ -291,10 +293,12 @@ export class SevenZipSource extends LoaderSource {
             await this.loadXsystem35();
         }
 
+        const playlist = files.find(f => f.name.toLowerCase() === 'playlist.txt');
+        if (playlist) {
+            this.tracks.load_playlist(new TextDecoder().decode(playlist.content));
+        }
         for (const f of files) {
-            let match = /(\d+)\.(wav|mp3|ogg)$/i.exec(f.name);
-            if (match) {
-                this.tracks[Number(match[1])] = createBlob(f.content, f.name);
+            if (this.tracks.add(f, f.name)) {
                 continue;
             }
             this.addFile(f.name, f.content.byteLength, [f.content]);
@@ -306,8 +310,50 @@ export class SevenZipSource extends LoaderSource {
     }
 
     async extractTrack(track: number): Promise<Blob> {
+        let f = this.tracks.get(track);
+        return createBlob(f.content, f.name);
+    }
+}
+
+class CDDATracks<T> {
+    private tracks: T[] = [];
+    private playlist: Map<string, number> | undefined;
+
+    private normalize(name: string) {
+        return name.toLowerCase().trim().replace(/.*[\/\\]/, '');
+    }
+
+    load_playlist(playlist: string) {
+        const lines = playlist.split('\n');
+        this.playlist = new Map();
+        for (let i = 0; i < lines.length; i++) {
+            const line = this.normalize(lines[i]);
+            if (line.length > 0) {
+                this.playlist?.set(line, i + 1);
+            }
+        }
+    }
+
+    add(item: T, name: string): boolean {
+        if (this.playlist) {
+            const track = this.playlist.get(this.normalize(name));
+            if (track) {
+                this.tracks[track] = item;
+                return true;
+            }
+        } else {
+            let match = /(\d+)\.(wav|mp3|ogg)$/i.exec(name.toLowerCase());
+            if (match) {
+                this.tracks[Number(match[1])] = item;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    get(track: number): T {
         if (!this.tracks[track])
-            throw new Error('SevenZipSource: Invalid track ' + track);
+            throw new Error('Invalid track ' + track);
         return this.tracks[track];
     }
 }
