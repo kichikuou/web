@@ -108,3 +108,19 @@ canvas.emscripten {
     animation: slide-down .2s ease 1;
     margin: 5px;
 }
+
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0);
+    animation: ripple-animation 250ms linear;
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+@keyframes ripple-animation {
+    to {
+        transform: scale(1.5);
+        opacity: 0.2;
+    }
+}

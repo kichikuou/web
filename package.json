@@ -7,7 +7,8 @@
     "type": "cd shell && tsc",
     "build-shell": "esbuild shell/shell.ts --bundle --target=es2017 --format=esm --outfile=docs/shell.js --charset=utf8 --sourcemap --minify",
     "watch-shell": "npm run build-shell -- --watch",
-    "build-css": "esbuild --bundle css/style.css --outfile=docs/style.css --supported:nesting=false"
+    "build-css": "esbuild --bundle css/style.css --outfile=docs/style.css --supported:nesting=false",
+    "watch-css": "npm run build-css -- --watch"
   },
   "dependencies": {
     "@types/emscripten": "1.39.5",

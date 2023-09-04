@@ -53,6 +53,27 @@ class System35Shell {
         }
     }
 
+    showMouseMoveEffect(x: number, y: number) {
+        const canvas = <HTMLCanvasElement>$('#canvas');
+        const rect = canvas.getBoundingClientRect();
+        const size = 32;
+        const xx = rect.left + (x * rect.width / canvas.width) - size / 2;
+        const yy = rect.top + (y * rect.height / canvas.height) - size / 2;
+        const ripple = document.createElement('div');
+
+        ripple.classList.add('ripple');
+        ripple.style.width = `${size}px`;
+        ripple.style.height = `${size}px`;
+        ripple.style.left = `${xx}px`;
+        ripple.style.top = `${yy}px`;
+
+        document.body.appendChild(ripple);
+
+        ripple.addEventListener('animationend', function() {
+            ripple.parentElement?.removeChild(ripple);
+        });
+    }
+
     inputString(title: string, initialValue: string, maxLength: number): string | null {
         title += ' (' + message.input_char_limit(maxLength) + ')';
         let result = window.prompt(title, initialValue);
