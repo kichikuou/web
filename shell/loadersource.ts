@@ -276,7 +276,7 @@ export class SevenZipSource extends LoaderSource {
     }
 
     protected async doLoad() {
-        const worker = new Worker('worker/archiveworker.js');
+        const worker = new Worker('archiveworker.js', {type: 'module'});
         worker.postMessage({ file: this.file });
         $('#loader').classList.add('module-loading');  // Show the spinner
         const e = await new Promise<MessageEvent<SevenZipWorkerResponse>>((resolve) => {

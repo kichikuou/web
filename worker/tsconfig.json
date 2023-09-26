@@ -1,12 +1,12 @@
 {
     "compilerOptions": {
         "target": "ES2017",
-        "outDir": "../docs/worker",
         "lib": ["ES2017", "WebWorker"],
         "types": ["emscripten"],
-        "newLine": "LF",
-        "sourceMap": false,
-        "strict": true
+        "noEmit": true,
+        "strict": true,
+        "isolatedModules": true,
+        "esModuleInterop": true
     },
     "files": [
         "archiveworker.ts"

@@ -3,36 +3,53 @@ import * as esbuild from 'esbuild';
 
 const logLevel = 'info';
 
-const shellOpts = {
-    entryPoints: [
-        'shell/shell.ts',
-    ],
-    bundle: true,
-    minify: true,
-    charset: 'utf8',
-    format: 'esm',
-    target: ['es2017'],
-    outdir: 'docs',
-    sourcemap: true,
-    logLevel,
-};
-
-const cssOpts = {
-    entryPoints: [
-        'css/style.css',
-    ],
-    supported: {
-        nesting: false,
+const configs = [
+    // Shell
+    {
+        entryPoints: [
+            'shell/shell.ts',
+        ],
+        bundle: true,
+        minify: true,
+        charset: 'utf8',
+        format: 'esm',
+        target: ['es2017'],
+        outdir: 'docs',
+        sourcemap: true,
+        logLevel,
     },
-    bundle: true,
-    outdir: 'docs',
-    logLevel,
-};
+    // Worker
+    {
+        entryPoints: [
+            'worker/archiveworker.ts',
+        ],
+        bundle: true,
+        minify: true,
+        charset: 'utf8',
+        format: 'esm',
+        target: ['es2017'],
+        outdir: 'docs',
+        sourcemap: true,
+        logLevel,
+    },
+    // CSS
+    {
+        entryPoints: [
+            'css/style.css',
+        ],
+        supported: {
+            nesting: false,
+        },
+        bundle: true,
+        outdir: 'docs',
+        logLevel,
+    },
+];
 
-if (process.argv[2] === '--watch') {
-    (await esbuild.context(shellOpts)).watch();
-    (await esbuild.context(cssOpts)).watch();
-} else {
-    esbuild.build(shellOpts);
-    esbuild.build(cssOpts);
+for (const config of configs) {
+    if (process.argv[2] === '--watch') {
+        (await esbuild.context(config)).watch();
+    } else {
+        esbuild.build(config);
+    }
 }
