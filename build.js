@@ -9,6 +9,10 @@ const configs = [
     {
         entryPoints: [
             'shell/shell.ts',
+            'shell/fdimage.ts',
+        ],
+        external: [
+            './fdimage.js',
         ],
         bundle: true,
         minify: true,

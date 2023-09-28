@@ -1,4 +1,5 @@
 node_modules/
 dist/shell.js*
 dist/archiveworker.js*
+dist/fdimage.js*
 dist/style.css

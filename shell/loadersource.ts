@@ -231,7 +231,11 @@ export class ZipSource extends LoaderSource {
 
         const dataFiles = zip.file(/\.(ald|ain|dat|mda|ttf|otf|ini|xsys35rc)$/i);
         if (dataFiles.length === 0) {
-            const msg = zip.file(/\.(d88|dsk|hdm|xdf)$/i).length > 0 ?
+            const hdmImages = zip.file(/\.hdm$/i);
+            if (hdmImages.length > 0) {
+                return this.loadFloppyImages(hdmImages);
+            }
+            const msg = zip.file(/\.(d88|dsk|xdf)$/i).length > 0 ?
                 message.floppy_images_cant_be_used : message.no_ald_in_zip;
             throw new NoGamedataError(msg);
         }
@@ -242,7 +246,7 @@ export class ZipSource extends LoaderSource {
         }
 
         for (const f of dataFiles) {
-            const content: ArrayBuffer = await zip.files[f.name].async('arraybuffer');
+            const content: ArrayBuffer = await f.async('arraybuffer');
             const basename = f.name.split('/').pop()!;
             this.addFile(basename, content.byteLength, [new Uint8Array(content)]);
         }
@@ -252,6 +256,19 @@ export class ZipSource extends LoaderSource {
         }
         for (const f of zip.file(/\.(wav|mp3|ogg)$/i)) {
             this.tracks.add(f, f.name);
+        }
+    }
+
+    private async loadFloppyImages(floppies: JSZipObject[]) {
+        // Dynamically import fdimage.js since it depends on relatively large modules.
+        const {extractFDImage} = await import('./fdimage.js');
+        await this.loadSystem3('/save/@');
+        for (const floppy of floppies) {
+            const img: ArrayBuffer = await floppy.async('arraybuffer');
+            await extractFDImage(new Uint8Array(img), (fname, contents) => {
+                console.log(fname);
+                this.addFile(fname, contents.byteLength, [contents]);
+            });
         }
     }
 
