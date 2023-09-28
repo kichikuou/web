@@ -15,17 +15,12 @@ commands:
 
 ```bash
 $ npm install
-$ npm run build-shell
+$ npm run build
 ```
 
 #### css
-This directory contains the source code for the website's stylesheet. Build it
-using the following commands:
-
-```bash
-$ npm install
-$ npm run build-css
-```
+This directory contains the source code for the website's stylesheet.
+`npm run build` mentioned above also builds the stylesheet.
 
 #### fslib
 This is a dummy Emscripten program that allows access to save files stored in
