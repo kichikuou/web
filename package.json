@@ -5,7 +5,7 @@
   "repository": "github:kichikuou/web",
   "type": "module",
   "scripts": {
-    "type": "cd shell && tsc",
+    "type": "(cd shell && tsc) && (cd worker && tsc)",
     "build": "node build.js",
     "watch": "node build.js --watch"
   },
@@ -15,7 +15,7 @@
     "@types/jszip": "0.0.33"
   },
   "devDependencies": {
-    "esbuild": "^0.17.19",
-    "typescript": "^4.9.5"
+    "esbuild": "^0.19.4",
+    "typescript": "^5.2.2"
   }
 }

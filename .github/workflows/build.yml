@@ -11,6 +11,7 @@ jobs:
     - name: Build
       run: |
         npm install
+        npm run type
         npm run build
 
     - name: Upload artifacts for GitHub Pages
