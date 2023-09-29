@@ -1,8 +1,31 @@
+import * as fsPromises from 'node:fs/promises';
 import * as process from 'node:process';
 import * as esbuild from 'esbuild';
 
 const logLevel = 'info';
 const outdir = 'dist';
+
+// An esbuild plugin that rewrites module specifiers for the emscripten packages.
+const resolveEmscriptenModules = {
+    name: 'resolveEmscriptenModules',
+    setup(build) {
+        build.onResolve({ filter: /^[^.]/ }, async (args) => {
+            switch (args.path) {
+                case '7z-wasm': return { path: './lib/7zz.es6.js', external: true };
+                case 'js-fatfs': return { path: './lib/fatfs.js', external: true };
+            }
+        })
+    },
+}
+
+async function installEmscriptenPackages() {
+    return Promise.all([
+        fsPromises.copyFile('node_modules/7z-wasm/7zz.es6.js', 'dist/lib/7zz.es6.js'),
+        fsPromises.copyFile('node_modules/7z-wasm/7zz.wasm', 'dist/lib/7zz.wasm'),
+        fsPromises.copyFile('node_modules/js-fatfs/dist/fatfs.js', 'dist/lib/fatfs.js'),
+        fsPromises.copyFile('node_modules/js-fatfs/dist/fatfs.wasm', 'dist/lib/fatfs.wasm'),
+    ]);
+}
 
 const configs = [
     // Shell
@@ -14,6 +37,7 @@ const configs = [
         external: [
             './fdimage.js',
         ],
+        plugins: [resolveEmscriptenModules],
         bundle: true,
         minify: true,
         charset: 'utf8',
@@ -28,6 +52,7 @@ const configs = [
         entryPoints: [
             'worker/archiveworker.ts',
         ],
+        plugins: [resolveEmscriptenModules],
         bundle: true,
         minify: true,
         charset: 'utf8',
@@ -58,3 +83,5 @@ for (const config of configs) {
         esbuild.build(config);
     }
 }
+
+await installEmscriptenPackages();

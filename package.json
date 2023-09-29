@@ -13,6 +13,7 @@
     "@types/emscripten": "1.39.5",
     "@types/gtag.js": "^0.0.12",
     "@types/jszip": "0.0.33",
+    "7z-wasm": "^1.0.2",
     "js-fatfs": "^0.0.0"
   },
   "devDependencies": {

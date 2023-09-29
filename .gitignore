@@ -3,3 +3,5 @@ dist/shell.js*
 dist/archiveworker.js*
 dist/fdimage.js*
 dist/style.css
+dist/lib/7zz.*
+dist/lib/fatfs.*

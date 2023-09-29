@@ -1,12 +1,5 @@
-import * as FatFs from "https://unpkg.com/js-fatfs@0.0.0/dist/fatfs.js";
-//@ts-ignore
-import SevenZipFactory from "https://unpkg.com/7z-wasm@1.0.2/7zz.es6.js";
-
-interface SevenZipModule extends EmscriptenModule {
-    FS: typeof FS;
-    WORKERFS: Emscripten.FileSystemType;
-    callMain(args: string[]): void;
-}
+import * as FatFs from "js-fatfs";
+import SevenZipFactory from "7z-wasm";
 
 class RawDiskImage implements FatFs.DiskIO {
 	private sectorSize: number;
@@ -104,7 +97,7 @@ export async function extractFDImage(image: Uint8Array, callback: ExtractCallbac
 }
 
 async function extractArchive(fname: string, contents: Uint8Array, callback: ExtractCallback) {
-    const sevenZip = await (SevenZipFactory as EmscriptenModuleFactory<SevenZipModule>)({
+    const sevenZip = await SevenZipFactory({
         print: (s: string) => {}
     });
     sevenZip.FS.mkdir('/archive');

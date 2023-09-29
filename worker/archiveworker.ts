@@ -1,20 +1,12 @@
-//@ts-ignore
-import SevenZipFactory from "https://unpkg.com/7z-wasm@1.0.2/7zz.es6.js";
-
-interface SevenZipModule extends EmscriptenModule {
-    FS: typeof FS;
-    WORKERFS: Emscripten.FileSystemType;
-    callMain(args: string[]): void;
-}
-declare var SevenZip: EmscriptenModuleFactory<SevenZipModule>;
+import SevenZipFactory from "7z-wasm";
 
 onmessage = async (e: MessageEvent) => {
     try {
         const { file } = e.data as { file: File };
 
         let stdout: string[] = [];
-        const sevenZip = await (SevenZipFactory as EmscriptenModuleFactory<SevenZipModule>)({
-            print: (s) => stdout.push(s)
+        const sevenZip = await SevenZipFactory({
+            print: (s: string) => stdout.push(s)
         });
 
         sevenZip.FS.mkdir('/archive');

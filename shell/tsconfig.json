@@ -4,13 +4,9 @@
         "noEmit": true,
         "strict": true,
         "module": "es2020",
+        "moduleResolution": "Bundler",
         "isolatedModules": true,
         "esModuleInterop": true,
-        "paths": {
-            "https://unpkg.com/js-fatfs@0.0.0/dist/fatfs.js": [
-                "../node_modules/js-fatfs/dist/fatfs.d.ts"
-            ]
-        }
     },
     "files": [
         "shell.ts"

@@ -5,6 +5,8 @@
         "types": ["emscripten"],
         "noEmit": true,
         "strict": true,
+        "module": "es2020",
+        "moduleResolution": "Bundler",
         "isolatedModules": true,
         "esModuleInterop": true
     },
