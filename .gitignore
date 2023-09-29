@@ -1,2 +1,4 @@
 node_modules/
-docs/*.js.map
+dist/shell.js*
+dist/archiveworker.js*
+dist/style.css

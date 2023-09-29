@@ -6,5 +6,5 @@ EMFLAGS += --post-js post.js
 EMFLAGS += -lidbfs.js
 EMFLAGS += -O2 --memory-init-file 0
 
-../docs/fslib.js: fslib.c post.js Makefile
+../dist/fslib.js: fslib.c post.js Makefile
 	emcc $(EMFLAGS) -o $@ $<

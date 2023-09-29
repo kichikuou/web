@@ -27,7 +27,7 @@ This is a dummy Emscripten program that allows access to save files stored in
 the Emscripten file system before the game engine (system3 or xsystem35) is
 loaded.
 
-#### docs
+#### dist
 This directory is published at https://kichikuou.github.io/web/. It contains
 static files such as HTML, as well as compiled JavaScript, WASM, and CSS files.
 The `system3.*` files are built from [system3-sdl2], and the `xsystem35.*`
@@ -36,7 +36,7 @@ files are built from [xsystem35-sdl2].
 During development, serve this directory using any local HTTP server.
 
 For running a game that utilizes MIDI, an additional setup step is required.
-Run the following command in the `docs` directory:
+Run the following command in the `dist` directory:
 
 ```bash
 git clone -b gh-pages https://github.com/kichikuou/timidity.git
@@ -46,22 +46,22 @@ git clone -b gh-pages https://github.com/kichikuou/timidity.git
 Code in the `shell/` and `fslib/` directories is licensed under the
 [MIT License](shell/LICENSE).
 
-Files under `docs/xsystem35.*` are built from [xsystem35-sdl2] and are licensed
+Files under `dist/xsystem35.*` are built from [xsystem35-sdl2] and are licensed
 under
 [GPL 2.0](https://github.com/kichikuou/xsystem35-sdl2/blob/master/COPYING).
 
-Files under `docs/system3.*` are built from [system3-sdl2] and are licensed
+Files under `dist/system3.*` are built from [system3-sdl2] and are licensed
 under
 [GPL 2.0](https://github.com/kichikuou/system3-sdl2/blob/master/COPYING).
 
-The font `docs/fonts/MTLc3m.ttf` is the "モトヤLシーダ3等幅" font from the
+The font `dist/fonts/MTLc3m.ttf` is the "モトヤLシーダ3等幅" font from the
 Android Open Source Project and is licensed under the
-[Apache License 2.0](docs/fonts/MTLc3m.ttf.license).
+[Apache License 2.0](dist/fonts/MTLc3m.ttf.license).
 
-The font `docs/fonts/mincho.otf` is a subset of the
+The font `dist/fonts/mincho.otf` is a subset of the
 [Source Han Serif](https://github.com/adobe-fonts/source-han-serif/) font and
 is licensed under the
-[SIL Open Font License 1.1](docs/fonts/mincho.otf.license). The script used for
+[SIL Open Font License 1.1](dist/fonts/mincho.otf.license). The script used for
 subsetting can be found in
 [xsystem35-sdl2/fonts](https://github.com/kichikuou/xsystem35-sdl2/blob/master/fonts/CMakeLists.txt).
 

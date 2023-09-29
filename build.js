@@ -2,6 +2,7 @@ import * as process from 'node:process';
 import * as esbuild from 'esbuild';
 
 const logLevel = 'info';
+const outdir = 'dist';
 
 const configs = [
     // Shell
@@ -14,7 +15,7 @@ const configs = [
         charset: 'utf8',
         format: 'esm',
         target: ['es2017'],
-        outdir: 'docs',
+        outdir,
         sourcemap: true,
         logLevel,
     },
@@ -28,7 +29,7 @@ const configs = [
         charset: 'utf8',
         format: 'esm',
         target: ['es2017'],
-        outdir: 'docs',
+        outdir,
         sourcemap: true,
         logLevel,
     },
@@ -41,7 +42,7 @@ const configs = [
             nesting: false,
         },
         bundle: true,
-        outdir: 'docs',
+        outdir,
         logLevel,
     },
 ];

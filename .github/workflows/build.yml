@@ -1,0 +1,34 @@
+name: Build
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v3
+
+    - name: Build
+      run: |
+        npm install
+        npm run build
+
+    - name: Upload artifacts for GitHub Pages
+      uses: actions/upload-pages-artifact@v2
+      with:
+        path: dist
+
+  deploy:
+    needs: build
+    if: ${{ github.ref == 'refs/heads/master' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v2
+        id: deployment
