@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "target": "ES2017",
-        "lib": ["ES2017", "WebWorker"],
+        "lib": ["ES2020", "WebWorker"],
         "types": ["emscripten"],
         "noEmit": true,
         "strict": true,

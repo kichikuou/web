@@ -10,7 +10,8 @@
     "watch": "node build.js --watch"
   },
   "dependencies": {
-    "@types/emscripten": "1.39.5",
+    "@irori/idbfs": "^0.1.0",
+    "@types/emscripten": "^1.39.8",
     "@types/gtag.js": "^0.0.12",
     "@types/jszip": "0.0.33",
     "7z-wasm": "^1.0.2",

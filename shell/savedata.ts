@@ -1,11 +1,9 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {loadScript, JSZIP_SCRIPT, JSZipOptions, mkdirIfNotExist, gaException} from './util.js';
+import {loadScript, JSZIP_SCRIPT, JSZipOptions, mkdirIfNotExist} from './util.js';
 import {saveDirReady} from './moduleloader.js';
 import {addToast, downloadAs} from './widgets.js';
 import {message} from './strings.js';
-
-declare function FSLib(): {saveDirReady: Promise<typeof FS>};
 
 export class SaveDataManager {
     private FSready!: Promise<typeof FS>;
@@ -15,9 +13,13 @@ export class SaveDataManager {
             this.FSready = saveDirReady;
         if (!this.FSready) {
             this.FSready = (async () => {
-                await loadScript('fslib.js');
-                const fslib = await FSLib();
-                return fslib.saveDirReady;
+                const idbfsModule = await import('@irori/idbfs');
+                const idbfs = await idbfsModule.default();
+                idbfs.FS.mkdir('/save');
+                idbfs.FS.mount(idbfs.IDBFS, {}, '/save');
+                const err = await new Promise((resolve) => idbfs.FS.syncfs(true, resolve));
+                if (err) throw err;
+                return idbfs.FS;
             })();
         }
         loadScript(JSZIP_SCRIPT);

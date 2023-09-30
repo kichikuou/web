@@ -22,11 +22,6 @@ $ npm run build
 This directory contains the source code for the website's stylesheet.
 `npm run build` mentioned above also builds the stylesheet.
 
-#### fslib
-This is a dummy Emscripten program that allows access to save files stored in
-the Emscripten file system before the game engine (system3 or xsystem35) is
-loaded.
-
 #### dist
 This directory is published at https://kichikuou.github.io/web/. It contains
 static files such as HTML, as well as compiled JavaScript, WASM, and CSS files.
