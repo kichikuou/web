@@ -12,6 +12,7 @@ import * as toolbar from './toolbar.js';
 import * as texthook from './textlog.js';
 import {addToast} from './widgets.js';
 import {message} from './strings.js';
+import {config} from './config.js';
 
 class System35Shell {
     constructor() {
@@ -107,6 +108,17 @@ class System35Shell {
     syncfs(timeout = 100) {
         syncfs(timeout);
     }
+
+    onExit(code: number): number {
+        if (code === 2 && $('.navbar-brand').textContent === 'アリスの館3') {
+            launchPatton();
+            return -1; // NACT_HALT
+        } else if (code >= 0) {
+            // Restarts the game instead of exiting.
+            return -2; // NACT_RESTART
+        }
+        return code;
+    }
 }
 
 function scenario_address(): string | undefined {
@@ -148,3 +160,29 @@ window.addEventListener('beforeinstallprompt', (e: any) => {
         gtag('event', 'InstallPrompt', { event_category: 'App', event_label: choiceResult.outcome });
     });
 });
+
+async function launchPatton() {
+    FS.mkdir('/patton');
+    FS.mount(IDBFS, {}, '/patton');
+    await new Promise((resolve) => FS.syncfs(true, resolve));
+    try {
+        FS.stat('/patton/patton.nhd');
+        // The HD image already exists, no preparation is needed.
+    } catch (_) {
+        // Store the game files to IDBFS.
+        for (const fname of FS.readdir('/')) {
+            if (FS.isDir(FS.stat(fname).mode)) {
+                continue;
+            }
+            const content = FS.readFile(fname);
+            FS.writeFile('/patton/' + fname, content);
+        }
+        const err = await new Promise((resolve) => FS.syncfs(false, resolve));
+        if (err) throw err;
+    }
+    FS.unmount('/patton');
+    FS.rmdir('/patton');
+    config.unloadConfirmation = false;
+    window.location.href = '/patton/';  // Patton GO!
+    setTimeout(_sys_restart, 1000);
+}
