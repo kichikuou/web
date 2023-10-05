@@ -21,7 +21,11 @@
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
 
-      gtag('config', 'G-KPPEHCDMLR', location.host.startsWith('localhost:') ? { debug_mode:true } : undefined);
+      if (location.host.startsWith('localhost:')) {
+        gtag('config', 'G-KPPEHCDMLR', { debug_mode:true });
+      } else {
+        gtag('config', 'G-KPPEHCDMLR');
+      }
       gtag('config', 'UA-98461872-' + (location.host === 'kichikuou.github.io' ? 1 : 2), {
         'custom_map': { 'dimension1': 'GameTitle' }
       });
