@@ -10,8 +10,8 @@ let cacheOptions = {
     ],
 };
 
-// Cache-first for fonts, versioned libraries, and sound patches
-workbox.routing.registerRoute(/\/(fonts|lib|Tone_000|Drum_000)\//, new workbox.strategies.CacheFirst(cacheOptions));
+// Cache-first for fonts and sound patches.
+workbox.routing.registerRoute(/\/(fonts|Tone_000|Drum_000)\//, new workbox.strategies.CacheFirst(cacheOptions));
 
 // Network first for the game engines, shell.js and help.html.
 workbox.routing.registerRoute(/\/(shell.js|(system3|xsystem35)\.(js|wasm)|help.html)/, new workbox.strategies.NetworkFirst(cacheOptions));
