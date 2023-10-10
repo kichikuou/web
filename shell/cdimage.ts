@@ -1,7 +1,6 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 import { createWaveFile } from './util.js';
-import {openFileInput} from './widgets.js';
 
 export class ISO9660FileSystem {
     private decoder: TextDecoder;
@@ -152,7 +151,6 @@ export interface Reader {
     readSequentialSectors(startSector: number, length: number): Promise<Uint8Array[]>;
     maxTrack(): number;
     extractTrack(track: number): Promise<Blob>;
-    reloadImage(): Promise<any>;
 }
 
 export async function createReader(img: File, metadata?: File) {
@@ -175,33 +173,9 @@ export async function createReader(img: File, metadata?: File) {
     }
 }
 
-class ImageReaderBase {
+class IsoReader implements Reader {
     constructor(public image: File) { }
 
-    async readSequential(startOffset: number,
-                            bytesToRead: number,
-                            blockSize: number,
-                            sectorSize: number,
-                            sectorOffset: number): Promise<Uint8Array[]> {
-        let sectors = Math.ceil(bytesToRead / sectorSize);
-        let blob = this.image.slice(startOffset, startOffset + sectors * blockSize);
-        let buf = await blob.arrayBuffer();
-        let bufs: Uint8Array[] = [];
-        for (let i = 0; i < sectors; i++) {
-            bufs.push(new Uint8Array(buf, i * blockSize + sectorOffset, Math.min(bytesToRead, sectorSize)));
-            bytesToRead -= sectorSize;
-        }
-        return bufs;
-    }
-
-    reloadImage(): Promise<any> {
-        return openFileInput().then((file) => {
-            this.image = file;
-        });
-    }
-}
-
-class IsoReader extends ImageReaderBase implements Reader {
     readSector(sector: number): Promise<ArrayBuffer> {
         return this.image.slice(sector * 2048, (sector + 1) * 2048).arrayBuffer();
     }
@@ -221,21 +195,37 @@ class IsoReader extends ImageReaderBase implements Reader {
     }
 }
 
-class ImgCueReader extends ImageReaderBase implements Reader {
+async function readSequential(
+    image: File,
+    startOffset: number,
+    bytesToRead: number,
+    blockSize: number,
+    sectorSize: number,
+    sectorOffset: number
+): Promise<Uint8Array[]> {
+    let sectors = Math.ceil(bytesToRead / sectorSize);
+    let buf = await image.slice(startOffset, startOffset + sectors * blockSize).arrayBuffer();
+    let bufs: Uint8Array[] = [];
+    for (let i = 0; i < sectors; i++) {
+        bufs.push(new Uint8Array(buf, i * blockSize + sectorOffset, Math.min(bytesToRead, sectorSize)));
+        bytesToRead -= sectorSize;
+    }
+    return bufs;
+}
+
+class ImgCueReader implements Reader {
     private tracks: Array<{ isAudio: boolean; index: number[]; }> = [];
 
-    constructor(img: File) {
-        super(img);
-    }
+    constructor(private img: File) {}
 
     readSector(sector: number): Promise<ArrayBuffer> {
         let start = sector * 2352 + 16;
         let end = start + 2048;
-        return this.image.slice(start, end).arrayBuffer();
+        return this.img.slice(start, end).arrayBuffer();
     }
 
     readSequentialSectors(startSector: number, length: number): Promise<Uint8Array[]> {
-        return this.readSequential(startSector * 2352, length, 2352, 2048, 16);
+        return readSequential(this.img, startSector * 2352, length, 2352, 2048, 16);
     }
 
     async parseCue(cueFile: File) {
@@ -302,9 +292,9 @@ class ImgCueReader extends ImageReaderBase implements Reader {
             let index = this.tracks[track + 1].index[0] || this.tracks[track + 1].index[1];
             end = index * 2352;
         } else {
-            end = this.image.size;
+            end = this.img.size;
         }
-        return createWaveFile(44100, 2, end - start, [this.image.slice(start, end)]);
+        return createWaveFile(44100, 2, end - start, [this.img.slice(start, end)]);
     }
 
     private indexToSector(index: string): number {
@@ -315,12 +305,10 @@ class ImgCueReader extends ImageReaderBase implements Reader {
 
 enum MdsTrackMode { Audio = 0xa9, Mode1 = 0xaa }
 
-class MdfMdsReader extends ImageReaderBase implements Reader {
+class MdfMdsReader implements Reader {
     private tracks: Array<{ mode: number; sectorSize: number; offset: number; sectors: number; }> = [];
 
-    constructor(mdf: File) {
-        super(mdf);
-    }
+    constructor(private mdf: File) {}
 
     async parseMds(mdsFile: File) {
         let buf = await mdsFile.arrayBuffer();
@@ -352,13 +340,14 @@ class MdfMdsReader extends ImageReaderBase implements Reader {
     readSector(sector: number): Promise<ArrayBuffer> {
         let start = sector * this.tracks[1].sectorSize + 16;
         let end = start + 2048;
-        return this.image.slice(start, end).arrayBuffer();
+        return this.mdf.slice(start, end).arrayBuffer();
     }
 
     readSequentialSectors(startSector: number, length: number): Promise<Uint8Array[]> {
         let track = this.tracks[1];
-        return this.readSequential(track.offset + startSector * track.sectorSize,
-                                    length, track.sectorSize, 2048, 16);
+        return readSequential(
+            this.mdf, track.offset + startSector * track.sectorSize, length,
+            track.sectorSize, 2048, 16);
     }
 
     maxTrack(): number {
@@ -370,8 +359,9 @@ class MdfMdsReader extends ImageReaderBase implements Reader {
             throw new Error('Invalid track ' + track);
 
         let size = this.tracks[track].sectors * 2352;
-        let chunks = await this.readSequential(this.tracks[track].offset, size,
-                                                this.tracks[track].sectorSize, 2352, 0);
+        let chunks = await readSequential(
+            this.mdf, this.tracks[track].offset, size,
+            this.tracks[track].sectorSize, 2352, 0);
         return createWaveFile(44100, 2, size, chunks);
     }
 }
