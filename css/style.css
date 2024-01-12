@@ -69,10 +69,14 @@ canvas.emscripten {
 }
 
 .modal-container {
-    width: initial;
+    width: fit-content;
+    border: none;
+    color: inherit;
 }
-
-.modal.active .modal-overlay {
+.modal-container:not([open]) {
+    display: none;
+}
+dialog::backdrop {
     background-color: rgba(69,77,93,.5);
 }
 
@@ -85,11 +89,10 @@ canvas.emscripten {
     }
 }
 
-#textlog-modal {
-    .modal-container {
-        max-width: 90vw;
-        background-color: rgba(255, 255, 255, 0.85);
-    }
+#textlog {
+    max-width: 90vw;
+    background-color: rgba(255, 255, 255, 0.85);
+
     & pre {
         margin: 0;
     }

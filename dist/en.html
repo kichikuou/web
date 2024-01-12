@@ -80,9 +80,7 @@
   </div>
 
   <!-- Settings -->
-  <div id="settings-modal" class="modal">
-    <div id="settings-overlay" class="modal-overlay"></div>
-    <div class="modal-container">
+    <dialog id="settings" class="modal-container">
       <div class="modal-header">
         <div class="modal-title">Settings</div>
       </div>
@@ -163,23 +161,19 @@
       <div class="modal-footer">
         <button id="settings-close" class="btn btn-primary">OK</button>
       </div>
-    </div>
-  </div>
+    </dialog>
 
   <!-- Text log -->
-  <div id="textlog-modal" class="modal">
-    <div id="textlog-overlay" class="modal-overlay"></div>
-    <div class="modal-container">
-      <div class="modal-header">
-        <div class="modal-title">Text History</div>
-      </div>
-      <pre id="textlog-content" class="modal-body">
-      </pre>
-      <div class="modal-footer">
-        <button id="textlog-close" class="btn btn-primary">Close</button>
-      </div>
+  <dialog id="textlog" class="modal-container">
+    <div class="modal-header">
+      <div class="modal-title">Text History</div>
     </div>
-  </div>
+    <pre id="textlog-content" class="modal-body">
+    </pre>
+    <div class="modal-footer">
+      <button id="textlog-close" class="btn btn-primary">Close</button>
+    </div>
+  </dialog>
 
   <div class="toast-container"></div>
 

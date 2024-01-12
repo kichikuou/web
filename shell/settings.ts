@@ -6,6 +6,7 @@ import {SaveDataManager} from './savedata.js';
 import {openFileInput} from './widgets.js';
 
 // Settings Dialog
+const dialog = $('#settings') as HTMLDialogElement;
 
 const antialias = <HTMLInputElement>$('#antialias');
 const unloadConfirmation = <HTMLInputElement>$('#unload-confirmation');
@@ -16,16 +17,15 @@ const messageSkipFlags: { [id: string]: number } = {
     '#msgskip-stop-on-click': 8,
 };
 let saveDataManager: SaveDataManager | null = null;
-let keyDownHandler: (ev: KeyboardEvent) => void;
 
 function init() {
     $('#settings-button').addEventListener('click', openModal);
-    $('#settings-close').addEventListener('click', closeModal);
-    keyDownHandler = (ev: KeyboardEvent) => {
-        if (ev.keyCode === 27)  // escape
-            closeModal();
-    };
-    $('#settings-overlay').addEventListener('click', closeModal);
+    $('#settings-close').addEventListener('click', () => dialog.close());
+    dialog.addEventListener('close', onDialogClose);
+    // Close the dialog when clicked outside of the dialog.
+    dialog.addEventListener('click', () => dialog.close());
+    for (const e of Array.from(dialog.children))
+        e.addEventListener('click', (e) => e.stopPropagation());
 
     antialias.addEventListener('change', antialiasChanged);
     antialias.checked = config.antialias;
@@ -50,15 +50,12 @@ function onGameStart() {
 }
 
 function openModal() {
-    $('#settings-modal').classList.add('active');
-    document.addEventListener('keydown', keyDownHandler);
+    dialog.showModal();
     saveDataManager = new SaveDataManager();
     checkSaveData();
 }
 
-function closeModal() {
-    $('#settings-modal').classList.remove('active');
-    document.removeEventListener('keydown', keyDownHandler);
+function onDialogClose() {
     saveDataManager = null;
 }
 

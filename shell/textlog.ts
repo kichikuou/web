@@ -25,18 +25,22 @@ const quietPagesTable: [RegExp | string, number[]][] = [
     [/^グレイメルカ ver1\./, [1, 2, 5, 6]],
 ];
 
+const dialog = $('#textlog') as HTMLDialogElement;
 const textlogContent = $('#textlog-content');
 
-$('#textlog-button').addEventListener('click', openTextLog);
-$('#textlog-close').addEventListener('click', closeTextLog);
-$('#textlog-overlay').addEventListener('click', closeTextLog);
+function init() {
+    $('#textlog-button').addEventListener('click', openTextLog);
+    $('#textlog-close').addEventListener('click', () => dialog.close());
+    // Close the dialog when clicked outside of the dialog.
+    dialog.addEventListener('click', () => dialog.close());
+    for (const e of Array.from(dialog.children))
+        e.addEventListener('click', (e) => e.stopPropagation());
+}
 
 document.addEventListener('gamestart', () => {
     document.addEventListener('keydown', (e: KeyboardEvent) => {
         if (e.keyCode === 76) { // l
             openTextLog();
-        } else if (e.keyCode === 27) { // esc
-            closeTextLog();
         }
     });
 });
@@ -53,22 +57,17 @@ $('#canvas').addEventListener('wheel', (e: WheelEvent) => {
 
 textlogContent.addEventListener('wheel', (e: WheelEvent) => {
     if (e.deltaY > 0 && textlogContent.scrollTop + textlogContent.clientHeight >= textlogContent.scrollHeight) {
-        closeTextLog();
+        dialog.close();
     }
 });
 
 function openTextLog() {
-    const classes = $('#textlog-modal').classList;
-    if (classes.contains('active')) {
+    if (dialog.open) {
         return;
     }
     render(textlogContent);
-    classes.add('active');
+    dialog.showModal();
     textlogContent.scrollTop = textlogContent.scrollHeight;
-}
-
-function closeTextLog() {
-    $('#textlog-modal').classList.remove('active');
 }
 
 let currentPage = -1;
@@ -134,3 +133,5 @@ function skiplog(page: number) {
 export function disableWheelEvent(duration: number) {
     wheelIgnoreTime = performance.now() + duration;
 }
+
+init();
