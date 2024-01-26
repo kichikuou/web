@@ -13,6 +13,11 @@ function init() {
     document.addEventListener('gamestart', () => {
         document.addEventListener('keydown', keyDownHandler);
     });
+
+    // Unfocus buttons when clicked (to prevent tooltips from remaining visible)
+    for (const button of document.querySelectorAll('#toolbar button.tooltip') as NodeListOf<HTMLElement>) {
+        button.addEventListener('click', () => button.blur());
+    }
 }
 
 export function setCloseable() {
