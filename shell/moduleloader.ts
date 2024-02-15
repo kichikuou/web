@@ -40,11 +40,6 @@ function init() {
                 Module.removeRunDependency('syncfs');
                 idbfsReady(FS);
             });
-        },
-        () => {
-            // Don't let emscripten change the window title.
-            // Must be overwritten after the emscripten module is evaluated.
-            window.setWindowTitle = () => {};
         }
     ];
 }

@@ -190,7 +190,6 @@ declare global {
         // Undocumented methods / attributes
         canvas: HTMLCanvasElement;
     }
-    function setWindowTitle(title: string): void;
     function readAsync(url: string, onload: (response: any) => void, onerror: () => void): void;
 
     namespace Asyncify {
