@@ -22,11 +22,9 @@ export abstract class LoaderSource {
 
     public hasMidi = false;
     private hasBGM = false;
-    private aldFiles: string[] | null = null;
 
     async startLoad() {
         await this.doLoad();
-        this.createGr();
     }
 
     getCDDALoader(): CDDALoader {
@@ -43,50 +41,17 @@ export abstract class LoaderSource {
 
     protected async loadXsystem35() {
         await loadModule('xsystem35');
-        this.aldFiles = [];
+        Module.arguments.push('-savedir', '/save');
     }
 
     protected addFile(fname: string, size: number, chunks: Uint8Array[]) {
         registerDataFile(fname, size, chunks);
-        this.aldFiles?.push(fname);
-    }
-
-    private createGr() {
-        if (!this.aldFiles) {
-            return;
+        if (/M[A-Z]\.ALD$/i.test(fname)) {
+            this.hasMidi = true;
         }
-        const resourceType: { [ch: string]: string } = {
-            b: 'BGM', d: 'Data', g: 'Graphics', m: 'Midi', r: 'Resource', s: 'Scenario', w: 'Wave',
-        };
-        let basename = '';
-        let lines: string[] = [];
-        for (let name of this.aldFiles) {
-            if (name.toLowerCase() === 'system39.ain') {
-                lines.push('Ain ' + name);
-                continue;
-            }
-            if (!name.toLowerCase().endsWith('.ald')) {
-                continue;
-            }
-            let type = name.charAt(name.length - 6).toLowerCase();
-            let id = name.charAt(name.length - 5);
-            basename = name.slice(0, -6);
-            if (!resourceType[type]) {
-                console.log('Resource file of unknown type: ' + name);
-                continue;
-            }
-            lines.push(resourceType[type] + id.toUpperCase() + ' ' + name);
-            if (type == 'm')
-                this.hasMidi = true;
-            if (type == 'b')
-                this.hasBGM = true;
+        if (/B[A-Z]\.ALD$/i.test(fname)) {
+            this.hasBGM = true;
         }
-        for (let i = 0; i < 26; i++) {
-            let id = String.fromCharCode(65 + i);
-            lines.push('Save' + id + ' save/' + basename + 's' + id.toLowerCase() + '.asd');
-        }
-        lines.push(`MsgSkip save/${basename}.msgskip`);
-        FS.writeFile('xsystem35.gr', lines.join('\n') + '\n');
     }
 }
 
