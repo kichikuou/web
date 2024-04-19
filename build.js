@@ -26,6 +26,8 @@ async function installExternalModules() {
         fsPromises.copyFile('node_modules/js-fatfs/dist/fatfs.js', 'dist/lib/fatfs.js'),
         fsPromises.copyFile('node_modules/js-fatfs/dist/fatfs.wasm', 'dist/lib/fatfs.wasm'),
         fsPromises.copyFile('node_modules/@irori/idbfs/idbfs.js', 'dist/lib/idbfs.js'),
+        fsPromises.copyFile('node_modules/font-awesome/css/font-awesome.min.css', 'dist/lib/font-awesome.min.css'),
+        fsPromises.copyFile('node_modules/font-awesome/fonts/fontawesome-webfont.woff2', 'dist/fonts/fontawesome-webfont.woff2'),
     ]);
 }
 
