@@ -154,15 +154,15 @@ export interface Reader {
 }
 
 export async function createReader(img: File, metadata?: File) {
-    if (img.name.endsWith('.iso')) {
+    if (img.name.toLowerCase().endsWith('.iso')) {
         return new IsoReader(img);
     } else if (!metadata) {
         throw new Error('No metadata file');
-    } else if (metadata.name.endsWith('.cue')) {
+    } else if (metadata.name.toLowerCase().endsWith('.cue')) {
         let reader = new ImgCueReader(img);
         await reader.parseCue(metadata);
         return reader;
-    } else if (metadata.name.endsWith('.ccd')) {
+    } else if (metadata.name.toLowerCase().endsWith('.ccd')) {
         let reader = new ImgCueReader(img);
         await reader.parseCcd(metadata);
         return reader;
