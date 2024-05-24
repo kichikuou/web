@@ -194,7 +194,7 @@ export class ZipSource extends LoaderSource {
         const zip = new JSZip();
         await zip.loadAsync(await this.zipFile.arrayBuffer(), JSZipOptions());
 
-        const dataFiles = zip.file(/\.(ald|ain|dat|mda|ttf|otf|ini|xsys35rc)$/i);
+        const dataFiles = zip.file(/\.(ald|ain|map|dat|mda|ttf|otf|ini|xsys35rc)$/i);
         if (dataFiles.length === 0) {
             const hdmImages = zip.file(/\.hdm$/i);
             if (hdmImages.length > 0) {
