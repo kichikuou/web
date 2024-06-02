@@ -1,4 +1,6 @@
 node_modules/
+dist/system3.*
+dist/xsystem35.*
 dist/shell.js*
 dist/archiveworker.js*
 dist/fdimage.js*

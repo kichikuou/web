@@ -1,0 +1,6 @@
+[submodule "xsystem35-sdl2"]
+	path = xsystem35-sdl2
+	url = https://github.com/kichikuou/xsystem35-sdl2.git
+[submodule "system3-sdl2"]
+	path = system3-sdl2
+	url = https://github.com/kichikuou/system3-sdl2.git
