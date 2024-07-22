@@ -1,34 +1,40 @@
 This is the source code for the
 [Kichikuou on Web](https://kichikuou.github.io/web/) website.
 
-### Subdirectories
+## Building the site
 
-#### shell
-This directory contains the JavaScript source code responsible for:
+To build the site, you will need to have the following software installed:
 
-* Loading CD images
-* User interface (toolbar, dialogs, etc.)
-* Low-level platform-specific code, such as audio playback
+- [Node.js](https://nodejs.org)
+- [Emscripten](https://emscripten.org/)
+- [CMake](https://cmake.org/)
 
-Node.js is required for building. You can build the project using the following
-commands:
+First, clone the repository and install the dependencies:
 
-```bash
-$ npm install
-$ npm run build
+```sh
+git clone --recurse-submodules https://github.com/kichikuou/web.git
+cd web
+npm install
 ```
 
-#### css
-This directory contains the source code for the website's stylesheet.
-`npm run build` mentioned above also builds the stylesheet.
+Then, build the WebAssembly modules:
 
-#### dist
-This directory is published at https://kichikuou.github.io/web/. It contains
-static files such as HTML, as well as compiled JavaScript, WASM, and CSS files.
-The `system3.*` files are built from [system3-sdl2], and the `xsystem35.*`
-files are built from [xsystem35-sdl2].
+```sh
+./build-wasm.sh
+```
 
-During development, serve this directory using any local HTTP server.
+Finally, build the site:
+
+```sh
+npm run build
+```
+
+The built site will be in the `dist` directory. You can serve the site locally
+using the `serve` command:
+
+```sh
+npm run serve
+```
 
 For running a game that utilizes MIDI, an additional setup step is required.
 Run the following command in the `dist` directory:
@@ -37,16 +43,14 @@ Run the following command in the `dist` directory:
 git clone -b gh-pages https://github.com/kichikuou/timidity.git
 ```
 
-### Licenses
+## Licenses
 Code in the `shell/` and `fslib/` directories is licensed under the
 [MIT License](shell/LICENSE).
 
-Files under `dist/xsystem35.*` are built from [xsystem35-sdl2] and are licensed
-under
+The [xsystem35-sdl2] submodule is licensed under
 [GPL 2.0](https://github.com/kichikuou/xsystem35-sdl2/blob/master/COPYING).
 
-Files under `dist/system3.*` are built from [system3-sdl2] and are licensed
-under
+The [system3-sdl2] submodule is licensed under
 [GPL 2.0](https://github.com/kichikuou/system3-sdl2/blob/master/COPYING).
 
 The font `dist/fonts/MTLc3m.ttf` is the "モトヤLシーダ3等幅" font from the
