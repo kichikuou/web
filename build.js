@@ -83,6 +83,12 @@ const configs = [
 for (const config of configs) {
     if (process.argv[2] === '--watch') {
         (await esbuild.context(config)).watch();
+    } else if (process.argv[2] === '--serve') {
+        const ctx = await esbuild.context(config);
+        if (config === configs[0])
+            ctx.serve({ servedir: outdir });
+        else
+            ctx.watch();
     } else {
         esbuild.build(config);
     }

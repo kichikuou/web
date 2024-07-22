@@ -7,7 +7,7 @@
   "scripts": {
     "type": "(cd shell && tsc) && (cd worker && tsc)",
     "build": "node build.js",
-    "watch": "node build.js --watch"
+    "serve": "node build.js --serve"
   },
   "dependencies": {
     "@irori/idbfs": "^0.1.0",
