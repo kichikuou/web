@@ -143,9 +143,9 @@ function loaded(hasMidi: boolean) {
     $('#toolbar').classList.remove('before-game-start');
     window.onbeforeunload = onBeforeUnload;
     setTimeout(() => {
-        Module.arguments.push(config.antialias ? '-antialias' : '-noantialias');
-        Module.arguments.push('-fm');
-        Module.removeRunDependency('gameFiles');
+        Module!.arguments.push(config.antialias ? '-antialias' : '-noantialias');
+        Module!.arguments.push('-fm');
+        Module!.removeRunDependency('gameFiles');
         document.dispatchEvent(new Event('gamestart'));
     }, 0);
 }

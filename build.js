@@ -40,6 +40,8 @@ const configs = [
         ],
         external: [
             './fdimage.js',
+            './system3.js',
+            './xsystem35.js',
         ],
         plugins: [resolveExternalModules],
         bundle: true,

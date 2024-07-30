@@ -63,7 +63,7 @@ function antialiasChanged() {
     config.antialias = antialias.checked;
     config.persist();
     if (!$('#xsystem35').hidden)
-        _ags_setAntialiasedStringMode(config.antialias ? 1 : 0);
+        Module!._ags_setAntialiasedStringMode(config.antialias ? 1 : 0);
 }
 
 function unloadConfirmationChanged() {
@@ -79,8 +79,7 @@ function messageSkipFlagChanged() {
     }
     $('#msgskip-stop-on-unseen').toggleAttribute(
         'disabled', ($('#msgskip-skip-unseen') as HTMLInputElement).checked);
-    if ((window as any)['_msgskip_setFlags'])
-        _msgskip_setFlags(flags, 0xffffffff);
+    Module!._msgskip_setFlags(flags, 0xffffffff);
     config.messageSkipFlags = flags;
     config.persist();
 }

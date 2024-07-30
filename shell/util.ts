@@ -1,5 +1,8 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
+import type { MainModule as IDBFSModule } from '@irori/idbfs';
+import type { MainModule as System3Module } from './system3.js';
+import type { MainModule as XSystem35Module } from './xsystem35.js';
 
 export const $: (selector: string) => HTMLElement = document.querySelector.bind(document);
 
@@ -22,9 +25,9 @@ export function loadScript(src: string): Promise<any> {
     return p;
 }
 
-export function mkdirIfNotExist(path: string, fs?: typeof FS) {
+export function mkdirIfNotExist(path: string, fs?: IDBFSModule['FS']) {
     try {
-        (fs || FS).mkdir(path);
+        (fs || Module!.FS).mkdir(path, undefined);
     } catch (err) {
         // ignore EEXIST
     }
@@ -147,54 +150,53 @@ export enum DRIType {
 type AldEntry = { name: string, data: ArrayBuffer }
 
 export function ald_getdata(type: DRIType, no: number): AldEntry | null {
-    let dfile = _ald_getdata(type, no);
+    let dfile = (Module as XSystem35Module)._ald_getdata(type, no);
     if (!dfile)
         return null;
-    let ptr = Module.getValue(dfile + 8, '*');
-    let size = Module.getValue(dfile, 'i32');
-    let name = ascii_to_string(Module.getValue(dfile + 12, '*'));  // TODO: Shift_JIS decoding
-    let data = Module.HEAPU8.buffer.slice(ptr, ptr + size);
-    _ald_freedata(dfile);
+    let ptr = Module!.getValue(dfile + 8, '*');
+    let size = Module!.getValue(dfile, 'i32');
+    let name = ascii_to_string(Module!.getValue(dfile + 12, '*'));  // TODO: Shift_JIS decoding
+    let data = Module!.HEAPU8.buffer.slice(ptr, ptr + size);
+    (Module as XSystem35Module)._ald_freedata(dfile);
     return { name, data };
 }
 
 function ascii_to_string(ptr: number): string {
     let str = '';
     while (1) {
-        const ch = Module.HEAPU8[ptr++];
+        const ch = Module!.HEAPU8[ptr++];
         if (!ch) break;
         str += String.fromCharCode(ch);
     }
     return str;
 }
 
+export type EmscriptenOptions = {
+    canvas: HTMLCanvasElement;
+    print(str: string): void;
+    printErr(str: string): void;
+    preRun: Array<{ (m: EmscriptenModule): void }>;
+    arguments: string[];
+};
+
+export type EmscriptenModule = (System3Module | XSystem35Module) & EmscriptenOptions & {
+    FS: {
+        createPreloadedFile: (
+            parent: string,
+            name: string,
+            url: string,
+            canRead: boolean,
+            canWrite: boolean,
+            onload?: () => void,
+            onerror?: () => void,
+            dontCreateFile?: boolean,
+            canOwn?: boolean,
+        ) => void;
+    }
+};
+
 declare global {
-    // xsystem35 exported functions
-    function _ags_setAntialiasedStringMode(on: number): void;
-    function _ald_getdata(type: number, no: number): number;
-    function _ald_freedata(data: number): void;
-    function _sdl_getDisplaySurface(): number;
-    function _audio_callback(ptr: number, len: number): number;
-    function _msgskip_activate(enable: number): void;
-    function _msgskip_setFlags(flags: number, mask: number): void;
-    function _simulate_right_button(pressed: number): void;
-    function _sys_restart(): void;
-    function _nact_current_page(): number;
-    function _nact_current_addr(): number;
-
-    var Module: EmscriptenModule;
-    interface EmscriptenModule {
-        getValue: typeof getValue;
-        addRunDependency: typeof addRunDependency;
-        removeRunDependency: typeof removeRunDependency;
-        // Undocumented methods / attributes
-        canvas: HTMLCanvasElement;
-    }
-    function readAsync(url: string, onload: (response: any) => void, onerror: () => void): void;
-
-    namespace Asyncify {
-        function handleSleep(op : (wakeUp: (result: any) => void) => void): void;
-    }
+    var Module: EmscriptenModule | undefined;
 
     // stbvorbis.js
     namespace stbvorbis {

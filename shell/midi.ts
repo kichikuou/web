@@ -20,7 +20,7 @@ let fadeFinishTime = 0;
 let stopTimer: number | null = null;
 
 export function init(destNode: AudioNode) {
-    Module.addRunDependency('timidity');
+    Module!.addRunDependency('timidity');
     loadScript('/timidity/timidity.js').then(() => {
         gain = destNode.context.createGain();
         gain.connect(destNode);
@@ -28,14 +28,14 @@ export function init(destNode: AudioNode) {
         timidity.on('playing', onPlaying);
         timidity.on('error', onError);
         timidity.on('ended', onEnd);
-        Module.removeRunDependency('timidity');
+        Module!.removeRunDependency('timidity');
     });
 }
 
 export function play(loop: number, data: number, datalen: number) {
     if (!timidity)
         return;
-    timidity.load(Module.HEAPU8.slice(data, data + datalen));
+    timidity.load(Module!.HEAPU8.slice(data, data + datalen));
     timidity.play();
     playing = true;
     // NOTE: `loop` is ignored.

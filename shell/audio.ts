@@ -1,5 +1,6 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
+import type { MainModule as System3Module } from './system3.js';
 import {gaException, Bool, Status, DRIType, ald_getdata, loadScript} from './util.js';
 import * as volumeControl from './volume.js';
 
@@ -76,54 +77,48 @@ export function pcm_reset() {
     }
 }
 
-export function pcm_load(slot: number, no: number) {
-    return Asyncify.handleSleep((wakeUp: (result: Status) => void) => {
-        pcm_stop(slot);
-        if (bufCache[no]) {
-            slots[slot] = new PCMSoundSimple(destNode, bufCache[no], slotVolume[slot]);
-            return wakeUp(Status.OK);
-        }
-        load(no).then((audioBuf) => {
-            slots[slot] = new PCMSoundSimple(destNode, audioBuf, slotVolume[slot]);
-            wakeUp(Status.OK);
-        }, (err) => {
-            gaException({type: 'PCM', err});
-            wakeUp(Status.NG);
-        });
+export function pcm_load(slot: number, no: number, wakeUp: (result: Status) => void) {
+    pcm_stop(slot);
+    if (bufCache[no]) {
+        slots[slot] = new PCMSoundSimple(destNode, bufCache[no], slotVolume[slot]);
+        return wakeUp(Status.OK);
+    }
+    load(no).then((audioBuf) => {
+        slots[slot] = new PCMSoundSimple(destNode, audioBuf, slotVolume[slot]);
+        wakeUp(Status.OK);
+    }, (err) => {
+        gaException({type: 'PCM', err});
+        wakeUp(Status.NG);
     });
 }
 
-export function pcm_load_data(slot: number, buf: number, len: number) {
-    return Asyncify.handleSleep((wakeUp: (result: Status) => void) => {
-        pcm_stop(slot);
-        decodeAudioData(Module.HEAPU8.slice(buf, buf + len).buffer).then((audioBuf) => {
-            slots[slot] = new PCMSoundSimple(destNode, audioBuf, slotVolume[slot]);
-            wakeUp(Status.OK);
-        }, (err) => {
-            gaException({type: 'PCM', err});
-            wakeUp(Status.NG);
-        });
+export function pcm_load_data(slot: number, buf: number, len: number, wakeUp: (result: Status) => void) {
+    pcm_stop(slot);
+    decodeAudioData(Module!.HEAPU8.slice(buf, buf + len).buffer).then((audioBuf) => {
+        slots[slot] = new PCMSoundSimple(destNode, audioBuf, slotVolume[slot]);
+        wakeUp(Status.OK);
+    }, (err) => {
+        gaException({type: 'PCM', err});
+        wakeUp(Status.NG);
     });
 }
 
-export function pcm_load_mixlr(slot: number, noL: number, noR: number) {
-    return Asyncify.handleSleep((wakeUp: (result: Status) => void) => {
-        pcm_stop(slot);
-        if (bufCache[noL] && bufCache[noR]) {
-            slots[slot] = new PCMSoundMixLR(destNode, bufCache[noL], bufCache[noR], slotVolume[slot]);
-            return wakeUp(Status.OK);
-        }
-        let ps: [Promise<AudioBuffer>, Promise<AudioBuffer>] = [
-            bufCache[noL] ? Promise.resolve(bufCache[noL]) : load(noL),
-            bufCache[noR] ? Promise.resolve(bufCache[noR]) : load(noR),
-        ];
-        Promise.all(ps).then((bufs) => {
-            slots[slot] = new PCMSoundMixLR(destNode, bufs[0], bufs[1], slotVolume[slot]);
-            wakeUp(Status.OK);
-        }).catch((err) => {
-            gaException({type: 'PCM', err});
-            wakeUp(Status.NG);
-        });
+export function pcm_load_mixlr(slot: number, noL: number, noR: number, wakeUp: (result: Status) => void) {
+    pcm_stop(slot);
+    if (bufCache[noL] && bufCache[noR]) {
+        slots[slot] = new PCMSoundMixLR(destNode, bufCache[noL], bufCache[noR], slotVolume[slot]);
+        return wakeUp(Status.OK);
+    }
+    let ps: [Promise<AudioBuffer>, Promise<AudioBuffer>] = [
+        bufCache[noL] ? Promise.resolve(bufCache[noL]) : load(noL),
+        bufCache[noR] ? Promise.resolve(bufCache[noR]) : load(noR),
+    ];
+    Promise.all(ps).then((bufs) => {
+        slots[slot] = new PCMSoundMixLR(destNode, bufs[0], bufs[1], slotVolume[slot]);
+        wakeUp(Status.OK);
+    }).catch((err) => {
+        gaException({type: 'PCM', err});
+        wakeUp(Status.NG);
     });
 }
 
@@ -197,13 +192,11 @@ export function pcm_isplaying(slot: number): Bool {
     return sound.isPlaying() ? Bool.TRUE : Bool.FALSE;
 }
 
-export function pcm_waitend(slot: number) {
-    return Asyncify.handleSleep((wakeUp: (result: Status) => void) => {
-        let sound = slots[slot];
-        if (!sound || !sound.isPlaying())
-            return wakeUp(Status.OK);
-        sound.end_callback = () => wakeUp(Status.OK);
-    });
+export function pcm_waitend(slot: number, wakeUp: (result: Status) => void) {
+    let sound = slots[slot];
+    if (!sound || !sound.isPlaying())
+        return wakeUp(Status.OK);
+    sound.end_callback = () => wakeUp(Status.OK);
 }
 
 function onVisibilityChange() {
@@ -338,14 +331,14 @@ export function enable_audio_hook(): number {
     if (!scriptNode) {
         const BUFSIZE = 4096;
         scriptNode = destNode.context.createScriptProcessor(BUFSIZE, 0, 2);
-        let bufptr = Module._malloc(BUFSIZE * 2 * 2);
+        let bufptr = Module!._malloc(BUFSIZE * 2 * 2);
         scriptNode.addEventListener('audioprocess', (event) => {
             const output0 = event.outputBuffer.getChannelData(0);
             const output1 = event.outputBuffer.getChannelData(1);
-            if (_audio_callback(bufptr, BUFSIZE)) {
+            if ((Module as System3Module)._audio_callback(bufptr, BUFSIZE)) {
                 for (let i = 0; i < BUFSIZE; i++) {
-                    output0[i] = Module.HEAP16[(bufptr >> 1) + i * 2] / 0x8000;
-                    output1[i] = Module.HEAP16[(bufptr >> 1) + i * 2 + 1] / 0x8000;
+                    output0[i] = Module!.HEAP16[(bufptr >> 1) + i * 2] / 0x8000;
+                    output1[i] = Module!.HEAP16[(bufptr >> 1) + i * 2 + 1] / 0x8000;
                 }
             } else {
                 for (let i = 0; i < BUFSIZE; i++) {

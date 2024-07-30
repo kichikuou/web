@@ -1,4 +1,6 @@
 node_modules/
+shell/xsystem35.d.ts
+shell/system3.d.ts
 dist/system3.*
 dist/xsystem35.*
 dist/shell.js*

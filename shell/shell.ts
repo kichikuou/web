@@ -1,5 +1,6 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
+import type { MainModule as XSystem35Module } from './xsystem35.js';
 import {$, gaException, Status} from './util.js';
 import './settings.js';
 import './loader.js';
@@ -122,8 +123,9 @@ class System35Shell {
 }
 
 function scenario_address(): string | undefined {
-    if (!window['_nact_current_page']) return undefined;
-    return _nact_current_page() + ':' + _nact_current_addr().toString(16);
+    const m = Module as XSystem35Module;
+    if (!m['_nact_current_page']) return undefined;
+    return m._nact_current_page() + ':' + m._nact_current_addr().toString(16);
 }
 
 let shell = new System35Shell();
@@ -139,12 +141,12 @@ document.addEventListener('gamestart', () => {
     let container = $('#xsystem35');
     container.addEventListener('touchstart', (e) => {
         if (e.target === container) {
-            _simulate_right_button(1);
+            Module!._simulate_right_button(1);
         }
     });
     container.addEventListener('touchend', (e) => {
         if (e.target === container) {
-            _simulate_right_button(0);
+            Module!._simulate_right_button(0);
         }
     });
 });
@@ -162,27 +164,27 @@ window.addEventListener('beforeinstallprompt', (e: any) => {
 });
 
 async function launchPatton() {
-    FS.mkdir('/patton');
-    FS.mount(IDBFS, {}, '/patton');
-    await new Promise((resolve) => FS.syncfs(true, resolve));
+    Module!.FS.mkdir('/patton', undefined);
+    Module!.FS.mount(Module!.IDBFS, {}, '/patton');
+    await new Promise((resolve) => Module!.FS.syncfs(true, resolve));
     try {
-        FS.stat('/patton/patton.nhd');
+        Module!.FS.stat('/patton/patton.nhd', undefined);
         // The HD image already exists, no preparation is needed.
     } catch (_) {
         // Store the game files to IDBFS.
-        for (const fname of FS.readdir('/')) {
-            if (FS.isDir(FS.stat(fname).mode)) {
+        for (const fname of Module!.FS.readdir('/')) {
+            if (Module!.FS.isDir(Module!.FS.stat(fname, undefined).mode)) {
                 continue;
             }
-            const content = FS.readFile(fname);
-            FS.writeFile('/patton/' + fname, content);
+            const content = Module!.FS.readFile(fname);
+            Module!.FS.writeFile('/patton/' + fname, content);
         }
-        const err = await new Promise((resolve) => FS.syncfs(false, resolve));
+        const err = await new Promise((resolve) => Module!.FS.syncfs(false, resolve));
         if (err) throw err;
     }
-    FS.unmount('/patton');
-    FS.rmdir('/patton');
+    Module!.FS.unmount('/patton');
+    Module!.FS.rmdir('/patton');
     config.unloadConfirmation = false;
     window.location.href = '/patton/';  // Patton GO!
-    setTimeout(_sys_restart, 1000);
+    setTimeout(Module!._sys_restart, 1000);
 }

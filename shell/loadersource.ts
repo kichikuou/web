@@ -35,13 +35,13 @@ export abstract class LoaderSource {
 
     protected async loadSystem3(savedir: string) {
         await loadModule('system3');
-        Module.arguments.push('-savedir', savedir);
+        Module!.arguments.push('-savedir', savedir);
         saveDirReady.then(() => { mkdirIfNotExist(savedir.replace(/\/@$/, '')); });
     }
 
     protected async loadXsystem35() {
         await loadModule('xsystem35');
-        Module.arguments.push('-savedir', '/save');
+        Module!.arguments.push('-savedir', '/save');
     }
 
     protected addFile(fname: string, size: number, chunks: Uint8Array[]) {

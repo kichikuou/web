@@ -55,29 +55,29 @@ export function setSkipButtonState(enabled: number, activated: number) {
 }
 
 function toggleMessageSkip() {
-    _msgskip_activate(msgskip_button.classList.contains('activated') ? 0 : 1);
+    Module!._msgskip_activate(msgskip_button.classList.contains('activated') ? 0 : 1);
 }
 
 function restart() {
     if (window.confirm(message.restart_confirmation)) {
         gtag('event', 'Restart', { event_category: 'Toolbar' });
-        _sys_restart();
+        Module!._sys_restart();
     }
 }
 
 async function saveScreenshot() {
-    let pixels = _sdl_getDisplaySurface();
+    let pixels = Module!._sdl_getDisplaySurface();
     let canvas = document.createElement('canvas');
-    canvas.width = Module.canvas.width;
-    canvas.height = Module.canvas.height;
+    canvas.width = Module!.canvas.width;
+    canvas.height = Module!.canvas.height;
     let ctx = canvas.getContext('2d')!;
     let image = ctx.createImageData(canvas.width, canvas.height);
     let buffer = image.data;
     let num = image.data.length;
     for (let dst = 0; dst < num; dst += 4) {
-        buffer[dst] = Module.HEAPU8[pixels + 2];
-        buffer[dst + 1] = Module.HEAPU8[pixels + 1];
-        buffer[dst + 2] = Module.HEAPU8[pixels];
+        buffer[dst] = Module!.HEAPU8[pixels + 2];
+        buffer[dst + 1] = Module!.HEAPU8[pixels + 1];
+        buffer[dst + 2] = Module!.HEAPU8[pixels];
         buffer[dst + 3] = 0xff;
         pixels += 4;
     }

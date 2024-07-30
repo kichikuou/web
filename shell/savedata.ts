@@ -1,21 +1,22 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {loadScript, JSZIP_SCRIPT, JSZipOptions, mkdirIfNotExist} from './util.js';
+import type { MainModule as IDBFSModule } from '@irori/idbfs';
+import {EmscriptenModule, loadScript, JSZIP_SCRIPT, JSZipOptions, mkdirIfNotExist} from './util.js';
 import {saveDirReady} from './moduleloader.js';
 import {addToast, downloadAs} from './widgets.js';
 import {message} from './strings.js';
 
 export class SaveDataManager {
-    private FSready!: Promise<typeof FS>;
+    private FSready!: Promise<IDBFSModule['FS']>;
 
     constructor() {
-        if ((<any>window).FS)
+        if (window['Module'])
             this.FSready = saveDirReady;
         if (!this.FSready) {
             this.FSready = (async () => {
                 const idbfsModule = await import('@irori/idbfs');
                 const idbfs = await idbfsModule.default();
-                idbfs.FS.mkdir('/save');
+                idbfs.FS.mkdir('/save', undefined);
                 idbfs.FS.mount(idbfs.IDBFS, {}, '/save');
                 const err = await new Promise((resolve) => idbfs.FS.syncfs(true, resolve));
                 if (err) throw err;
@@ -26,8 +27,8 @@ export class SaveDataManager {
     }
 
     public hasSaveData(): Promise<boolean> {
-        function find(fs: typeof FS, dir: string): boolean {
-            if (!fs.isDir(fs.stat(dir).mode))
+        function find(fs: IDBFSModule['FS'], dir: string): boolean {
+            if (!fs.isDir(fs.stat(dir, undefined).mode))
                 return false;
             for (let name of fs.readdir(dir) as string[]) {
                 if (name[0] === '.')
@@ -70,7 +71,7 @@ export class SaveDataManager {
                 }
             }
             await new Promise((resolve, reject) => {
-                fs.syncfs(false, (err) => {
+                fs.syncfs(false, (err: any) => {
                     if (err)
                         reject(err);
                     else
@@ -91,12 +92,12 @@ export class SaveDataManager {
     }
 }
 
-function storeZip(fs: typeof FS, dir: string, zip: JSZip) {
+function storeZip(fs: IDBFSModule['FS'], dir: string, zip: JSZip) {
     for (let name of fs.readdir(dir)) {
         let path = dir + '/' + name;
         if (name[0] === '.') {
             continue;
-        } else if (fs.isDir(fs.stat(path).mode)) {
+        } else if (fs.isDir(fs.stat(path, undefined).mode)) {
             storeZip(fs, path, zip.folder(name));
         } else if (!name.toLowerCase().endsWith('.asd.')) {
             let content = fs.readFile(path, { encoding: 'binary' });
@@ -105,6 +106,6 @@ function storeZip(fs: typeof FS, dir: string, zip: JSZip) {
     }
 }
 
-function addSaveFile(fs: typeof FS, path: string, content: ArrayBuffer) {
+function addSaveFile(fs: IDBFSModule['FS'], path: string, content: ArrayBuffer) {
     fs.writeFile(path, new Uint8Array(content));
 }

@@ -36,17 +36,17 @@ export function registerDataFile(fname: string, size: number, chunks: Uint8Array
     if (fname.match(/\.(ald|ain|alk|kld)$/i)) {
         // Put the file content in the WASM memory space, so that it won't
         // consume additional heap space when mmaped.
-        const dev = FS.makedev(major, entryCount++);
+        const dev = Module!.FS.makedev(major, entryCount++);
         const ops = new NodeOps(size, chunks, patch);
-        FS.registerDevice(dev, ops);
-        FS.mkdev(path, dev);
+        Module!.FS.registerDevice(dev, ops);
+        Module!.FS.mkdev(path, dev, undefined);
     } else {
         // Store as a regular file.
-        var f = FS.open(path, 'w');
+        var f = Module!.FS.open(path, 'w', undefined);
         for (const chunk of chunks) {
-            FS.write(f, chunk, 0, chunk.byteLength);
+            Module!.FS.write(f, chunk, 0, chunk.byteLength, undefined, undefined);
         }
-        FS.close(f);
+        Module!.FS.close(f);
     }
 }
 
@@ -59,14 +59,14 @@ class NodeOps {
     }
 
     read(stream: any, buffer: Int8Array, offset: number, length: number, position: number): number {
-        if (buffer !== Module.HEAP8)
+        if (buffer !== Module!.HEAP8)
             throw new Error('Invalid argument');
         if (this.addr === undefined)
             this.load();
         let src = this.addr! + position;
         length = Math.min(length, this.size - position);
         // load() might have invalidated `buffer`, so use Module.HEAP8 directly
-        Module.HEAP8.set(Module.HEAPU8.subarray(src, src + length), offset);
+        Module!.HEAP8.set(Module!.HEAPU8.subarray(src, src + length), offset);
         return length;
     }
 
@@ -86,9 +86,9 @@ class NodeOps {
     }
 
     private load() {
-        let ptr = this.addr = Module._malloc(this.size);
+        let ptr = this.addr = Module!._malloc(this.size);
         for (let c of this.chunks!) {
-            Module.HEAPU8.set(c, ptr);
+            Module!.HEAPU8.set(c, ptr);
             ptr += c.byteLength;
         }
         this.chunks = null;
@@ -99,13 +99,13 @@ class NodeOps {
         if (!this.patchTbl)
             return;
         for (let a of this.patchTbl) {
-            if (Module.HEAPU8[this.addr! + a[0]] !== a[1]) {
+            if (Module!.HEAPU8[this.addr! + a[0]] !== a[1]) {
                 console.log('Patch failed');
                 return;
             }
         }
         for (let a of this.patchTbl)
-            Module.HEAPU8[this.addr! + a[0]] = a[2];
+            Module!.HEAPU8[this.addr! + a[0]] = a[2];
         console.log('Patch applied');
         this.patchTbl = null;
     }
