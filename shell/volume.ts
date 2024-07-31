@@ -4,8 +4,8 @@ import {$} from './util.js';
 import {config} from './config.js';
 
 const slider = <HTMLInputElement>$('#volume-control-slider');
-let audioContext: AudioContext;
-let masterGain: GainNode;
+export const audioContext = new AudioContext();
+const masterGain = audioContext.createGain();
 let vol = config.volume;  // 0.0 - 1.0
 let muted = false;
 
@@ -18,9 +18,7 @@ function init() {
     // Firefox fix, https://github.com/emscripten-ports/SDL2/issues/41
     slider.addEventListener('mouseup', () => {slider.blur()});
 
-    audioContext = new AudioContext();
     removeUserGestureRestriction();  // For Safari
-    masterGain = audioContext.createGain();
     masterGain.connect(audioContext.destination);
     addEventListener(onVolumeChanged);
     masterGain.gain.value = volume();

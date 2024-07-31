@@ -1,14 +1,9 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 import type { MainModule as System3Module } from './system3.js';
+import type { MainModule as XSystem35Module } from './xsystem35.js';
 import {gaException, Bool, Status, DRIType, ald_getdata, loadScript} from './util.js';
 import * as volumeControl from './volume.js';
-
-declare global {
-    interface BaseAudioContext {
-        resume(): Promise<void>;  // Missing in lib.dom.d.ts of TypeScript 3.6.2
-    }
-}
 
 const PCM_SLOTS = 1 + 128;
 const slots: (PCMSound | null)[] = [];
@@ -21,13 +16,13 @@ function init() {
 }
 
 async function load(no: number): Promise<AudioBuffer> {
-    const dfile = ald_getdata(DRIType.WAVE, no - 1);
+    const dfile = ald_getdata(Module as XSystem35Module, DRIType.WAVE, no - 1);
     if (!dfile)
         throw new Error('Failed to open wave ' + no);
 
     // If the AudioContext was not created inside a user-initiated event
     // handler, then it will be suspended. Attempt to resume it.
-    destNode.context.resume();
+    volumeControl.audioContext.resume();
 
     const audioBuf = await decodeAudioData(dfile.data);
     bufCache[no] = audioBuf;
@@ -361,7 +356,7 @@ export function enable_audio_hook(): number {
     }
     // If the AudioContext was not created inside a user-initiated event
     // handler, then it will be suspended. Attempt to resume it.
-    scriptNode.context.resume();
+    volumeControl.audioContext.resume();
 
     return scriptNode.context.sampleRate;
 }

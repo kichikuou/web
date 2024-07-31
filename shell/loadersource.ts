@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {$, startMeasure, mkdirIfNotExist, loadScript, JSZIP_SCRIPT, JSZipOptions, createBlob, DRIType} from './util.js';
+import {$, startMeasure, loadScript, JSZIP_SCRIPT, JSZipOptions, createBlob, DRIType} from './util.js';
 import * as cdimage from './cdimage.js';
 import {CDDALoader, BGMLoader} from './cddaloader.js';
 import {registerDataFile} from './datafile.js';
@@ -36,7 +36,7 @@ export abstract class LoaderSource {
     protected async loadSystem3(savedir: string) {
         await loadModule('system3');
         Module!.arguments.push('-savedir', savedir);
-        saveDirReady.then(() => { mkdirIfNotExist(savedir.replace(/\/@$/, '')); });
+        saveDirReady.then(() => { Module!.FS.mkdirTree(savedir.replace(/\/@$/, ''), undefined); });
     }
 
     protected async loadXsystem35() {

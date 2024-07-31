@@ -1,6 +1,5 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import type { MainModule as IDBFSModule } from '@irori/idbfs';
 import type { MainModule as System3Module } from './system3.js';
 import type { MainModule as XSystem35Module } from './xsystem35.js';
 
@@ -23,14 +22,6 @@ export function loadScript(src: string): Promise<any> {
         scriptPromises.set(src, p);
     }
     return p;
-}
-
-export function mkdirIfNotExist(path: string, fs?: IDBFSModule['FS']) {
-    try {
-        (fs || Module!.FS).mkdir(path, undefined);
-    } catch (err) {
-        // ignore EEXIST
-    }
 }
 
 export function isMobileSafari(from?: string, to?: string): boolean {
@@ -149,15 +140,15 @@ export enum DRIType {
 
 type AldEntry = { name: string, data: ArrayBuffer }
 
-export function ald_getdata(type: DRIType, no: number): AldEntry | null {
-    let dfile = (Module as XSystem35Module)._ald_getdata(type, no);
+export function ald_getdata(m: XSystem35Module, type: DRIType, no: number): AldEntry | null {
+    let dfile = m._ald_getdata(type, no);
     if (!dfile)
         return null;
-    let ptr = Module!.getValue(dfile + 8, '*');
-    let size = Module!.getValue(dfile, 'i32');
-    let name = ascii_to_string(Module!.getValue(dfile + 12, '*'));  // TODO: Shift_JIS decoding
-    let data = Module!.HEAPU8.buffer.slice(ptr, ptr + size);
-    (Module as XSystem35Module)._ald_freedata(dfile);
+    let ptr = m.getValue(dfile + 8, '*');
+    let size = m.getValue(dfile, 'i32');
+    let name = ascii_to_string(m.getValue(dfile + 12, '*'));  // TODO: Shift_JIS decoding
+    let data = m.HEAPU8.buffer.slice(ptr, ptr + size);
+    m._ald_freedata(dfile);
     return { name, data };
 }
 
@@ -208,14 +199,4 @@ declare global {
         }
         function decode(buf: ArrayBuffer|Uint8Array, callback: (event: DecodeResult) => void): void;
     }
-}
-
-// https://storage.spec.whatwg.org
-interface Navigator {
-    storage: StorageManager;
-}
-interface StorageManager {
-    persisted: () => Promise<boolean>;
-    persist: () => Promise<boolean>;
-    // estimate: () => Promise<StorageEstimate>;
 }

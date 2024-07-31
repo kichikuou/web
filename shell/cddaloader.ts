@@ -1,6 +1,7 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import { DRIType, ald_getdata, isMobileSafari, createBlob, loadScript, createWaveFile } from './util.js';
+import type { MainModule as XSystem35Module } from './xsystem35.js';
+import { ald_getdata, isMobileSafari, createBlob, loadScript, createWaveFile } from './util.js';
 
 export interface CDDALoaderSource {
     extractTrack(track: number): Promise<Blob>;
@@ -50,7 +51,7 @@ export class BGMLoader implements CDDALoaderSource {
     constructor(private type: number, private base_no: number) {}
 
     async extractTrack(track: number): Promise<Blob> {
-        const dfile = ald_getdata(this.type, track + this.base_no - 1);
+        const dfile = ald_getdata(Module as XSystem35Module, this.type, track + this.base_no - 1);
         if (!dfile)
             throw new Error('BGMLoader: Invalid track ' + track);
         return createBlob(dfile.data, dfile.name);

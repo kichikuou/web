@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 import type { MainModule as IDBFSModule } from '@irori/idbfs';
-import {EmscriptenModule, loadScript, JSZIP_SCRIPT, JSZipOptions, mkdirIfNotExist} from './util.js';
+import {loadScript, JSZIP_SCRIPT, JSZipOptions} from './util.js';
 import {saveDirReady} from './moduleloader.js';
 import {addToast, downloadAs} from './widgets.js';
 import {message} from './strings.js';
@@ -65,7 +65,7 @@ export class SaveDataManager {
                 zip.folder('save').forEach((path, z) => { entries.push(z); });
                 for (let z of entries) {
                     if (z.dir)
-                        mkdirIfNotExist('/' + z.name.slice(0, -1), fs);
+                        fs.mkdirTree('/' + z.name.slice(0, -1), undefined);
                     else
                         addSaveFile(fs, '/' + z.name, await z.async('arraybuffer'));
                 }
