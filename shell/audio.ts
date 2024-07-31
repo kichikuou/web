@@ -77,49 +77,51 @@ export function pcm_reset() {
     }
 }
 
-export function pcm_load(slot: number, no: number, wakeUp: (result: Status) => void) {
+export async function pcm_load(slot: number, no: number): Promise<Status> {
     pcm_stop(slot);
     if (bufCache[no]) {
         slots[slot] = new PCMSoundSimple(destNode, bufCache[no], slotVolume[slot]);
-        return wakeUp(Status.OK);
+        return Status.OK;
     }
-    load(no).then((audioBuf) => {
+    try {
+        const audioBuf = await load(no);
         slots[slot] = new PCMSoundSimple(destNode, audioBuf, slotVolume[slot]);
-        wakeUp(Status.OK);
-    }, (err) => {
+        return Status.OK;
+    } catch (err) {
         gaException({type: 'PCM', err});
-        wakeUp(Status.NG);
-    });
+        return Status.NG;
+    }
 }
 
-export function pcm_load_data(slot: number, buf: number, len: number, wakeUp: (result: Status) => void) {
+export async function pcm_load_data(slot: number, buf: number, len: number): Promise<Status> {
     pcm_stop(slot);
-    decodeAudioData(Module!.HEAPU8.slice(buf, buf + len).buffer).then((audioBuf) => {
+    try {
+        const audioBuf = await decodeAudioData(Module!.HEAPU8.slice(buf, buf + len).buffer);
         slots[slot] = new PCMSoundSimple(destNode, audioBuf, slotVolume[slot]);
-        wakeUp(Status.OK);
-    }, (err) => {
+        return Status.OK;
+    } catch (err) {
         gaException({type: 'PCM', err});
-        wakeUp(Status.NG);
-    });
+        return Status.NG;
+    }
 }
 
-export function pcm_load_mixlr(slot: number, noL: number, noR: number, wakeUp: (result: Status) => void) {
+export async function pcm_load_mixlr(slot: number, noL: number, noR: number): Promise<Status> {
     pcm_stop(slot);
     if (bufCache[noL] && bufCache[noR]) {
         slots[slot] = new PCMSoundMixLR(destNode, bufCache[noL], bufCache[noR], slotVolume[slot]);
-        return wakeUp(Status.OK);
+        return Status.OK;
     }
-    let ps: [Promise<AudioBuffer>, Promise<AudioBuffer>] = [
-        bufCache[noL] ? Promise.resolve(bufCache[noL]) : load(noL),
-        bufCache[noR] ? Promise.resolve(bufCache[noR]) : load(noR),
-    ];
-    Promise.all(ps).then((bufs) => {
+    try {
+        const bufs = await Promise.all([
+            bufCache[noL] ? Promise.resolve(bufCache[noL]) : load(noL),
+            bufCache[noR] ? Promise.resolve(bufCache[noR]) : load(noR),
+        ]);
         slots[slot] = new PCMSoundMixLR(destNode, bufs[0], bufs[1], slotVolume[slot]);
-        wakeUp(Status.OK);
-    }).catch((err) => {
+        return Status.OK;
+    } catch (err) {
         gaException({type: 'PCM', err});
-        wakeUp(Status.NG);
-    });
+        return Status.NG;
+    }
 }
 
 export function pcm_unload(slot: number): Status {
@@ -192,11 +194,12 @@ export function pcm_isplaying(slot: number): Bool {
     return sound.isPlaying() ? Bool.TRUE : Bool.FALSE;
 }
 
-export function pcm_waitend(slot: number, wakeUp: (result: Status) => void) {
+export async function pcm_waitend(slot: number): Promise<Status> {
     let sound = slots[slot];
-    if (!sound || !sound.isPlaying())
-        return wakeUp(Status.OK);
-    sound.end_callback = () => wakeUp(Status.OK);
+    if (!sound)
+        return Status.OK;
+    await sound.waitForEnd();
+    return Status.OK;
 }
 
 function onVisibilityChange() {
@@ -205,7 +208,7 @@ function onVisibilityChange() {
 }
 
 abstract class PCMSound {
-    end_callback: (() => void) | null = null;
+    private end_callback: (() => void) | null = null;
     protected context: BaseAudioContext;
     protected gain: GainNode;
     protected startTime: number | null = null;
@@ -218,6 +221,7 @@ abstract class PCMSound {
     }
     abstract start(loop: number): void;
     abstract stop(after_msec?: number): void;
+    abstract get duration(): number;
     setGain(gain: number) {
         this.gain.gain.value = gain;
     }
@@ -233,7 +237,14 @@ abstract class PCMSound {
     isPlaying(): boolean {
         return this.startTime !== null;
     }
-    abstract get duration(): number;
+    waitForEnd(): Promise<void> {
+        if (!this.isPlaying()) {
+            return Promise.resolve();
+        }
+        return new Promise((resolve) => {
+            this.end_callback = resolve;
+        });
+    }
 
     protected ended() {
         this.startTime = null;
