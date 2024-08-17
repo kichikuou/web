@@ -1,7 +1,8 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 import type { MainModule as XSystem35Module } from './xsystem35.js';
-import { ald_getdata, isMobileSafari, createBlob, loadScript, createWaveFile } from './util.js';
+import { ald_getdata, isMobileSafari, createBlob, loadScript } from './util.js';
+import { createWaveFile } from './cdimage.js';
 
 export interface CDDALoaderSource {
     extractTrack(track: number): Promise<Blob>;

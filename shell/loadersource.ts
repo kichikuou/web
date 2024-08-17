@@ -4,6 +4,7 @@ import {$, startMeasure, loadScript, JSZIP_SCRIPT, JSZipOptions, createBlob, DRI
 import * as cdimage from './cdimage.js';
 import {CDDALoader, BGMLoader} from './cddaloader.js';
 import {registerDataFile} from './datafile.js';
+import * as iso9660 from './iso9660.js';
 import {loadModule, saveDirReady} from './moduleloader.js';
 import {message} from './strings.js';
 
@@ -64,7 +65,7 @@ export class CDImageSource extends LoaderSource {
 
     protected async doLoad() {
         this.imageReader = await cdimage.createReader(this.imageFile, this.metadataFile);
-        let isofs = await cdimage.ISO9660FileSystem.create(this.imageReader);
+        let isofs = await iso9660.FileSystem.create(this.imageReader);
         // this.walk(isofs, isofs.rootDir(), '/');
         let gamedata = await this.findGameDir(isofs);
         if (!gamedata)
@@ -104,7 +105,7 @@ export class CDImageSource extends LoaderSource {
         return new CDDALoader(this.imageReader);
     }
 
-    private async findGameDir(isofs: cdimage.ISO9660FileSystem): Promise<cdimage.DirEnt | null> {
+    private async findGameDir(isofs: iso9660.FileSystem): Promise<iso9660.DirEnt | null> {
         for (let e of await isofs.readDir(isofs.rootDir())) {
             if (e.isDirectory) {
                 if (e.name.toLowerCase() === 'gamedata' || await isofs.getDirEnt('adisk.dat', e))
@@ -116,7 +117,7 @@ export class CDImageSource extends LoaderSource {
         return null;
     }
 
-    private async saveDir(isofs: cdimage.ISO9660FileSystem): Promise<string> {
+    private async saveDir(isofs: iso9660.FileSystem): Promise<string> {
         let dirname = isofs.volumeLabel();
         if (!dirname) {
             if (await isofs.getDirEnt('prog.bat', isofs.rootDir())) {
@@ -132,7 +133,7 @@ export class CDImageSource extends LoaderSource {
     }
 
     // For debug
-    private async walk(isofs: cdimage.ISO9660FileSystem, dir: cdimage.DirEnt, dirname: string) {
+    private async walk(isofs: iso9660.FileSystem, dir: iso9660.DirEnt, dirname: string) {
         for (let e of await isofs.readDir(dir)) {
             if (e.name !== '.' && e.name !== '..') {
                 console.log(dirname + e.name);
