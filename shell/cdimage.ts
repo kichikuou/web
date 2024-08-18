@@ -91,7 +91,16 @@ class ImgCueReader implements Reader {
             switch (fields[0]) {
                 case 'TRACK':
                     currentTrack = Number(fields[1]);
-                    this.tracks[currentTrack] = { isAudio: fields[2] === 'AUDIO', index: [] };
+                    switch (fields[2]) {
+                        case 'MODE1/2352':
+                            this.tracks[currentTrack] = { isAudio: false, index: [] };
+                            break;
+                        case 'AUDIO':
+                            this.tracks[currentTrack] = { isAudio: true, index: [] };
+                            break;
+                        default:
+                            throw new Error(`${cueFile.name}: Unknown track mode "${fields[2]}"`);
+                    }
                     break;
                 case 'INDEX':
                     if (currentTrack)
