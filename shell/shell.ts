@@ -14,6 +14,7 @@ import * as texthook from './textlog.js';
 import {addToast} from './widgets.js';
 import {message} from './strings.js';
 import {config} from './config.js';
+import { hasPattonSave } from './savedata.js';
 
 class System35Shell {
     constructor() {
@@ -123,6 +124,7 @@ class System35Shell {
 }
 
 function scenario_address(): string | undefined {
+    if (!window.Module) return undefined;
     const m = Module as XSystem35Module;
     if (!m['_nact_current_page']) return undefined;
     return m._nact_current_page() + ':' + m._nact_current_addr().toString(16);
@@ -164,13 +166,7 @@ window.addEventListener('beforeinstallprompt', (e: any) => {
 });
 
 async function launchPatton() {
-    Module!.FS.mkdir('/patton', undefined);
-    Module!.FS.mount(Module!.IDBFS, {}, '/patton');
-    await new Promise((resolve) => Module!.FS.syncfs(true, resolve));
-    try {
-        Module!.FS.stat('/patton/patton.nhd', undefined);
-        // The HD image already exists, no preparation is needed.
-    } catch (_) {
+    if (!hasPattonSave(Module!.FS)) {
         // Store the game files to IDBFS.
         for (const fname of Module!.FS.readdir('/')) {
             if (Module!.FS.isDir(Module!.FS.stat(fname, undefined).mode)) {
@@ -182,9 +178,12 @@ async function launchPatton() {
         const err = await new Promise((resolve) => Module!.FS.syncfs(false, resolve));
         if (err) throw err;
     }
-    Module!.FS.unmount('/patton');
-    Module!.FS.rmdir('/patton');
     config.unloadConfirmation = false;
     window.location.href = '/patton/';  // Patton GO!
-    setTimeout(Module!._sys_restart, 1000);
+    setTimeout(async () => {
+        // This *may* run after the user is back from Patton.
+        const err = await new Promise((resolve) => Module!.FS.syncfs(true, resolve));
+        if (err) throw err;
+        Module!._sys_restart();
+    }, 1000);
 }

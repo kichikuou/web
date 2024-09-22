@@ -33,6 +33,8 @@ export async function loadModule(name: 'system3' | 'xsystem35'): Promise<any> {
             function prepareSaveDir(m: EmscriptenModule) {
                 m.FS.mkdir('/save', undefined);
                 m.FS.mount(m.IDBFS, {}, '/save');
+                m.FS.mkdir('/patton', undefined);
+                m.FS.mount(m.IDBFS, {}, '/patton');
                 m.addRunDependency('syncfs');
                 m.FS.syncfs(true, (err: any) => {
                     m.removeRunDependency('syncfs');

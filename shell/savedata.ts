@@ -18,6 +18,8 @@ export class SaveDataManager {
                 const idbfs = await idbfsModule.default();
                 idbfs.FS.mkdir('/save', undefined);
                 idbfs.FS.mount(idbfs.IDBFS, {}, '/save');
+                idbfs.FS.mkdir('/patton', undefined);
+                idbfs.FS.mount(idbfs.IDBFS, {}, '/patton');
                 const err = await new Promise((resolve) => idbfs.FS.syncfs(true, resolve));
                 if (err) throw err;
                 return idbfs.FS;
@@ -26,7 +28,7 @@ export class SaveDataManager {
         loadScript(JSZIP_SCRIPT);
     }
 
-    public hasSaveData(): Promise<boolean> {
+    public async hasSaveData(): Promise<boolean> {
         function find(fs: IDBFSModule['FS'], dir: string): boolean {
             if (!fs.isDir(fs.stat(dir, undefined).mode))
                 return false;
@@ -40,14 +42,19 @@ export class SaveDataManager {
             }
             return false;
         }
-        return this.FSready.then((fs) => find(fs, '/save'));
+        const fs = await this.FSready;
+        return find(fs, '/save') || hasPattonSave(fs);
     }
 
     public async download() {
         await loadScript(JSZIP_SCRIPT);
-        let zip = new JSZip();
-        storeZip(await this.FSready, '/save', zip.folder('save'));
-        let blob = await zip.generateAsync({type: 'blob', compression: 'DEFLATE'});
+        const zip = new JSZip();
+        const fs = await this.FSready;
+        storeZip(fs, '/save', zip.folder('save'));
+        if (hasPattonSave(fs)) {
+            storeZip(fs, '/patton', zip.folder('patton'));
+        }
+        const blob = await zip.generateAsync({type: 'blob', compression: 'DEFLATE'});
         downloadAs('savedata.zip', URL.createObjectURL(blob));
         gtag('event', 'Downloaded', { event_category: 'Savedata' });
     }
@@ -56,18 +63,19 @@ export class SaveDataManager {
         try {
             let fs = await this.FSready;
             if (file.name.toLowerCase().endsWith('.asd')) {
-                addSaveFile(fs, '/save/' + file.name, await file.arrayBuffer());
+                fs.writeFile('/save/' + file.name, new Uint8Array(await file.arrayBuffer()));
             } else {
                 await loadScript(JSZIP_SCRIPT);
                 let zip = new JSZip();
                 await zip.loadAsync(await file.arrayBuffer(), JSZipOptions());
                 let entries: JSZipObject[] = [];
                 zip.folder('save').forEach((path, z) => { entries.push(z); });
+                zip.folder('patton').forEach((path, z) => { entries.push(z); });
                 for (let z of entries) {
                     if (z.dir)
                         fs.mkdirTree('/' + z.name.slice(0, -1), undefined);
                     else
-                        addSaveFile(fs, '/' + z.name, await z.async('arraybuffer'));
+                        fs.writeFile('/' + z.name, new Uint8Array(await z.async('arraybuffer')));
                 }
             }
             await new Promise((resolve, reject) => {
@@ -106,6 +114,11 @@ function storeZip(fs: IDBFSModule['FS'], dir: string, zip: JSZip) {
     }
 }
 
-function addSaveFile(fs: IDBFSModule['FS'], path: string, content: ArrayBuffer) {
-    fs.writeFile(path, new Uint8Array(content));
+export function hasPattonSave(fs: IDBFSModule['FS']): boolean {
+    try {
+        fs.stat('/patton/patton.nhd', undefined);
+        return true;
+    } catch (e) {
+        return false;
+    }
 }
