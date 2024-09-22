@@ -15,7 +15,7 @@
     "@types/jszip": "0.0.33",
     "7z-wasm": "^1.1.0",
     "font-awesome": "^4.7.0",
-    "js-fatfs": "^0.0.0"
+    "js-fatfs": "^0.2.1"
   },
   "devDependencies": {
     "esbuild": "^0.19.4",

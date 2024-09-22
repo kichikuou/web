@@ -73,8 +73,7 @@ export type ExtractCallback = (fname: string, contents: Uint8Array) => void;
 
 export async function extractFDImage(image: Uint8Array, callback: ExtractCallback) {
     const diskio = new RawDiskImage(image);
-    const ff = await FatFs.create({ diskio });
-    check_result(ff.f_setcp(932));
+    const ff = await FatFs.create({ diskio, codepage: 932 });
 
     const fs = ff.malloc(FatFs.sizeof_FATFS);
     check_result(ff.f_mount(fs, '', 1));
