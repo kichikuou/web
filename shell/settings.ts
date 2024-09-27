@@ -50,6 +50,7 @@ function onGameStart() {
 }
 
 function openModal() {
+    dialog.appendChild($('#toast-container'));  // Make toasts appear over the dialog
     dialog.showModal();
     saveDataManager = new SaveDataManager();
     checkSaveData();
@@ -57,6 +58,7 @@ function openModal() {
 
 function onDialogClose() {
     saveDataManager = null;
+    document.body.appendChild($('#toast-container'));
 }
 
 function antialiasChanged() {

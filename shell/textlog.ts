@@ -33,6 +33,7 @@ function init() {
     $('#textlog-close').addEventListener('click', () => dialog.close());
     // Close the dialog when clicked outside of the dialog.
     dialog.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('close', onDialogClose);
     for (const e of Array.from(dialog.children))
         e.addEventListener('click', (e) => e.stopPropagation());
 }
@@ -66,8 +67,13 @@ function openTextLog() {
         return;
     }
     render(textlogContent);
+    dialog.appendChild($('#toast-container'));  // Make toasts appear over the dialog
     dialog.showModal();
     textlogContent.scrollTop = textlogContent.scrollHeight;
+}
+
+function onDialogClose() {
+    document.body.appendChild($('#toast-container'));
 }
 
 let currentPage = -1;

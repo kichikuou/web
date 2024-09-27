@@ -16,6 +16,7 @@ export function addToast(msg: string | Node, type?: 'success' | 'warning' | 'err
     btn.setAttribute('class', 'btn btn-clear float-right');
     function dismiss() { if (div.parentNode === container) container.removeChild(div); }
     btn.addEventListener('click', dismiss);
+    div.addEventListener('click', (e) => e.stopPropagation());  // prevent dismissing dialog
     let timeout = type ? {success: 5000, warning: 10000, error: null}[type] : 5000;
     if (timeout)
         setTimeout(dismiss, timeout);
