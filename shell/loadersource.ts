@@ -205,10 +205,12 @@ export class ZipSource extends LoaderSource {
                 message.floppy_images_cant_be_used : message.no_ald_in_zip;
             throw new NoGamedataError(msg);
         }
-        if (zip.file(/adisk.dat/i).length > 0) {
+        if (zip.file(/adisk\.dat$/i).length > 0) {
             await this.loadSystem3('/save/@');
-        } else {
+        } else if (zip.file(/sa\.ald$/i).length > 0) {
             await this.loadXsystem35();
+        } else {
+            throw new NoGamedataError(message.no_ald_in_zip)
         }
 
         for (const f of dataFiles) {
