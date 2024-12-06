@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {$, urlParams} from './util.js';
+import {$} from './util.js';
 
 const textLogMaxLines = 2000;
 
@@ -8,21 +8,21 @@ const textLogMaxLines = 2000;
 let wheelIgnoreTime = 0;
 
 // Text from these scenario pages won't be shown in the text log.
-const quietPagesTable: [RegExp | string, number[]][] = [
-    ['ＲＡＮＣＥ', [2]],
-    ['ＲＡＮＣＥ２', [2]],
-    ['Ｒａｎｃｅ３', [1]],
+const suppressionTable: [RegExp | string, string][] = [
+    ['ＲＡＮＣＥ', '2'],
+    ['ＲＡＮＣＥ２', '2'],
+    ['Ｒａｎｃｅ３', '1'],
     [/^(Ｒａｎｃｅ４　－教団の遺産－　Ｆｏｒ　Ｗｉｎ９５|Rance4 -Legacy of the Sect- For Win95|RanceⅣ　－教団の遺産－　for Windows|Rance4 -Legacy of the Sect- for Windows)$/,
-     [10, 11, 16, 88, 90, 98]],
-    ['ランス 4.1 〜お薬工場を救え！〜', [6]],
-    ['ランス 4.2 〜エンジェル組〜', [7]],
-    ['Rance4.1 for System3.9', [2, 7]],
-    ['Rance4.2 for System3.9', [2, 8]],
-    [/^(鬼畜王ランス|Kichikuou Rance)$/, [7, 11, 15, 16, 17, 18, 23, 24, 32, 33, 197]],
-    ['闘神都市', [1]],
-    ['闘神都市Ⅱ　ｆｏｒ　Ｗｉｎ９５', [4, 5, 6, 7, 8]],
-    ['あゆみちゃん物語', [6]],
-    [/^グレイメルカ ver1\./, [1, 2, 5, 6]],
+     '10,11,16,88,90,98'],
+    ['ランス 4.1 〜お薬工場を救え！〜', '6'],
+    ['ランス 4.2 〜エンジェル組〜', '7'],
+    ['Rance4.1 for System3.9', '2,7'],
+    ['Rance4.2 for System3.9', '2,8'],
+    [/^(鬼畜王ランス|Kichikuou Rance)$/, '7,11,15,16,17,18,23,24,32,33,197'],
+    ['闘神都市', '1'],
+    ['闘神都市Ⅱ　ｆｏｒ　Ｗｉｎ９５', '4,5,6,7,8'],
+    ['あゆみちゃん物語', '6'],
+    [/^グレイメルカ ver1\./, '1,2,5,6'],
 ];
 
 const dialog = $('#textlog') as HTMLDialogElement;
@@ -76,25 +76,16 @@ function onDialogClose() {
     document.body.appendChild($('#toast-container'));
 }
 
-let currentPage = -1;
 let linebuf = '';
 let lines: string[] = [];
-let quietPages: number[] = [];
-let consoleLog = urlParams.get('consoleTextLog') === '1';
 
-export function message(s: string, page: number) {
-    if (linebuf === '')
-        currentPage = page;
+export function message(s: string) {
     linebuf += s;
 }
 
 export function newline() {
     if (linebuf !== '') {
-        if (!skiplog(currentPage)) {
-            if (consoleLog)
-                console.log(currentPage + ': ' + linebuf);
-            addLine(linebuf);
-        }
+        addLine(linebuf);
         linebuf = '';
     }
 }
@@ -102,8 +93,6 @@ export function newline() {
 export function nextpage() {
     newline();
     if (lines[lines.length - 1] !== '') {
-        if (consoleLog)
-            console.log('');
         addLine('');
     }
 }
@@ -117,23 +106,19 @@ function render(e: HTMLElement) {
 }
 
 export function setTitle(title: string) {
-    for (const [pattern, pages] of quietPagesTable) {
+    for (const [pattern, list] of suppressionTable) {
         if (pattern instanceof RegExp ? pattern.test(title) : pattern === title) {
-            quietPages = pages;
+            const ptr = Module!.stringToUTF8OnStack(list);
+            Module!._texthook_set_suppression_list(ptr);
             return;
         }
     }
-    quietPages = [];
 }
 
 function addLine(s: string) {
     lines.push(s);
     if (lines.length > textLogMaxLines)
         lines.shift();
-}
-
-function skiplog(page: number) {
-    return quietPages.includes(page);
 }
 
 export function disableWheelEvent(duration: number) {
