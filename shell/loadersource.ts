@@ -45,8 +45,8 @@ export abstract class LoaderSource {
         Module!.arguments.push('-savedir', '/save');
     }
 
-    protected addFile(fname: string, size: number, chunks: Uint8Array[]) {
-        registerDataFile(fname, size, chunks);
+    protected addFile(fname: string, chunks: Uint8Array[]) {
+        registerDataFile(fname, chunks);
         if (/M[A-Z]\.ALD$/i.test(fname)) {
             this.hasMidi = true;
         }
@@ -92,11 +92,11 @@ export class CDImageSource extends LoaderSource {
             let em = startMeasure(e.name);
             let chunks = await isofs.readFile(e);
             em();
-            this.addFile(e.name, e.size, chunks);
+            this.addFile(e.name, chunks);
         }
         for (let f of this.patchFiles) {
             let content = await f.arrayBuffer();
-            this.addFile(f.name, f.size, [new Uint8Array(content)]);
+            this.addFile(f.name, [new Uint8Array(content)]);
         }
         endMeasure();
     }
@@ -170,7 +170,7 @@ export class FileSource extends LoaderSource {
                 continue;
             }
             let content = await f.arrayBuffer();
-            this.addFile(f.name, f.size, [new Uint8Array(content)]);
+            this.addFile(f.name, [new Uint8Array(content)]);
         }
     }
 
@@ -216,7 +216,7 @@ export class ZipSource extends LoaderSource {
         for (const f of dataFiles) {
             const content: ArrayBuffer = await f.async('arraybuffer');
             const basename = f.name.split('/').pop()!;
-            this.addFile(basename, content.byteLength, [new Uint8Array(content)]);
+            this.addFile(basename, [new Uint8Array(content)]);
         }
         const playlist = zip.file(/playlist.txt/i);
         if (playlist.length > 0) {
@@ -235,7 +235,7 @@ export class ZipSource extends LoaderSource {
             const img: ArrayBuffer = await floppy.async('arraybuffer');
             await extractFDImage(new Uint8Array(img), (fname, contents) => {
                 console.log(fname);
-                this.addFile(fname, contents.byteLength, [contents]);
+                this.addFile(fname, [contents]);
             });
         }
     }
@@ -286,7 +286,7 @@ export class SevenZipSource extends LoaderSource {
             if (this.tracks.add(f, f.name)) {
                 continue;
             }
-            this.addFile(f.name, f.content.byteLength, [f.content]);
+            this.addFile(f.name, [f.content]);
         }
     }
 

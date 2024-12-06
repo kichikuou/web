@@ -17,7 +17,7 @@ const TADAModePatch: PatchTable = [
     [0x16e61, 0x06, 0x05]
 ];
 
-export function registerDataFile(fname: string, size: number, chunks: Uint8Array[]) {
+export function registerDataFile(fname: string, chunks: Uint8Array[]) {
     const path = '/' + fname;
     var f = Module!.FS.open(path, 'w+', undefined);
     for (const chunk of chunks) {
