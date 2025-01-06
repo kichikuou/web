@@ -8,15 +8,16 @@ import * as volumeControl from './volume.js';
 const PCM_SLOTS = 1 + 128;
 const slots: (PCMSound | null)[] = [];
 const slotVolume: number[] = new Array(PCM_SLOTS).fill(1.0);
-let bufCache: AudioBuffer[] = [];
+let wavCache: AudioBuffer[] = [];
+let bgmCache: AudioBuffer[] = [];
 const destNode = volumeControl.audioNode();
 
 function init() {
     document.addEventListener('visibilitychange', onVisibilityChange);
 }
 
-async function load(no: number): Promise<AudioBuffer> {
-    const dfile = ald_getdata(Module as XSystem35Module, DRIType.WAVE, no - 1);
+async function load(type: DRIType, no: number): Promise<AudioBuffer> {
+    const dfile = ald_getdata(Module as XSystem35Module, type, no - 1);
     if (!dfile)
         throw new Error('Failed to open wave ' + no);
 
@@ -25,7 +26,7 @@ async function load(no: number): Promise<AudioBuffer> {
     volumeControl.audioContext.resume();
 
     const audioBuf = await decodeAudioData(dfile.data);
-    bufCache[no] = audioBuf;
+    (type == DRIType.WAVE ? wavCache : bgmCache)[no] = audioBuf;
     return audioBuf;
 }
 
@@ -74,12 +75,28 @@ export function pcm_reset() {
 
 export async function pcm_load(slot: number, no: number): Promise<Status> {
     pcm_stop(slot);
-    if (bufCache[no]) {
-        slots[slot] = new PCMSoundSimple(destNode, bufCache[no], slotVolume[slot]);
+    if (wavCache[no]) {
+        slots[slot] = new PCMSoundSimple(destNode, wavCache[no], slotVolume[slot]);
         return Status.OK;
     }
     try {
-        const audioBuf = await load(no);
+        const audioBuf = await load(DRIType.WAVE, no);
+        slots[slot] = new PCMSoundSimple(destNode, audioBuf, slotVolume[slot]);
+        return Status.OK;
+    } catch (err) {
+        gaException({type: 'PCM', err});
+        return Status.NG;
+    }
+}
+
+export async function pcm_load_bgm(slot: number, no: number): Promise<Status> {
+    pcm_stop(slot);
+    if (bgmCache[no]) {
+        slots[slot] = new PCMSoundSimple(destNode, bgmCache[no], slotVolume[slot]);
+        return Status.OK;
+    }
+    try {
+        const audioBuf = await load(DRIType.BGM, no);
         slots[slot] = new PCMSoundSimple(destNode, audioBuf, slotVolume[slot]);
         return Status.OK;
     } catch (err) {
@@ -102,14 +119,14 @@ export async function pcm_load_data(slot: number, buf: number, len: number): Pro
 
 export async function pcm_load_mixlr(slot: number, noL: number, noR: number): Promise<Status> {
     pcm_stop(slot);
-    if (bufCache[noL] && bufCache[noR]) {
-        slots[slot] = new PCMSoundMixLR(destNode, bufCache[noL], bufCache[noR], slotVolume[slot]);
+    if (wavCache[noL] && wavCache[noR]) {
+        slots[slot] = new PCMSoundMixLR(destNode, wavCache[noL], wavCache[noR], slotVolume[slot]);
         return Status.OK;
     }
     try {
         const bufs = await Promise.all([
-            bufCache[noL] ? Promise.resolve(bufCache[noL]) : load(noL),
-            bufCache[noR] ? Promise.resolve(bufCache[noR]) : load(noR),
+            wavCache[noL] ? Promise.resolve(wavCache[noL]) : load(DRIType.WAVE, noL),
+            wavCache[noR] ? Promise.resolve(wavCache[noR]) : load(DRIType.WAVE, noR),
         ]);
         slots[slot] = new PCMSoundMixLR(destNode, bufs[0], bufs[1], slotVolume[slot]);
         return Status.OK;
@@ -198,8 +215,10 @@ export async function pcm_waitend(slot: number): Promise<Status> {
 }
 
 function onVisibilityChange() {
-    if (document.hidden)
-        bufCache = [];
+    if (document.hidden) {
+        wavCache = [];
+        bgmCache = [];
+    }
 }
 
 abstract class PCMSound {
