@@ -46,13 +46,25 @@ class System35Shell {
         zoom.recalcAspectRatio();
     }
 
-    setWindowTitle(title: string) {
+    setWindowTitle(title: string, gameId?: string) {
         let colon = title.indexOf(':');
         if (colon !== -1) {
             title = title.slice(colon + 1).trim();
             texthook.setTitle(title);
             $('.navbar-brand').textContent = title;
             gtag('event', 'GameStart', { GameTitle: title, event_category: 'Game', event_label: title });
+        }
+        switch (gameId) {
+        case 'dalk':
+        case 'gakuen_king':
+        case 'rance':
+        case 'rance2':
+        case 'rance3':
+        case 'rance4':
+        case 'toushin':
+        case 'toushin2':
+            addToast(message.pc98_images_cant_be_used, 'warning');
+            break;
         }
     }
 
