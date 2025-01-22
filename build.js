@@ -20,6 +20,7 @@ const resolveExternalModules = {
 }
 
 async function installExternalModules() {
+    await fsPromises.mkdir('dist/soundfonts', { recursive: true });
     return Promise.all([
         fsPromises.copyFile('node_modules/7z-wasm/7zz.es6.js', 'dist/lib/7zz.es6.js'),
         fsPromises.copyFile('node_modules/7z-wasm/7zz.wasm', 'dist/lib/7zz.wasm'),
@@ -28,6 +29,9 @@ async function installExternalModules() {
         fsPromises.copyFile('node_modules/@irori/idbfs/idbfs.js', 'dist/lib/idbfs.js'),
         fsPromises.copyFile('node_modules/font-awesome/css/font-awesome.min.css', 'dist/lib/font-awesome.min.css'),
         fsPromises.copyFile('node_modules/font-awesome/fonts/fontawesome-webfont.woff2', 'dist/fonts/fontawesome-webfont.woff2'),
+        fsPromises.copyFile('SpessaSynth/src/spessasynth_lib/synthetizer/worklet_processor.min.js', 'dist/worklet_processor.min.js'),
+        fsPromises.copyFile('SpessaSynth/src/spessasynth_lib/synthetizer/audio_effects/impulse_response_2.flac', 'dist/impulse_response_2.flac'),
+        fsPromises.copyFile('SpessaSynth/soundfonts/GeneralUserGS.sf3', 'dist/soundfonts/GeneralUserGS.sf3'),
     ]);
 }
 
@@ -37,9 +41,11 @@ const configs = [
         entryPoints: [
             'shell/shell.ts',
             'shell/fdimage.ts',
+            'shell/spessasynth.ts',
         ],
         external: [
             './fdimage.js',
+            './spessasynth.js',
             './system3.js',
             './xsystem35.js',
         ],

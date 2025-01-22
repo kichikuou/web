@@ -1,97 +1,85 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {gaException, loadScript} from './util.js';
+import type { Synthetizer, Sequencer } from "./spessasynth-types";
+import { addToast } from './widgets.js';
+import { message } from './strings.js';
 
-declare class Timidity {
-    constructor(dst: AudioNode, baseurl?: string);
-    load(urlOrBuf: string | Uint8Array): Promise<void>;
-    play(): void;
-    pause(): void;
-    on(event: 'playing', callback: (playbackTime: number) => void): void;
-    on(event: 'error', callback: (err: Error) => void): void;
-    on(event: string, callback: () => void): void;
-    currentTime: number;
-}
-
-let timidity: Timidity | undefined;
+let SpessaSynth: typeof import('./spessasynth-types') | undefined;
+let synth: Synthetizer | undefined;
+let seq: Sequencer | undefined;
 let gain!: GainNode;
-let playing = false;
 let fadeFinishTime = 0;
 let stopTimer: number | null = null;
 
-export function init(destNode: AudioNode) {
-    Module!.addRunDependency('timidity');
-    loadScript('/timidity/timidity.js').then(() => {
+export async function init(destNode: AudioNode) {
+    Module!.addRunDependency('SpessaSynth');
+    try {
+        const sfFetch = fetch("soundfonts/GeneralUserGS.sf3");
+        SpessaSynth = await import("./spessasynth.js");
+        await destNode.context.audioWorklet.addModule("./worklet_processor.min.js");
         gain = destNode.context.createGain();
         gain.connect(destNode);
-        timidity = new Timidity(gain, '/timidity/');
-        timidity.on('playing', onPlaying);
-        timidity.on('error', onError);
-        timidity.on('ended', onEnd);
-        Module!.removeRunDependency('timidity');
-    });
+        const sfResp = await sfFetch;
+        if (!sfResp.ok)
+            throw new Error(`Failed to load soundfont: ${sfResp.statusText}`);
+        synth = new SpessaSynth.Synthetizer(gain, await sfResp.arrayBuffer());
+    } catch (e) {
+        console.warn(e);
+        addToast(message.midi_init_error, 'error');
+        if (e instanceof Error) {
+            gtag('event', 'MidiInitFailed', { event_category: 'MIDI', event_label: e.message });
+        }
+    }
+    Module!.removeRunDependency('SpessaSynth');
 }
 
-export function play(loop: number, data: number, datalen: number) {
-    if (!timidity)
+export function play(loopCount: number, data: number, datalen: number) {
+    if (!synth)
         return;
-    timidity.load(Module!.HEAPU8.slice(data, data + datalen));
-    timidity.play();
-    playing = true;
-    // NOTE: `loop` is ignored.
+    const midiBuffers = [{
+        binary: Module!.HEAPU8.slice(data, data + datalen),
+        altName: undefined
+    }];
+    if (!seq) {
+        seq = new SpessaSynth!.Sequencer(midiBuffers, synth);
+    } else {
+        seq.loadNewSongList(midiBuffers);
+    }
+    seq.loop = loopCount === 0;
 }
 
 export function stop() {
-    if (!timidity)
-        return;
-    playing = false;
-    timidity.pause();
+    seq?.stop();
 }
 
 export function pause() {
-    if (!timidity)
-        return;
-    timidity.pause();
+    seq?.pause();
 }
 
 export function resume() {
-    if (!timidity)
-        return;
-    timidity.play();
+    seq?.play();
 }
 
 export function getPosition(): number {
-    if (!timidity)
+    if (!seq || seq.isFinished)
         return 0;
-    return Math.round(timidity.currentTime * 1000);
+    return Math.round(seq.currentTime * 1000);
 }
 
 export function setVolume(vol: number) {
-    if (!timidity)
-        return;
     gain.gain.value = vol / 100;
 }
 
 export function getVolume(): number {
-    if (!timidity)
-        return 100;
     return gain.gain.value * 100;
 }
 
 export function fadeStart(ms: number, vol: number, stopAfterFade: number) {
-    if (!timidity)
-        return;
     // Cancel previous fade
     gain.gain.cancelScheduledValues(gain.context.currentTime);
     if (stopTimer !== null) {
         clearTimeout(stopTimer);
         stopTimer = null;
-    }
-
-    // Resetting the volume while not playing?
-    if (ms === 0 && vol === 100 && (stopTimer || !playing)) {
-        // No worries, playback always starts with volume 100%
-        return;
     }
 
     gain.gain.linearRampToValueAtTime(vol / 100, gain.context.currentTime + ms / 1000);
@@ -109,24 +97,5 @@ export function fadeStart(ms: number, vol: number, stopAfterFade: number) {
 }
 
 export function isFading(): number {
-    if (!timidity)
-        return 0;
     return performance.now() < fadeFinishTime ? 1 : 0;
-}
-
-function onPlaying(playbackTime: number) {
-    if (!playbackTime)
-        return;
-    // Reset volume to 100% at the start of playback
-    gain.gain.setValueAtTime(1, playbackTime);
-}
-
-function onError(err: Error) {
-    console.warn(err);
-    gaException(err);
-}
-
-function onEnd() {
-    if (playing)
-        timidity!.play();
 }

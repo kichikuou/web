@@ -36,13 +36,6 @@ using the `serve` command:
 npm run serve
 ```
 
-For running a game that utilizes MIDI, an additional setup step is required.
-Run the following command in the `dist` directory:
-
-```bash
-git clone -b gh-pages https://github.com/kichikuou/timidity.git
-```
-
 ## Licenses
 Code in the `shell/` and `fslib/` directories is licensed under the
 [MIT License](shell/LICENSE).
@@ -69,7 +62,8 @@ This site also uses the following open-source software:
 - [Font Awesome](https://fontawesome.com/v4.7.0/) by Dave Gandy ([License](https://fontawesome.com/v4.7.0/license/))
 - [JSZip](https://stuk.github.io/jszip/) by Stuart Knightley ([License](https://github.com/Stuk/jszip/blob/v3.1.3/LICENSE.markdown))
 - [Spectre.css](https://picturepan2.github.io/spectre/) by Yan Zhu ([License](https://github.com/picturepan2/spectre/blob/v0.5.8/LICENSE))
-- [WebAssembly port of libTiMidity](https://github.com/feross/timidity) by Feross Aboukhadijeh ([License](https://github.com/kichikuou/timidity/blob/kichikuou/LICENSE))
+- [SpessaSynth](https://github.com/spessasus/SpessaSynth) by Spessasus ([License](https://github.com/spessasus/SpessaSynth/blob/v3.24.0/LICENSE))
+- [GeneralUser GS](https://www.schristiancollins.com/generaluser) by S. Christian Collins ([License](https://github.com/mrbumpy409/GeneralUser-GS/blob/d0fc360abafa736f11a1fa18c721f65bfc3a6991/documentation/LICENSE.txt))
 - [stbvorbis.js](https://github.com/hajimehoshi/stbvorbis.js) ([License](https://github.com/hajimehoshi/stbvorbis.js/blob/v0.2.2/LICENSE))
 
 [system3-sdl2]: https://github.com/kichikuou/system3-sdl2

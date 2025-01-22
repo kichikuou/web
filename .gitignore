@@ -6,9 +6,13 @@ dist/xsystem35.*
 dist/shell.js*
 dist/archiveworker.js*
 dist/fdimage.js*
+dist/spessasynth.js*
 dist/style.css
 dist/lib/7zz.*
 dist/lib/fatfs.*
 dist/lib/idbfs.js
 dist/lib/font-awesome.min.css
 dist/fonts/fontawesome-webfont.woff2
+dist/soundfonts/
+dist/worklet_processor.min.js
+dist/impulse_response_2.flac
