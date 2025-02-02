@@ -1,9 +1,9 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {EmscriptenModule, EmscriptenOptions, $, urlParams, Status} from './util.js';
-import {addToast} from './widgets.js';
+import { EmscriptenModule, EmscriptenOptions, $, urlParams } from './util.js';
+import { addToast } from './widgets.js';
 import * as toolbar from './toolbar.js';
-import {message} from './strings.js';
+import { message } from './strings.js';
 
 const FontGothic = 'MTLc3m.ttf';
 const FontMincho = 'mincho.otf';
@@ -86,8 +86,8 @@ async function persistStorage() {
 }
 
 let mincho_loaded = false;
-export async function load_mincho_font(): Promise<number> {
-    if (mincho_loaded) return Status.OK;
+export async function load_mincho_font(): Promise<boolean> {
+    if (mincho_loaded) return true;
     mincho_loaded = true;
 
     console.log('loading mincho font');
@@ -95,8 +95,8 @@ export async function load_mincho_font(): Promise<number> {
         const resp = await fetch('fonts/' + FontMincho);
         const buf = await resp.arrayBuffer();
         Module!.FS.writeFile('/fonts/' + FontMincho, new Uint8Array(buf));
-        return Status.OK;
+        return true;
     } catch (e) {
-        return Status.NG;
+        return false;
     };
 }

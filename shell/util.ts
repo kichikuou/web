@@ -99,15 +99,6 @@ export function gaException(description: any, fatal: boolean = false) {
 }
 
 // xsystem35 constants
-export enum Status {
-    OK = 0,
-    NG = -1,
-}
-export enum Bool {
-    FALSE = 0,
-    TRUE = 1,
-}
-
 export enum DRIType {
     SCO = 0,
     CG = 1,

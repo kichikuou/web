@@ -2,7 +2,7 @@
 // This source code is governed by the MIT License, see the LICENSE file.
 import type { MainModule as System3Module } from './system3.js';
 import type { MainModule as XSystem35Module } from './xsystem35.js';
-import {gaException, Bool, Status, DRIType, ald_getdata, loadScript} from './util.js';
+import { gaException, DRIType, ald_getdata, loadScript } from './util.js';
 import * as volumeControl from './volume.js';
 
 const PCM_SLOTS = 1 + 128;
@@ -73,55 +73,55 @@ export function pcm_reset() {
     }
 }
 
-export async function pcm_load(slot: number, no: number): Promise<Status> {
+export async function pcm_load(slot: number, no: number): Promise<boolean> {
     pcm_stop(slot);
     if (wavCache[no]) {
         slots[slot] = new PCMSoundSimple(destNode, wavCache[no], slotVolume[slot]);
-        return Status.OK;
+        return true;
     }
     try {
         const audioBuf = await load(DRIType.WAVE, no);
         slots[slot] = new PCMSoundSimple(destNode, audioBuf, slotVolume[slot]);
-        return Status.OK;
+        return true;
     } catch (err) {
         gaException({type: 'PCM', err});
-        return Status.NG;
+        return false;
     }
 }
 
-export async function pcm_load_bgm(slot: number, no: number): Promise<Status> {
+export async function pcm_load_bgm(slot: number, no: number): Promise<boolean> {
     pcm_stop(slot);
     if (bgmCache[no]) {
         slots[slot] = new PCMSoundSimple(destNode, bgmCache[no], slotVolume[slot]);
-        return Status.OK;
+        return true;
     }
     try {
         const audioBuf = await load(DRIType.BGM, no);
         slots[slot] = new PCMSoundSimple(destNode, audioBuf, slotVolume[slot]);
-        return Status.OK;
+        return true;
     } catch (err) {
         gaException({type: 'PCM', err});
-        return Status.NG;
+        return false;
     }
 }
 
-export async function pcm_load_data(slot: number, buf: number, len: number): Promise<Status> {
+export async function pcm_load_data(slot: number, buf: number, len: number): Promise<boolean> {
     pcm_stop(slot);
     try {
         const audioBuf = await decodeAudioData(Module!.HEAPU8.slice(buf, buf + len).buffer);
         slots[slot] = new PCMSoundSimple(destNode, audioBuf, slotVolume[slot]);
-        return Status.OK;
+        return true;
     } catch (err) {
         gaException({type: 'PCM', err});
-        return Status.NG;
+        return false;
     }
 }
 
-export async function pcm_load_mixlr(slot: number, noL: number, noR: number): Promise<Status> {
+export async function pcm_load_mixlr(slot: number, noL: number, noR: number): Promise<boolean> {
     pcm_stop(slot);
     if (wavCache[noL] && wavCache[noR]) {
         slots[slot] = new PCMSoundMixLR(destNode, wavCache[noL], wavCache[noR], slotVolume[slot]);
-        return Status.OK;
+        return true;
     }
     try {
         const bufs = await Promise.all([
@@ -129,52 +129,49 @@ export async function pcm_load_mixlr(slot: number, noL: number, noR: number): Pr
             wavCache[noR] ? Promise.resolve(wavCache[noR]) : load(DRIType.WAVE, noR),
         ]);
         slots[slot] = new PCMSoundMixLR(destNode, bufs[0], bufs[1], slotVolume[slot]);
-        return Status.OK;
+        return true;
     } catch (err) {
         gaException({type: 'PCM', err});
-        return Status.NG;
+        return false;
     }
 }
 
-export function pcm_unload(slot: number): Status {
+export function pcm_unload(slot: number): void {
     let sound = slots[slot];
     if (!sound)
-        return Status.NG;
+        return;
     sound.stop();
     slots[slot] = null;
-    return Status.OK;
 }
 
-export function pcm_start(slot: number, loop: number): Status {
+export function pcm_start(slot: number, loop: number): boolean {
     let sound = slots[slot];
     if (!sound) {
         console.log('pcm_start: invalid slot', slot);
-        return Status.NG;
+        return false;
     }
     sound.start(loop);
-    return Status.OK;
+    return true;
 }
 
-export function pcm_stop(slot: number): Status {
+export function pcm_stop(slot: number): void {
     let sound = slots[slot];
     if (!sound)
-        return Status.NG;
+        return;
     sound.stop();
     if (slot === 0)  // slot 0 plays at most once
         slots[slot] = null;
-    return Status.OK;
 }
 
-export function pcm_fadeout(slot: number, msec: number): Status {
+export function pcm_fadeout(slot: number, msec: number): void {
     let sound = slots[slot];
     if (!sound)
-        return Status.NG;
+        return;
     if (msec === 0) {
         sound.stop();
     } else {
         sound.fadeout(msec);
     }
-    return Status.OK;
 }
 
 export function pcm_getpos(slot: number): number {
@@ -184,12 +181,11 @@ export function pcm_getpos(slot: number): number {
     return sound.getPosition() * 1000;
 }
 
-export function pcm_setvol(slot: number, vol: number): Status {
+export function pcm_setvol(slot: number, vol: number): void {
     slotVolume[slot] = vol / 100;
     let sound = slots[slot];
     if (sound)
         sound.setGain(slotVolume[slot]);
-    return Status.OK;
 }
 
 export function pcm_getwavelen(slot: number): number {
@@ -199,19 +195,18 @@ export function pcm_getwavelen(slot: number): number {
     return sound.duration * 1000;
 }
 
-export function pcm_isplaying(slot: number): Bool {
+export function pcm_isplaying(slot: number): boolean {
     let sound = slots[slot];
     if (!sound)
-        return Bool.FALSE;
-    return sound.isPlaying() ? Bool.TRUE : Bool.FALSE;
+        return false;
+    return sound && sound.isPlaying();
 }
 
-export async function pcm_waitend(slot: number): Promise<Status> {
+export async function pcm_waitend(slot: number): Promise<void> {
     let sound = slots[slot];
     if (!sound)
-        return Status.OK;
+        return;
     await sound.waitForEnd();
-    return Status.OK;
 }
 
 function onVisibilityChange() {

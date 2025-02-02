@@ -1,19 +1,19 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 import type { MainModule as XSystem35Module } from './xsystem35.js';
-import {$, gaException, Status} from './util.js';
+import { $, gaException } from './util.js';
 import './settings.js';
 import './loader.js';
-import {syncfs, load_mincho_font} from './moduleloader.js';
+import { syncfs, load_mincho_font } from './moduleloader.js';
 import * as zoom from './zoom.js';
 import * as cdPlayer from './cdda.js';
 import * as audio from './audio.js';
 import * as midiPlayer from './midi.js';
 import * as toolbar from './toolbar.js';
 import * as texthook from './textlog.js';
-import {addToast} from './widgets.js';
-import {message} from './strings.js';
-import {config} from './config.js';
+import { addToast } from './widgets.js';
+import { message } from './strings.js';
+import { config } from './config.js';
 import { hasPattonSave } from './savedata.js';
 
 class System35Shell {
@@ -144,7 +144,7 @@ function scenario_address(): string | undefined {
 
 let shell = new System35Shell();
 
-let xsystem35 = {Status, shell, cdPlayer, midiPlayer, audio, texthook, load_mincho_font};
+let xsystem35 = { shell, cdPlayer, midiPlayer, audio, texthook, load_mincho_font };
 (window as any).xsystem35 = xsystem35;
 
 if (typeof WebAssembly !== 'object') {

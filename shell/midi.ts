@@ -66,14 +66,6 @@ export function getPosition(): number {
     return Math.round(seq.currentTime * 1000);
 }
 
-export function setVolume(vol: number) {
-    gain.gain.value = vol / 100;
-}
-
-export function getVolume(): number {
-    return gain.gain.value * 100;
-}
-
 export function fadeStart(ms: number, vol: number, stopAfterFade: number) {
     // Cancel previous fade
     gain.gain.cancelScheduledValues(gain.context.currentTime);
