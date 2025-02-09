@@ -66,27 +66,14 @@ function restart() {
 }
 
 async function saveScreenshot() {
-    let pixels = Module!._sdl_getDisplaySurface();
-    let canvas = document.createElement('canvas');
-    canvas.width = Module!.canvas.width;
-    canvas.height = Module!.canvas.height;
-    let ctx = canvas.getContext('2d')!;
-    let image = ctx.createImageData(canvas.width, canvas.height);
-    let buffer = image.data;
-    let num = image.data.length;
-    for (let dst = 0; dst < num; dst += 4) {
-        buffer[dst] = Module!.HEAPU8[pixels + 2];
-        buffer[dst + 1] = Module!.HEAPU8[pixels + 1];
-        buffer[dst + 2] = Module!.HEAPU8[pixels];
-        buffer[dst + 3] = 0xff;
-        pixels += 4;
-    }
-    ctx.putImageData(image, 0, 0);
-
-    let blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve));
-    if (!blob) return;
-    // Unless target="_blank", iOS safari replaces current page
-    downloadAs(getScreenshotFilename(), URL.createObjectURL(blob), '_blank');
+    const name = getScreenshotFilename();
+    const ptr = Module!.stringToUTF8OnStack(name);
+    if (!Module!._save_screenshot(ptr)) return;
+    const content: Uint8Array = Module!.FS.readFile(name, { encoding: 'binary' });
+    Module!.FS.unlink(name);
+    const blob = new Blob([content], { type: 'image/bmp' });
+    // Without target="_blank", iOS Safari replaces current page
+    downloadAs(name, URL.createObjectURL(blob), '_blank');
 }
 
 function getScreenshotFilename(): string {
@@ -96,7 +83,7 @@ function getScreenshotFilename(): string {
     let hh = ('0' + now.getHours()).slice(-2);
     let mm = ('0' + now.getMinutes()).slice(-2);
     let ss = ('0' + now.getSeconds()).slice(-2);
-    return 'Screenshot-' + now.getFullYear() + MM + DD + '-' + hh + mm + ss + '.png';
+    return 'Screenshot-' + now.getFullYear() + MM + DD + '-' + hh + mm + ss + '.bmp';
 }
 
 init();
