@@ -4,8 +4,8 @@
 const GPBF_ENCRYPTED = 0x0001;
 const GPBF_UTF8 = 0x0800;
 const OS_UNIX = 3;
-const METHOD_STORE = 0;
-const METHOD_DEFLATE = 8;
+export const METHOD_STORE = 0;
+export const METHOD_DEFLATE = 8;
 const DOS_ATTR_DIRECTORY = 0x10;
 const DOS_ATTR_ARCHIVE = 0x20;
 
@@ -133,8 +133,28 @@ export class ZipBuilder {
     private entries: Uint8Array[] = [];
     private centralDirectory: Uint8Array[] = [];
     private offset = 0;
+    private method: number;
 
-    addFile(path: string, data: Uint8Array, mtime: Date) {
+    constructor(method?: number) {
+        switch (method) {
+        case METHOD_DEFLATE:
+            if (typeof CompressionStream === 'undefined') {
+                throw new ZipError('CompressionStream is not supported in this environment');
+            }
+            this.method = METHOD_DEFLATE;
+            break;
+        case METHOD_STORE:
+            this.method = METHOD_STORE;
+            break;
+        case undefined:
+            this.method = typeof CompressionStream === 'undefined' ? METHOD_STORE : METHOD_DEFLATE;
+            break;
+        default:
+            throw new ZipError('Unsupported compression method: ' + method);
+        }
+    }
+
+    async addFile(path: string, data: Uint8Array, mtime: Date): Promise<void> {
         const dosTime = (mtime.getSeconds() >> 1) | (mtime.getMinutes() << 5) | (mtime.getHours() << 11);
         const dosDate = mtime.getDate() | ((mtime.getMonth() + 1) << 5) | ((mtime.getFullYear() - 1980) << 9);
         const crc = ~crc32(data);
@@ -143,22 +163,32 @@ export class ZipBuilder {
         const nameLength = name.byteLength;
         const gpbf = nameIsAscii ? 0 : GPBF_UTF8;
         const extAttr = path.endsWith('/') ? DOS_ATTR_DIRECTORY : DOS_ATTR_ARCHIVE;
+        const method = data.byteLength === 0 ? METHOD_STORE : this.method;
+
+        let compressedData = data;
+        if (method === METHOD_DEFLATE) {
+            const cs = new CompressionStream('deflate-raw');
+            const writer = cs.writable.getWriter();
+            writer.write(data);
+            writer.close();
+            compressedData = new Uint8Array(await new Response(cs.readable).arrayBuffer());
+        }
 
         const localHeader = new Uint8Array(30 + nameLength);
         const lh = new DataView(localHeader.buffer);
         lh.setUint32(0, 0x04034B50, true);  // "PK\003\004"
         lh.setUint16(4, 20, true);  // version needed to extract
         lh.setUint16(6, gpbf, true);  // GPB flag
-        lh.setUint16(8, METHOD_STORE, true);  // compression method
+        lh.setUint16(8, method, true);  // compression method
         lh.setUint16(10, dosTime, true);
         lh.setUint16(12, dosDate, true);
         lh.setUint32(14, crc, true);
-        lh.setUint32(18, data.byteLength, true);  // compressed size
+        lh.setUint32(18, compressedData.byteLength, true);  // compressed size
         lh.setUint32(22, data.byteLength, true);  // uncompressed size
         lh.setUint16(26, nameLength, true);  // file name length
         lh.setUint16(28, 0, true);  // extra field length
         localHeader.set(name, 30);
-        this.entries.push(localHeader, data);
+        this.entries.push(localHeader, compressedData);
 
         const centralDirectoryEntry = new Uint8Array(46 + nameLength);
         const cde = new DataView(centralDirectoryEntry.buffer);
@@ -166,11 +196,11 @@ export class ZipBuilder {
         cde.setUint16(4, OS_UNIX << 8 | 20, true);  // version made by
         cde.setUint16(6, 20, true);  // version needed to extract
         cde.setUint16(8, gpbf, true);  // GPB flag
-        cde.setUint16(10, METHOD_STORE, true);  // compression method
+        cde.setUint16(10, method, true);  // compression method
         cde.setUint16(12, dosTime, true);
         cde.setUint16(14, dosDate, true);
         cde.setUint32(16, crc, true);
-        cde.setUint32(20, data.byteLength, true);  // compressed size
+        cde.setUint32(20, compressedData.byteLength, true);  // compressed size
         cde.setUint32(24, data.byteLength, true);  // uncompressed size
         cde.setUint16(28, nameLength, true);  // file name length
         cde.setUint16(30, 0, true);  // extra field length
@@ -182,11 +212,11 @@ export class ZipBuilder {
         centralDirectoryEntry.set(name, 46);
         this.centralDirectory.push(centralDirectoryEntry);
 
-        this.offset += localHeader.byteLength + data.byteLength;
+        this.offset += localHeader.byteLength + compressedData.byteLength;
     }
 
-    addDir(path: string, mtime: Date) {
-        this.addFile(path + '/', new Uint8Array(0), mtime);
+    addDir(path: string, mtime: Date): Promise<void> {
+        return this.addFile(path + '/', new Uint8Array(0), mtime);
     }
 
     build(): Blob {

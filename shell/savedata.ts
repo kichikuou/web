@@ -49,9 +49,9 @@ export class SaveDataManager {
     public async download() {
         const builder = new zip.ZipBuilder();
         const fs = await this.FSready;
-        addToZip(fs, '/save', builder);
+        await addToZip(fs, '/save', builder);
         if (hasPattonSave(fs)) {
-            addToZip(fs, '/patton', builder);
+            await addToZip(fs, '/patton', builder);
         }
         const blob = await builder.build();
         downloadAs('savedata.zip', URL.createObjectURL(blob));
@@ -116,21 +116,21 @@ export class SaveDataManager {
     }
 }
 
-function addToZip(fs: IDBFSModule['FS'], path: string, builder: zip.ZipBuilder) {
+async function addToZip(fs: IDBFSModule['FS'], path: string, builder: zip.ZipBuilder) {
     if (path[0] !== '/') {
         throw new Error('addToZip: path must start with /');
     }
     const pathInZip = path.slice(1);
     const stat = fs.stat(path, undefined);
     if (fs.isDir(stat.mode)) {
-        builder.addDir(pathInZip, new Date(stat.mtime));
+        await builder.addDir(pathInZip, new Date(stat.mtime));
         for (const name of fs.readdir(path)) {
             if (name[0] === '.') continue;
-            addToZip(fs, path + '/' + name, builder);
+            await addToZip(fs, path + '/' + name, builder);
         }
     } else {
         const content = fs.readFile(path, { encoding: 'binary' });
-        builder.addFile(pathInZip, content, new Date(stat.mtime));
+        await builder.addFile(pathInZip, content, new Date(stat.mtime));
     }
 }
 
