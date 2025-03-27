@@ -6,8 +6,8 @@ const GPBF_UTF8 = 0x0800;
 const OS_UNIX = 3;
 export const METHOD_STORE = 0;
 export const METHOD_DEFLATE = 8;
-const DOS_ATTR_DIRECTORY = 0x10;
-const DOS_ATTR_ARCHIVE = 0x20;
+const ATTR_DIRECTORY = 0o40755 << 16 | 0x10;
+const ATTR_ARCHIVE = 0o100644 << 16 | 0x20;
 
 class ZipError extends Error {
     constructor(message?: string) {
@@ -162,7 +162,7 @@ export class ZipBuilder {
         const name = new TextEncoder().encode(path);
         const nameLength = name.byteLength;
         const gpbf = nameIsAscii ? 0 : GPBF_UTF8;
-        const extAttr = path.endsWith('/') ? DOS_ATTR_DIRECTORY : DOS_ATTR_ARCHIVE;
+        const extAttr = path.endsWith('/') ? ATTR_DIRECTORY : ATTR_ARCHIVE;
         const method = data.byteLength === 0 ? METHOD_STORE : this.method;
 
         let compressedData = data;
