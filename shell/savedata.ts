@@ -5,6 +5,7 @@ import {loadScript, JSZIP_SCRIPT, JSZipOptions} from './util.js';
 import {saveDirReady} from './moduleloader.js';
 import {addToast, downloadAs} from './widgets.js';
 import {message} from './strings.js';
+import * as zip from './zip.js';
 
 export class SaveDataManager {
     private FSready!: Promise<IDBFSModule['FS']>;
@@ -25,7 +26,6 @@ export class SaveDataManager {
                 return idbfs.FS;
             })();
         }
-        loadScript(JSZIP_SCRIPT);
     }
 
     public async hasSaveData(): Promise<boolean> {
@@ -47,14 +47,13 @@ export class SaveDataManager {
     }
 
     public async download() {
-        await loadScript(JSZIP_SCRIPT);
-        const zip = new JSZip();
+        const builder = new zip.ZipBuilder();
         const fs = await this.FSready;
-        storeZip(fs, '/save', zip.folder('save'));
+        addToZip(fs, '/save', builder);
         if (hasPattonSave(fs)) {
-            storeZip(fs, '/patton', zip.folder('patton'));
+            addToZip(fs, '/patton', builder);
         }
-        const blob = await zip.generateAsync({type: 'blob', compression: 'DEFLATE'});
+        const blob = await builder.build();
         downloadAs('savedata.zip', URL.createObjectURL(blob));
         gtag('event', 'Downloaded', { event_category: 'Savedata' });
     }
@@ -65,17 +64,34 @@ export class SaveDataManager {
             if (file.name.toLowerCase().endsWith('.asd')) {
                 fs.writeFile('/save/' + file.name, new Uint8Array(await file.arrayBuffer()));
             } else {
-                await loadScript(JSZIP_SCRIPT);
-                let zip = new JSZip();
-                await zip.loadAsync(await file.arrayBuffer(), JSZipOptions());
-                let entries: JSZipObject[] = [];
-                zip.folder('save').forEach((path, z) => { entries.push(z); });
-                zip.folder('patton').forEach((path, z) => { entries.push(z); });
-                for (let z of entries) {
-                    if (z.dir)
-                        fs.mkdirTree('/' + z.name.slice(0, -1), undefined);
-                    else
-                        fs.writeFile('/' + z.name, new Uint8Array(await z.async('arraybuffer')));
+                try {
+                    const files = await zip.load(file);
+                    for (const file of files) {
+                        if (!file.name.startsWith('save/') && !file.name.startsWith('patton/'))
+                            continue;
+                        if (file.name.endsWith('/')) {
+                            fs.mkdirTree('/' + file.name, undefined);
+                        } else {
+                            fs.writeFile('/' + file.name, await file.extract());
+                        }
+                    }
+                } catch (err) {
+                    console.warn(err);
+                    gtag('event', 'ZipError', { event_category: 'Savedata', event_label: err instanceof Error ? err.message : 'unknown' });
+
+                    // TODO: Remove this fallback once zip.ts is stable.
+                    await loadScript(JSZIP_SCRIPT);
+                    let zip = new JSZip();
+                    await zip.loadAsync(await file.arrayBuffer(), JSZipOptions());
+                    let entries: JSZipObject[] = [];
+                    zip.folder('save').forEach((path, z) => { entries.push(z); });
+                    zip.folder('patton').forEach((path, z) => { entries.push(z); });
+                    for (let z of entries) {
+                        if (z.dir)
+                            fs.mkdirTree('/' + z.name.slice(0, -1), undefined);
+                        else
+                            fs.writeFile('/' + z.name, new Uint8Array(await z.async('arraybuffer')));
+                    }
                 }
             }
             await new Promise((resolve, reject) => {
@@ -100,17 +116,21 @@ export class SaveDataManager {
     }
 }
 
-function storeZip(fs: IDBFSModule['FS'], dir: string, zip: JSZip) {
-    for (let name of fs.readdir(dir)) {
-        let path = dir + '/' + name;
-        if (name[0] === '.') {
-            continue;
-        } else if (fs.isDir(fs.stat(path, undefined).mode)) {
-            storeZip(fs, path, zip.folder(name));
-        } else if (!name.toLowerCase().endsWith('.asd.')) {
-            let content = fs.readFile(path, { encoding: 'binary' });
-            zip.file(name, content);
+function addToZip(fs: IDBFSModule['FS'], path: string, builder: zip.ZipBuilder) {
+    if (path[0] !== '/') {
+        throw new Error('addToZip: path must start with /');
+    }
+    const pathInZip = path.slice(1);
+    const stat = fs.stat(path, undefined);
+    if (fs.isDir(stat.mode)) {
+        builder.addDir(pathInZip, new Date(stat.mtime));
+        for (const name of fs.readdir(path)) {
+            if (name[0] === '.') continue;
+            addToZip(fs, path + '/' + name, builder);
         }
+    } else {
+        const content = fs.readFile(path, { encoding: 'binary' });
+        builder.addFile(pathInZip, content, new Date(stat.mtime));
     }
 }
 
