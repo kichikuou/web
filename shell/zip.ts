@@ -45,9 +45,8 @@ export class ZipFile {
         const fileNameLength = v.getUint16(28, true);
         this.fileOffset = v.getUint32(42, true);
         const fileNameBytes = cde.subarray(46, 46 + fileNameLength);
-        const encoding = this.guessPathEncoding(versionMadeBy);
         try {
-            this.name = new TextDecoder(encoding, { fatal: true }).decode(fileNameBytes);
+            this.name = this.decodeFileName(fileNameBytes);
         } catch (e) {
             if (e instanceof TypeError) {
                 let name = '';
@@ -66,11 +65,16 @@ export class ZipFile {
         }
     }
 
-    guessPathEncoding(versionMadeBy: number): string {
-        if (this.gpbf & GPBF_UTF8) return 'utf-8';
-        const os = versionMadeBy >> 8;
-        if (os === OS_UNIX) return 'utf-8';
-        return 'shift_jis';
+    decodeFileName(bytes: Uint8Array): string {
+        try {
+            return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+        } catch (err) {
+            if (err instanceof TypeError && !(this.gpbf & GPBF_UTF8)) {
+                return new TextDecoder('shift_jis', { fatal: true }).decode(bytes);
+            } else {
+                throw err;
+            }
+        }
     }
 
     async compressedData(): Promise<Blob> {
