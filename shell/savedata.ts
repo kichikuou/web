@@ -1,7 +1,6 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 import type { MainModule as IDBFSModule } from '@irori/idbfs';
-import {loadScript, JSZIP_SCRIPT, JSZipOptions} from './util.js';
 import {saveDirReady} from './moduleloader.js';
 import {addToast, downloadAs} from './widgets.js';
 import {message} from './strings.js';
@@ -64,33 +63,14 @@ export class SaveDataManager {
             if (file.name.toLowerCase().endsWith('.asd')) {
                 fs.writeFile('/save/' + file.name, new Uint8Array(await file.arrayBuffer()));
             } else {
-                try {
-                    const files = await zip.load(file);
-                    for (const file of files) {
-                        if (!file.name.startsWith('save/') && !file.name.startsWith('patton/'))
-                            continue;
-                        if (file.name.endsWith('/')) {
-                            fs.mkdirTree('/' + file.name, undefined);
-                        } else {
-                            fs.writeFile('/' + file.name, await file.extract());
-                        }
-                    }
-                } catch (err) {
-                    console.warn(err);
-                    gtag('event', 'ZipError', { event_category: 'Savedata', event_label: err instanceof Error ? err.message : 'unknown' });
-
-                    // TODO: Remove this fallback once zip.ts is stable.
-                    await loadScript(JSZIP_SCRIPT);
-                    let zip = new JSZip();
-                    await zip.loadAsync(await file.arrayBuffer(), JSZipOptions());
-                    let entries: JSZipObject[] = [];
-                    zip.folder('save').forEach((path, z) => { entries.push(z); });
-                    zip.folder('patton').forEach((path, z) => { entries.push(z); });
-                    for (let z of entries) {
-                        if (z.dir)
-                            fs.mkdirTree('/' + z.name.slice(0, -1), undefined);
-                        else
-                            fs.writeFile('/' + z.name, new Uint8Array(await z.async('arraybuffer')));
+                const files = await zip.load(file);
+                for (const file of files) {
+                    if (!file.name.startsWith('save/') && !file.name.startsWith('patton/'))
+                        continue;
+                    if (file.name.endsWith('/')) {
+                        fs.mkdirTree('/' + file.name, undefined);
+                    } else {
+                        fs.writeFile('/' + file.name, await file.extract());
                     }
                 }
             }

@@ -1,6 +1,7 @@
 // Copyright (c) 2024 Kichikuou <KichikuouChrome@gmail.com>
 // Licensed under the MIT License. See the LICENSE file for details.
 
+export const isDeflateSupported = typeof CompressionStream !== 'undefined';
 const GPBF_ENCRYPTED = 0x0001;
 const GPBF_UTF8 = 0x0800;
 const OS_UNIX = 3;
@@ -142,8 +143,8 @@ export class ZipBuilder {
     constructor(method?: number) {
         switch (method) {
         case METHOD_DEFLATE:
-            if (typeof CompressionStream === 'undefined') {
-                throw new ZipError('CompressionStream is not supported in this environment');
+            if (!isDeflateSupported) {
+                throw new ZipError('Deflate compression is not supported in this environment');
             }
             this.method = METHOD_DEFLATE;
             break;
@@ -151,7 +152,7 @@ export class ZipBuilder {
             this.method = METHOD_STORE;
             break;
         case undefined:
-            this.method = typeof CompressionStream === 'undefined' ? METHOD_STORE : METHOD_DEFLATE;
+            this.method = isDeflateSupported ? METHOD_DEFLATE : METHOD_STORE;
             break;
         default:
             throw new ZipError('Unsupported compression method: ' + method);

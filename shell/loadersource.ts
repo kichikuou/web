@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import {$, startMeasure, loadScript, JSZIP_SCRIPT, JSZipOptions, createBlob, DRIType} from './util.js';
+import { $, startMeasure, createBlob, DRIType } from './util.js';
 import * as cdimage from './cdimage.js';
 import {CDDALoader, BGMLoader} from './cddaloader.js';
 import {registerDataFile} from './datafile.js';
@@ -185,99 +185,53 @@ export class FileSource extends LoaderSource {
 }
 
 export class ZipSource extends LoaderSource {
-    private tracks = new CDDATracks<JSZipObject | zip.ZipFile>();
+    private tracks = new CDDATracks<zip.ZipFile>();
 
     constructor(private zipFile: File) {
         super();
     }
 
     protected async doLoad() {
-        try {
-            const files = await zip.load(this.zipFile);
-            const dataFiles = files.filter(f => /\.(ald|ain|map|dat|mda|ttf|otf|ini|xsys35rc)$/i.test(f.name));
-            if (dataFiles.length === 0) {
-                const hdmImages = files.filter(f => /\.hdm$/i.test(f.name));
-                if (hdmImages.length > 0) {
-                    return this.loadFloppyImages(hdmImages);
-                }
-                const msg = files.some(f => /\.(d88|dsk|xdf)$/i.test(f.name)) ?
-                    message.floppy_images_cant_be_used : message.no_ald_in_zip;
-                throw new NoGamedataError(msg);
-            }
-            if (files.some(f => /adisk\.dat$/i.test(f.name))) {
-                await this.loadSystem3('/save/@');
-            } else if (files.some(f => /sa\.ald$/i.test(f.name))) {
-                await this.loadXsystem35();
-            } else {
-                throw new NoGamedataError(message.no_ald_in_zip);
-            }
-
-            for (const f of dataFiles) {
-                const content = await f.extract();
-                const basename = f.name.split('/').pop()!;
-                this.addFile(basename, [content]);
-            }
-            const playlist = files.find(f => /playlist.txt/i.test(f.name));
-            if (playlist) {
-                const text = new TextDecoder().decode(await playlist.extract());
-                this.tracks.load_playlist(text);
-            }
-            for (const f of files.filter(f => /\.(wav|mp3|ogg)$/i.test(f.name))) {
-                this.tracks.add(f, f.name);
-            }
-        } catch (err) {
-            if (err instanceof NoGamedataError)
-                throw err;
-            console.warn(err);
-            gtag('event', 'ZipError', { event_category: 'Loader', event_label: err instanceof Error ? err.message : 'unknown' });
-            // TODO: Remove this fallback once zip.ts is stable.
-            await this.doLoadWithJSZip();
-        }
-    }
-
-    protected async doLoadWithJSZip() {
-        await loadScript(JSZIP_SCRIPT);
-        const zip = new JSZip();
-        await zip.loadAsync(await this.zipFile.arrayBuffer(), JSZipOptions());
-
-        const dataFiles = zip.file(/\.(ald|ain|map|dat|mda|ttf|otf|ini|xsys35rc)$/i);
+        const files = await zip.load(this.zipFile);
+        const dataFiles = files.filter(f => /\.(ald|ain|map|dat|mda|ttf|otf|ini|xsys35rc)$/i.test(f.name));
         if (dataFiles.length === 0) {
-            const hdmImages = zip.file(/\.hdm$/i);
+            const hdmImages = files.filter(f => /\.hdm$/i.test(f.name));
             if (hdmImages.length > 0) {
                 return this.loadFloppyImages(hdmImages);
             }
-            const msg = zip.file(/\.(d88|dsk|xdf)$/i).length > 0 ?
+            const msg = files.some(f => /\.(d88|dsk|xdf)$/i.test(f.name)) ?
                 message.floppy_images_cant_be_used : message.no_ald_in_zip;
             throw new NoGamedataError(msg);
         }
-        if (zip.file(/adisk\.dat$/i).length > 0) {
+        if (files.some(f => /adisk\.dat$/i.test(f.name))) {
             await this.loadSystem3('/save/@');
-        } else if (zip.file(/sa\.ald$/i).length > 0) {
+        } else if (files.some(f => /sa\.ald$/i.test(f.name))) {
             await this.loadXsystem35();
         } else {
-            throw new NoGamedataError(message.no_ald_in_zip)
+            throw new NoGamedataError(message.no_ald_in_zip);
         }
 
         for (const f of dataFiles) {
-            const content: ArrayBuffer = await f.async('arraybuffer');
+            const content = await f.extract();
             const basename = f.name.split('/').pop()!;
-            this.addFile(basename, [new Uint8Array(content)]);
+            this.addFile(basename, [content]);
         }
-        const playlist = zip.file(/playlist.txt/i);
-        if (playlist.length > 0) {
-            this.tracks.load_playlist(await playlist[0].async('text'));
+        const playlist = files.find(f => /playlist.txt/i.test(f.name));
+        if (playlist) {
+            const text = new TextDecoder().decode(await playlist.extract());
+            this.tracks.load_playlist(text);
         }
-        for (const f of zip.file(/\.(wav|mp3|ogg)$/i)) {
+        for (const f of files.filter(f => /\.(wav|mp3|ogg)$/i.test(f.name))) {
             this.tracks.add(f, f.name);
         }
     }
 
-    private async loadFloppyImages(floppies: (JSZipObject | zip.ZipFile)[]) {
+    private async loadFloppyImages(floppies: zip.ZipFile[]) {
         // Dynamically import fdimage.js since it depends on relatively large modules.
         const {extractFDImage} = await import('./fdimage.js');
         await this.loadSystem3('/save/@');
         for (const floppy of floppies) {
-            const img = floppy instanceof zip.ZipFile ? await floppy.extract() : await floppy.async('arraybuffer');
+            const img = await floppy.extract();
             await extractFDImage(img, (fname, contents) => {
                 console.log(fname);
                 this.addFile(fname, [contents]);
@@ -291,7 +245,7 @@ export class ZipSource extends LoaderSource {
 
     async extractTrack(track: number): Promise<Blob> {
         const zobj = this.tracks.get(track);
-        const buf: ArrayBuffer = zobj instanceof zip.ZipFile ? await zobj.extract() : await zobj.async('arraybuffer');
+        const buf: ArrayBuffer = await zobj.extract();
         return createBlob(buf, zobj.name);
     }
 }

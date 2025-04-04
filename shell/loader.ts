@@ -8,6 +8,7 @@ import {addToast} from './widgets.js';
 import * as midiPlayer from './midi.js';
 import * as volumeControl from './volume.js';
 import {message} from './strings.js';
+import { isDeflateSupported } from './zip.js';
 
 let imageFile: File | undefined;
 let metadataFile: File | undefined;
@@ -93,9 +94,9 @@ async function handleFiles(files: FileList | File[]) {
     if (imageFile && (metadataFile || imageFile.name.toLowerCase().endsWith('.iso'))) {
         source = new CDImageSource(imageFile, metadataFile, patchFiles);
     } else if (!imageFile && !metadataFile) {
-        if (files.length == 1 && files[0].name.toLowerCase().endsWith('.zip')) {
+        if (files.length == 1 && files[0].name.toLowerCase().endsWith('.zip') && isDeflateSupported) {
             source = new ZipSource(files[0]);
-        } else if (files.length == 1 && files[0].name.match(/\.(rar|7z)$/i)) {
+        } else if (files.length == 1 && files[0].name.match(/\.(zip|rar|7z)$/i)) {
             source = new SevenZipSource(files[0]);
         } else if (files.length > 2 && hasALD) {
             source = new FileSource(files);

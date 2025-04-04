@@ -6,7 +6,6 @@ import type { MainModule as XSystem35Module } from './xsystem35.js';
 export const $: (selector: string) => HTMLElement = document.querySelector.bind(document);
 
 export const urlParams = new URLSearchParams(location.search.slice(1));
-export const JSZIP_SCRIPT = 'lib/jszip.3.1.3.min.js';
 
 const scriptPromises: Map<string, Promise<any>> = new Map();
 export function loadScript(src: string): Promise<any> {
@@ -42,21 +41,6 @@ function mimeTypeFromFilename(name: string): string {
     if (lcname.endsWith('.ogg')) return 'audio/ogg';
     if (lcname.endsWith('.mp3')) return 'audio/mpeg';
     return '';
-}
-
-export function JSZipOptions(): JSZipLoadOptions {
-    let opts: JSZipLoadOptions = {};
-    if (typeof TextDecoder !== 'undefined')
-        opts = {decodeFileName} as JSZipLoadOptions;
-    return opts;
-
-    function decodeFileName(bytes: Uint8Array): string {
-        try {
-            return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
-        } catch (err) {
-            return new TextDecoder('shift_jis', { fatal: true }).decode(bytes);
-        }
-    }
 }
 
 export class Deferred<T> {
