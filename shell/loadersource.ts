@@ -359,14 +359,17 @@ class CDDATracks<T> {
     }
 
     add(item: T, name: string): boolean {
+        name = this.normalize(name);
         if (this.playlist) {
-            const track = this.playlist.get(this.normalize(name));
+            const track = this.playlist.get(name);
             if (track) {
                 this.tracks[track] = item;
                 return true;
             }
         } else {
-            let match = /(\d+)\.(wav|mp3|ogg)$/i.exec(name.toLowerCase());
+            // Try to match the track number in the filename.
+            let match = /^(\d+).*\.(wav|mp3|ogg)$/i.exec(name) ||
+                /(\d+)\.(wav|mp3|ogg)$/i.exec(name);
             if (match) {
                 this.tracks[Number(match[1])] = item;
                 return true;
