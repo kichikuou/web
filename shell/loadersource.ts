@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import { $, startMeasure, createBlob, DRIType } from './util.js';
+import { $, createBlob, DRIType } from './util.js';
 import * as cdimage from './cdimage.js';
 import {CDDALoader, BGMLoader} from './cddaloader.js';
 import {registerDataFile} from './datafile.js';
@@ -24,6 +24,10 @@ export abstract class LoaderSource {
 
     public hasMidi = false;
     private hasBGM = false;
+
+    isReadyToLoad(): boolean {
+        return true;
+    }
 
     async startLoad() {
         await this.doLoad();
@@ -57,53 +61,90 @@ export abstract class LoaderSource {
     }
 }
 
+type CDImage = { image: File | undefined, metadata: File | undefined };
 export class CDImageSource extends LoaderSource {
-    private imageReader!: cdimage.Reader;
+    private files: Map<string, CDImage> = new Map();
+    private cddaReader!: cdimage.Reader;
+    private patchFiles: File[] = [];
 
-    constructor(private imageFile: File, private metadataFile: File | undefined, private patchFiles: File[]) {
-        super();
+    addImageFile(file: File) {
+        const basename = file.name.replace(/\.[^.]+$/, '').toLowerCase();
+        if (this.files.has(basename)) {
+            this.files.get(basename)!.image = file;
+        } else {
+            this.files.set(basename, { image: file, metadata: undefined });
+        }
+    }
+
+    addMetadataFile(file: File) {
+        const basename = file.name.replace(/\.[^.]+$/, '').toLowerCase();
+        if (this.files.has(basename)) {
+            this.files.get(basename)!.metadata = file;
+        } else {
+            this.files.set(basename, { image: undefined, metadata: file });
+        }
+    }
+
+    addPatchFiles(files: File[]) {
+        this.patchFiles.push(...files);
+    }
+
+    isReadyToLoad(): boolean {
+        return this.files.size > 0 && Array.from(this.files.values()).every(i =>
+            i.image && (i.metadata || i.image.name.toLowerCase().endsWith('.iso')));
     }
 
     protected async doLoad() {
-        this.imageReader = await cdimage.createReader(this.imageFile, this.metadataFile);
-        let isofs = await iso9660.FileSystem.create(this.imageReader);
-        // this.walk(isofs, isofs.rootDir(), '/');
-        let gamedata = await this.findGameDir(isofs);
-        if (!gamedata)
-            throw new NoGamedataError(message.no_gamedata_dir);
-
-        let isSystem3 = !!await isofs.getDirEnt('system3.exe', gamedata);
-        if (isSystem3) {
-            await this.loadSystem3(await this.saveDir(isofs));
-        } else {
-            await this.loadXsystem35();
+        if (!this.isReadyToLoad()) {
+            throw new Error('CDImageSource is not ready to load');
         }
 
-        let endMeasure = startMeasure('ImageLoad');
-        for (let e of await isofs.readDir(gamedata)) {
-            if (this.patchFiles.some((f) => f.name.toLowerCase() === e.name.toLowerCase()))
-                continue;
-            if (isSystem3) {
-                if (!e.name.toLowerCase().endsWith('.dat'))
-                    continue;
-            } else {
-                if (e.name.match(/^\.|\.(exe|dll|txt|ini)$/i))
-                    continue;
+        let engine: 'system3' | 'xsystem35' | undefined;
+        for (let { image, metadata } of this.files.values()) {
+            const imageReader = await cdimage.createReader(image!, metadata);
+            if (!this.cddaReader || imageReader.maxTrack() > 1) {
+                this.cddaReader = imageReader;
             }
-            let em = startMeasure(e.name);
-            let chunks = await isofs.readFile(e);
-            em();
-            this.addFile(e.name, chunks);
+            let isofs = await iso9660.FileSystem.create(imageReader);
+            // this.walk(isofs, isofs.rootDir(), '/');
+            let gamedata = await this.findGameDir(isofs);
+            if (!gamedata)
+                continue;
+
+            if (!engine) {
+                engine = (await isofs.getDirEnt('system3.exe', gamedata)) ? 'system3' : 'xsystem35';
+                if (engine === 'system3') {
+                    await this.loadSystem3(await this.saveDir(isofs));
+                } else {
+                    await this.loadXsystem35();
+                }
+            }
+
+            for (let e of await isofs.readDir(gamedata)) {
+                if (this.patchFiles.some((f) => f.name.toLowerCase() === e.name.toLowerCase()))
+                    continue;
+                if (engine === 'system3') {
+                    if (!e.name.toLowerCase().endsWith('.dat'))
+                        continue;
+                } else {
+                    if (e.name.match(/^\.|\.(exe|dll|txt|ini)$/i))
+                        continue;
+                }
+                let chunks = await isofs.readFile(e);
+                this.addFile(e.name, chunks);
+            }
+        }
+        if (!engine) {
+            throw new NoGamedataError(message.no_gamedata_dir);
         }
         for (let f of this.patchFiles) {
             let content = await f.arrayBuffer();
             this.addFile(f.name, [new Uint8Array(content)]);
         }
-        endMeasure();
     }
 
     createCDDALoader(): CDDALoader {
-        return new CDDALoader(this.imageReader);
+        return new CDDALoader(this.cddaReader);
     }
 
     private async findGameDir(isofs: iso9660.FileSystem): Promise<iso9660.DirEnt | null> {
@@ -125,9 +166,8 @@ export class CDImageSource extends LoaderSource {
                 dirname = 'ProG';
             } else if (await isofs.getDirEnt('dps_all.bat', isofs.rootDir())) {
                 dirname = 'DPS_all';
-            } else {
+            } else {  // Yakata 3?
                 dirname = 'untitled';
-                gtag('event', 'NoVolumeLabel', { event_category: 'Loader', event_label: this.imageFile.name });
             }
         }
         return '/save/' + dirname;

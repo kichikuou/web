@@ -10,9 +10,7 @@ import * as volumeControl from './volume.js';
 import {message} from './strings.js';
 import { isDeflateSupported } from './zip.js';
 
-let imageFile: File | undefined;
-let metadataFile: File | undefined;
-let patchFiles: File[] = [];
+let cdSource: CDImageSource | undefined;
 let installing = false;
 
 function init() {
@@ -67,33 +65,43 @@ async function handleDirectory(entry: FileSystemDirectoryEntry) {
     handleFiles(files);
 }
 
-async function handleFiles(files: FileList | File[]) {
+function handleFiles(files: FileList | File[]) {
     if (installing || files.length === 0)
         return;
 
     let hasALD = false;
-    let recognized = false;
+    let patchFiles: File[] = [];
+    let unrecognized: File | undefined;
     for (let file of files) {
         if (isImageFile(file)) {
-            imageFile = file;
+            if (!cdSource) {
+                cdSource = new CDImageSource();
+            }
+            cdSource.addImageFile(file);
             $('#imgReady').classList.remove('notready');
             $('#imgReady').textContent = file.name;
-            recognized = true;
         } else if (isMetadataFile(file)) {
-            metadataFile = file;
+            if (!cdSource) {
+                cdSource = new CDImageSource();
+            }
+            cdSource.addMetadataFile(file);
             $('#cueReady').classList.remove('notready');
             $('#cueReady').textContent = file.name;
-            recognized = true;
         } else if (file.name.match(/\.(ald|ain)$/i) || file.name.toLowerCase() === 'adisk.dat') {
             hasALD = true;
             patchFiles.push(file);
+        } else {
+            unrecognized = file;
         }
     }
+    if (cdSource) {
+        cdSource.addPatchFiles(patchFiles);
+    }
 
-    let source: LoaderSource | null = null;
-    if (imageFile && (metadataFile || imageFile.name.toLowerCase().endsWith('.iso'))) {
-        source = new CDImageSource(imageFile, metadataFile, patchFiles);
-    } else if (!imageFile && !metadataFile) {
+    let source: LoaderSource | undefined;
+    if (cdSource) {
+        source = cdSource;
+    } else {
         if (files.length == 1 && files[0].name.toLowerCase().endsWith('.zip') && isDeflateSupported) {
             source = new ZipSource(files[0]);
         } else if (files.length == 1 && files[0].name.match(/\.(zip|rar|7z)$/i)) {
@@ -103,12 +111,14 @@ async function handleFiles(files: FileList | File[]) {
         }
     }
 
-    if (!source) {
-        if (!recognized)
-            addToast(`${files[0].name}: ${message.unrecognized_format}`, 'warning');
-        return;
+    if (source && source.isReadyToLoad()) {
+        install(source);
+    } else if (unrecognized) {
+        addToast(`${unrecognized.name}: ${message.unrecognized_format}`, 'warning');
     }
+}
 
+async function install(source: LoaderSource) {
     installing = true;
     try {
         await source.startLoad();

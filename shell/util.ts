@@ -62,16 +62,6 @@ export class Deferred<T> {
     }
 }
 
-export function startMeasure(name: string): () => void {
-    let startMark = name + '-start';
-    let endMark = name + '-end';
-    performance.mark(startMark);
-    return () => {
-        performance.mark(endMark);
-        performance.measure(name, startMark, endMark);
-    };
-}
-
 export function gaException(description: any, fatal: boolean = false) {
     let jsonDescription = JSON.stringify(description, (_, value) => {
         if (value instanceof DOMException) {
