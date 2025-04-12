@@ -1,0 +1,52 @@
+site_name: 鬼畜王 on Web ヘルプ
+site_url: https://kichikuou.github.io/web/help/
+site_dir: ../../dist/help
+
+nav:
+  - index.md
+  - games.md
+  - launch.md
+  - controls.md
+  - settings.md
+  - advanced.md
+  - about.md
+
+theme:
+  name: material
+  language: ja
+  logo: images/icon.png
+  favicon: images/icon.png
+  features:
+    - navigation.footer
+
+markdown_extensions:
+  - admonition
+  - def_list
+  - footnotes
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - toc:
+      slugify: !!python/object/apply:pymdownx.slugs.slugify {}
+
+extra:
+  alternate:
+    - name: 日本語
+      link: /web/help/
+      lang: ja
+    - name: English
+      link: /web/help/en/
+      lang: en
+  analytics:
+    provider: google
+    property: G-KPPEHCDMLR
+  homepage: https://kichikuou.github.io/web/
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/kichikuou
+    - icon: fontawesome/brands/x-twitter
+      link: https://x.com/KichikuouWeb
+
+extra_css:
+  - stylesheets/extra.css

@@ -7,7 +7,8 @@
   "scripts": {
     "type": "(cd shell && tsc) && (cd worker && tsc)",
     "build": "node build.js",
-    "serve": "node build.js --serve"
+    "serve": "node build.js --serve",
+    "build-help": "mkdocs build --config-file help/ja/mkdocs.yml && mkdocs build --config-file help/en/mkdocs.yml"
   },
   "dependencies": {
     "@irori/idbfs": "^0.4.0",

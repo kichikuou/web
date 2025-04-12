@@ -1,0 +1,50 @@
+site_name: Kichikuou on Web Help
+site_url: https://kichikuou.github.io/web/help/en/
+site_dir: ../../dist/help/en
+
+nav:
+  - index.md
+  - games.md
+  - launch.md
+  - controls.md
+  - settings.md
+  - advanced.md
+  - about.md
+
+theme:
+  name: material
+  language: en
+  logo: images/icon.png
+  favicon: images/icon.png
+  features:
+    - navigation.footer
+
+markdown_extensions:
+  - admonition
+  - def_list
+  - footnotes
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+extra:
+  alternate:
+    - name: English
+      link: /web/help/en/
+      lang: en
+    - name: 日本語
+      link: /web/help/
+      lang: ja
+  analytics:
+    provider: google
+    property: G-KPPEHCDMLR
+  homepage: https://kichikuou.github.io/web/en.html
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/kichikuou
+    - icon: fontawesome/brands/x-twitter
+      link: https://x.com/KichikuouWeb
+
+extra_css:
+  - stylesheets/extra.css

@@ -36,6 +36,12 @@ jobs:
         npm run type
         npm run build
 
+    - name: Build Help
+      run: |
+        pip install mkdocs-material
+        mkdocs build --config-file help/ja/mkdocs.yml
+        mkdocs build --config-file help/en/mkdocs.yml
+
     - name: Upload artifacts for GitHub Pages
       uses: actions/upload-pages-artifact@v3
       with:
