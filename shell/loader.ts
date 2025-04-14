@@ -138,7 +138,7 @@ async function install(source: LoaderSource) {
 
 function isImageFile(file: File): boolean {
     let name = file.name.toLowerCase();
-    return name.endsWith('.img') || name.endsWith('.mdf') || name.endsWith('.iso');
+    return name.endsWith('.img') || name.endsWith('.bin') || name.endsWith('.mdf') || name.endsWith('.iso');
 }
 
 function isMetadataFile(file: File): boolean {
