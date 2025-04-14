@@ -60,6 +60,9 @@ async function readSequential(
 ): Promise<Uint8Array[]> {
     let sectors = Math.ceil(bytesToRead / sectorSize);
     let buf = await image.slice(startOffset, startOffset + sectors * blockSize).arrayBuffer();
+    if (sectorSize === blockSize) {
+        return [new Uint8Array(buf, 0, bytesToRead)];
+    }
     let bufs: Uint8Array[] = [];
     for (let i = 0; i < sectors; i++) {
         bufs.push(new Uint8Array(buf, i * blockSize + sectorOffset, Math.min(bytesToRead, sectorSize)));
@@ -68,59 +71,89 @@ async function readSequential(
     return bufs;
 }
 
+interface TrackInfo {
+    isAudio: boolean;
+    offset: number;
+    blockSize: number;
+    blockOffset: number;
+    startSector: number;
+    numSectors: number;
+}
+
+interface CueTrack {
+    isAudio: boolean;
+    blockSize: number;
+    blockOffset: number;
+    index: number[];
+}
+
 class ImgCueReader implements Reader {
-    private tracks: Array<{ isAudio: boolean; index: number[]; }> = [];
+    private tracks: Array<TrackInfo | undefined> = [];
 
     constructor(private img: File) {}
 
-    readSector(sector: number): Promise<ArrayBuffer> {
-        let start = sector * 2352 + 16;
-        let end = start + 2048;
-        return this.img.slice(start, end).arrayBuffer();
+    async readSector(sector: number): Promise<ArrayBuffer> {
+        const track = this.findTrack(sector);
+        if (!track) {
+            throw new Error('Invalid sector ' + sector);
+        }
+        let offset = track.offset + (sector - track.startSector) * track.blockSize + track.blockOffset;
+        return await this.img.slice(offset, offset + 2048).arrayBuffer();
     }
 
-    readSequentialSectors(startSector: number, length: number): Promise<Uint8Array[]> {
-        return readSequential(this.img, startSector * 2352, length, 2352, 2048, 16);
+    async readSequentialSectors(startSector: number, length: number): Promise<Uint8Array[]> {
+        const track = this.findTrack(startSector);
+        if (!track) {
+            throw new Error('Invalid sector ' + startSector);
+        }
+        let offset = track.offset + (startSector - track.startSector) * track.blockSize;
+        return readSequential(this.img, offset, length, track.blockSize, 2048, track.blockOffset);
     }
 
     async parseCue(cueFile: File) {
         let lines = (await cueFile.text()).split('\n');
         let currentTrack: number | null = null;
+        const tracks: CueTrack[] = [];
         for (let line of lines) {
             let fields = line.trim().split(/\s+/);
             switch (fields[0]) {
                 case 'TRACK':
                     currentTrack = Number(fields[1]);
                     switch (fields[2]) {
+                        case 'MODE1/2048':
+                            tracks[currentTrack] = { isAudio: false, blockSize: 2048, blockOffset: 0, index: [] };
+                            break;
                         case 'MODE1/2352':
-                            this.tracks[currentTrack] = { isAudio: false, index: [] };
+                            tracks[currentTrack] = { isAudio: false, blockSize: 2352, blockOffset: 16, index: [] };
                             break;
                         case 'AUDIO':
-                            this.tracks[currentTrack] = { isAudio: true, index: [] };
+                            tracks[currentTrack] = { isAudio: true, blockSize: 2352, blockOffset: 0, index: [] };
                             break;
                         default:
-                            throw new Error(`${cueFile.name}: Unknown track mode "${fields[2]}"`);
+                            throw new Error(`${cueFile.name}: Unsupported track mode "${fields[2]}"`);
                     }
                     break;
                 case 'INDEX':
                     if (currentTrack)
-                        this.tracks[currentTrack].index[Number(fields[1])] = this.indexToSector(fields[2]);
+                        tracks[currentTrack].index[Number(fields[1])] = this.indexToSector(fields[2]);
                     break;
                 default:
                     // Do nothing
             }
         }
+        this.makeTrackInfo(tracks);
     }
 
     async parseCcd(ccdFile: File) {
         let lines = (await ccdFile.text()).split('\n');
         let currentTrack: number | null = null;
+        const tracks: CueTrack[] = [];
         for (let line of lines) {
             line = line.trim();
             let match = line.match(/\[TRACK ([0-9]+)\]/);
             if (match) {
                 currentTrack = Number(match[1]);
-                this.tracks[currentTrack] = { isAudio: false, index: [] };
+                tracks[currentTrack] = { isAudio: false, blockSize: 2352, blockOffset: 16, index: [] };
                 continue;
             }
             if (!currentTrack)
@@ -128,17 +161,40 @@ class ImgCueReader implements Reader {
             let keyval = line.split(/=/);
             switch (keyval[0]) {
                 case 'MODE':
-                    this.tracks[currentTrack].isAudio = keyval[1] === '0';
+                    if (keyval[1] === '0') {
+                        tracks[currentTrack].isAudio = true;
+                        tracks[currentTrack].blockOffset = 0;
+                    }
                     break;
                 case 'INDEX 0':
-                    this.tracks[currentTrack].index[0] = Number(keyval[1]);
+                    tracks[currentTrack].index[0] = Number(keyval[1]);
                     break;
                 case 'INDEX 1':
-                    this.tracks[currentTrack].index[1] = Number(keyval[1]);
+                    tracks[currentTrack].index[1] = Number(keyval[1]);
                     break;
                 default:
                     // Do nothing
             }
+        }
+        this.makeTrackInfo(tracks);
+    }
+
+    private makeTrackInfo(cueTracks: CueTrack[]) {
+        let offset = 0;
+        let startSector = 0;
+        for (let i = 1; i < cueTracks.length; i++) {
+            const { isAudio, blockSize, blockOffset, index } = cueTracks[i];
+            if (index[0]) {
+                const gap = index[1] - index[0];
+                startSector += gap;
+                offset += gap * blockSize;
+            }
+            let numSectors = i + 1 < cueTracks.length
+                ? (cueTracks[i + 1].index[0] || cueTracks[i + 1].index[1]) - index[1]
+                : (this.img.size - offset) / blockSize;
+            this.tracks[i] = { isAudio, offset, blockSize, blockOffset, startSector, numSectors };
+            startSector += numSectors;
+            offset += numSectors * blockSize;
         }
     }
 
@@ -146,24 +202,29 @@ class ImgCueReader implements Reader {
         return this.tracks.length - 1;
     }
 
-    async extractTrack(track: number): Promise<Blob> {
-        if (!this.tracks[track] || !this.tracks[track].isAudio)
-            throw new Error('Invalid track ' + track);
+    async extractTrack(trk: number): Promise<Blob> {
+        const track = this.tracks[trk];
+        if (!track || !track.isAudio)
+            throw new Error('Invalid track ' + trk);
 
-        let start = this.tracks[track].index[1] * 2352;
-        let end: number;
-        if (this.tracks[track + 1]) {
-            let index = this.tracks[track + 1].index[0] || this.tracks[track + 1].index[1];
-            end = index * 2352;
-        } else {
-            end = this.img.size;
-        }
-        return createWaveFile(44100, 2, end - start, [this.img.slice(start, end)]);
+        const size = track.numSectors * track.blockSize;
+        const blob = this.img.slice(track.offset, track.offset + size);
+        return createWaveFile(44100, 2, size, [blob]);
     }
 
     private indexToSector(index: string): number {
         let msf = index.split(':').map(Number);
         return msf[0] * 60 * 75 + msf[1] * 75 + msf[2];
+    }
+
+    private findTrack(sector: number): TrackInfo | null {
+        for (let track of this.tracks) {
+            if (!track) continue;
+            if (sector >= track.startSector && sector < track.startSector + track.numSectors) {
+                return track;
+            }
+        }
+        return null;
     }
 }
 
@@ -218,14 +279,13 @@ class MdfMdsReader implements Reader {
         return this.tracks.length - 1;
     }
 
-    async extractTrack(track: number): Promise<Blob> {
-        if (!this.tracks[track] || this.tracks[track].mode !== MdsTrackMode.Audio)
-            throw new Error('Invalid track ' + track);
+    async extractTrack(trk: number): Promise<Blob> {
+        const track = this.tracks[trk];
+        if (!track || track.mode !== MdsTrackMode.Audio)
+            throw new Error('Invalid track ' + trk);
 
-        let size = this.tracks[track].sectors * 2352;
-        let chunks = await readSequential(
-            this.mdf, this.tracks[track].offset, size,
-            this.tracks[track].sectorSize, 2352, 0);
+        let size = track.sectors * 2352;
+        let chunks = await readSequential(this.mdf, track.offset, size, track.sectorSize, 2352, 0);
         return createWaveFile(44100, 2, size, chunks);
     }
 }
