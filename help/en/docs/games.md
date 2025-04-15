@@ -83,6 +83,22 @@ Some titles store music as CD audio tracks. In such cases, use CD ripping softwa
 
 Place the ripped MP3 files together with the contents of the `GAMEDATA` folder from the CD, and compress everything into a ZIP file.
 
+For example, a ZIP file for *ATLACH＝NACHA* should contain[^1]:
+
+```
+蜘蛛GA.ALD
+蜘蛛GB.ALD
+蜘蛛SA.ALD
+蜘蛛WA.ALD
+SYSTEM35.EXE
+02.mp3
+03.mp3
+…
+16.mp3
+```
+
+[^1]: Note that `蜘蛛GB.ALD` is not installed on your PC. It must be copied from the CD-ROM, not from the installation folder.
+
 #### Creating a CD Image
 
 Use CD imaging software to convert your CD-ROM into a `.bin`/`.cue` format image file.
@@ -94,10 +110,10 @@ For more details about supported file formats, see [Advanced Usage](advanced.md#
 
 ## Games Using System4
 
-Games developed with AliceSoft’s System4 engine[^1] are not supported by *Kichikuou on Web*.
+Games developed with AliceSoft’s System4 engine[^2] are not supported by *Kichikuou on Web*.
 If you want to play them on a mobile device, the following options are available:
 
 - Android: [xsystem4-android](https://github.com/kichikuou/xsystem4-android)
 - iOS / iPadOS: [XSystem4 Web Installer](https://xsystem4-pwa.web.app)
 
-[^1]: "DALK Gaiden" (released in 2002) and all games released by AliceSoft in 2003 or later.
+[^2]: "DALK Gaiden" (released in 2002) and all games released by AliceSoft in 2003 or later.

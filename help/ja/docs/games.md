@@ -154,6 +154,22 @@ Windows Media PlayerなどのCDリッピング機能を使用して、MP3形式�
 
 取り込んだMP3ファイルと、CD内の `GAMEDATA` フォルダーの中身をすべてまとめてZIPファイルに圧縮してください。
 
+例えば、『アトラク＝ナクア』の場合は、ZIPファイルの中は以下のようになります。[^1]
+
+```
+蜘蛛GA.ALD
+蜘蛛GB.ALD
+蜘蛛SA.ALD
+蜘蛛WA.ALD
+SYSTEM35.EXE
+02.mp3
+03.mp3
+…
+16.mp3
+```
+
+[^1]: `蜘蛛GB.ALD` はPC上にインストールされないため、インストールフォルダーからではなくCD-ROMからコピーする必要があります。
+
 #### CD-ROMをイメージ化する方法
 
 CDイメージ作成ソフトを使って、CD-ROMを`.bin`/`.cue`形式のイメージファイルに変換します。
@@ -167,10 +183,10 @@ CDイメージ作成ソフトを使って、CD-ROMを`.bin`/`.cue`形式のイ�
 
 ## System4以降のゲーム
 
-System4系のゲームエンジンを使用しているアリスソフト作品[^1]は、鬼畜王 on Webでは動作しません。
+System4系のゲームエンジンを使用しているアリスソフト作品[^2]は、鬼畜王 on Webでは動作しません。
 これらのゲームをモバイル端末でプレイしたい場合は、以下の方法が利用可能です:
 
 - Android: [xsystem4-android](https://github.com/kichikuou/xsystem4-android)
 - iOS / iPadOS: [XSystem4 Webインストーラ](https://xsystem4-pwa.web.app)
 
-[^1]: 2002年発売の『DALK外伝』および2003年以降発売のゲーム。
+[^2]: 2002年発売の『DALK外伝』および2003年以降発売のゲーム。
