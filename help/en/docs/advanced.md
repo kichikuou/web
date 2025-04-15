@@ -21,7 +21,7 @@ For example, to use the [Unofficial Patch for Kichikuou Rance](http://alice.xfu.
     - `.bin` + `.cue`
     - `.mdf` + `.mds`
     - `.iso`
-- Archive Files (archived CD image files are not supported)
+- Archive Files (loading of archived CD images is not supported)
     - `.zip`
     - `.7z`
     - `.rar`

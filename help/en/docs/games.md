@@ -60,60 +60,14 @@ Even if a game isn’t part of the free distribution declaration, you can still 
 - [List of games supported by xsystem35](https://github.com/kichikuou/xsystem35-sdl2/blob/master/game_compatibility.md)
 - [List of games supported by system3-sdl2](https://github.com/kichikuou/system3-sdl2/blob/master/game_compatibility.md)
 
-The setup process differs depending on whether you have a **CD-ROM** or a **download edition**.
-
-### For Download Editions
-
-Install the game on your PC, then **compress the installation folder into a ZIP file**.
-Drag and drop the ZIP onto this site to launch the game.
-
-### For CD-ROM
-
-There are two ways to prepare the game:
-
-- Compress the CD contents into a ZIP file (recommended)
-- Convert the CD into a disk image
-
-#### Compressing the CD Contents into a ZIP (Recommended)
-
-Some titles store music as CD audio tracks. In such cases, use CD ripping software (like Windows Media Player) to extract the audio tracks in MP3 format.
-
-!!! note "Note"
-    The MP3 file names must include a **track number**, such as “02” or “03”.
-
-Place the ripped MP3 files together with the contents of the `GAMEDATA` folder from the CD, and compress everything into a ZIP file.
-
-For example, a ZIP file for *ATLACH＝NACHA* should contain[^1]:
-
-```
-蜘蛛GA.ALD
-蜘蛛GB.ALD
-蜘蛛SA.ALD
-蜘蛛WA.ALD
-SYSTEM35.EXE
-02.mp3
-03.mp3
-…
-16.mp3
-```
-
-[^1]: Note that `蜘蛛GB.ALD` is not installed on your PC. It must be copied from the CD-ROM, not from the installation folder.
-
-#### Creating a CD Image
-
-Use CD imaging software to convert your CD-ROM into a `.bin`/`.cue` format image file.
-
-!!! Warning
-    Some free CD imaging tools may include adware or viruses in their installers. Be sure to download from trusted sources.
-
-For more details about supported file formats, see [Advanced Usage](advanced.md#supported-file-formats).
+For details on how to prepare the files, refer to [Preparing Files for Launch](launch.md#preparing-files-for-launch).
 
 ## Games Using System4
 
-Games developed with AliceSoft’s System4 engine[^2] are not supported by *Kichikuou on Web*.
+Games developed with AliceSoft’s System4 engine[^1] are not supported by *Kichikuou on Web*.
 If you want to play them on a mobile device, the following options are available:
 
 - Android: [xsystem4-android](https://github.com/kichikuou/xsystem4-android)
 - iOS / iPadOS: [XSystem4 Web Installer](https://xsystem4-pwa.web.app)
 
-[^2]: "DALK Gaiden" (released in 2002) and all games released by AliceSoft in 2003 or later.
+[^1]: "DALK Gaiden" (released in 2002) and all games released by AliceSoft in 2003 or later.

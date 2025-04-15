@@ -41,3 +41,54 @@ The screenshots below are from an iPad, but the steps are the same on iPhone.
 6. Return to Safari, go to the *Kichikuou on Web* page, and tap the “Choose File” button. Then navigate to "Choose File" → "On My iPhone" → "iZip", and select the disk image files. Since file extensions may not be shown, all files may appear to have the same name—however, the ~600MB file is the `.img`, and the 1–2KB file is the `.cue`.<br/>![file chooser](images/ios-filer.png)
 7. Once both `.img` and `.cue` are loaded, the game will launch.
 8. After the game has launched, you can delete the downloaded `.rar` file using iZip or the built-in iOS "Files" app.
+
+## Preparing Files for Launch
+
+This section explains how to prepare files that *Kichikuou on Web* can load.
+The process differs depending on whether you have a **CD-ROM** or a **download edition**.
+
+### For Download Editions
+
+Install the game on your PC, then **compress the installation folder into a ZIP file**.
+Drag and drop the ZIP onto this site to launch the game.
+
+### For CD-ROM
+
+There are two ways to prepare the game:
+
+- Compress the CD contents into a ZIP file (recommended)
+- Convert the CD into a disk image
+
+#### Compressing the CD Contents into a ZIP (Recommended)
+
+Some titles store music as CD audio tracks. In such cases, use CD ripping software (like Windows Media Player) to extract the audio tracks in MP3 format.
+
+!!! note "Note"
+    The MP3 file names must include a **track number**, such as “02” or “03”.
+
+Place the ripped MP3 files together with the contents of the `GAMEDATA` folder from the CD, and compress everything into a ZIP file.
+
+For example, a ZIP file for *ATLACH＝NACHA* should contain[^1]:
+
+```
+蜘蛛GA.ALD
+蜘蛛GB.ALD
+蜘蛛SA.ALD
+蜘蛛WA.ALD
+SYSTEM35.EXE
+02.mp3
+03.mp3
+…
+16.mp3
+```
+
+[^1]: Note that `蜘蛛GB.ALD` is not installed on your PC. It must be copied from the CD-ROM, not from the installation folder.
+
+#### Creating a CD Image
+
+Use CD imaging software to convert your CD-ROM into a `.bin`/`.cue` format image file.
+
+!!! Warning
+    Some free CD imaging tools may include adware or viruses in their installers. Be sure to download from trusted sources.
+
+For more details about supported file formats, see [Advanced Usage](advanced.md#supported-file-formats).
