@@ -38,10 +38,15 @@ Confirm before closing the page
         This feature does not work on iOS.
 
 ## Saved data
+You can back up your save files stored in the browser or transfer it between different browsers.
 
-You can export save data stored in the browser as a ZIP file for backup, or restore save data from a ZIP file. This is also useful for transferring saves between computers.
+The save file format is compatible with AliceSoft’s `System39.exe`.
 
-Save files are compatible with AliceSoft’s `System39.exe`.
+Save as ZIP
+:   Downloads the save files stored in the browser as a ZIP file.
+
+Restore from ZIP
+:   Select a ZIP file to restore save files. After restoring, please restart the game.
 
 !!! Warning
     Save files are stored in your browser, but it will not be saved when using private browsing (incognito mode).
