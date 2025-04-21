@@ -11,7 +11,7 @@
     "build-help": "mkdocs build --config-file help/ja/mkdocs.yml && mkdocs build --config-file help/en/mkdocs.yml"
   },
   "dependencies": {
-    "@irori/idbfs": "^0.4.0",
+    "@irori/idbfs": "^0.5.0",
     "@types/gtag.js": "^0.0.12",
     "7z-wasm": "^1.1.0",
     "font-awesome": "^4.7.0",
