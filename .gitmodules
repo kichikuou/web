@@ -4,6 +4,3 @@
 [submodule "system3-sdl2"]
 	path = system3-sdl2
 	url = https://github.com/kichikuou/system3-sdl2.git
-[submodule "SpessaSynth"]
-	path = SpessaSynth
-	url = https://github.com/spessasus/SpessaSynth.git

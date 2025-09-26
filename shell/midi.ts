@@ -1,11 +1,11 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import type { Synthetizer, Sequencer } from "./spessasynth-types";
+import type { WorkletSynthesizer, Sequencer } from "./spessasynth.js";
 import { addToast } from './widgets.js';
 import { message } from './strings.js';
 
-let SpessaSynth: typeof import('./spessasynth-types') | undefined;
-let synth: Synthetizer | undefined;
+let SpessaSynth: typeof import('./spessasynth.js') | undefined;
+let synth: WorkletSynthesizer | undefined;
 let seq: Sequencer | undefined;
 let gain!: GainNode;
 let fadeFinishTime = 0;
@@ -16,13 +16,15 @@ export async function init(destNode: AudioNode) {
     try {
         const sfFetch = fetch("soundfonts/GeneralUserGS.sf3");
         SpessaSynth = await import("./spessasynth.js");
-        await destNode.context.audioWorklet.addModule("./worklet_processor.min.js");
+        await destNode.context.audioWorklet.addModule("./spessasynth_processor.min.js");
         gain = destNode.context.createGain();
         gain.connect(destNode);
         const sfResp = await sfFetch;
         if (!sfResp.ok)
             throw new Error(`Failed to load soundfont: ${sfResp.statusText}`);
-        synth = new SpessaSynth.Synthetizer(gain, await sfResp.arrayBuffer());
+        synth = new SpessaSynth.WorkletSynthesizer(destNode.context);
+        synth.connect(gain);
+        await synth.soundBankManager.addSoundBank(await sfResp.arrayBuffer(), "main");
     } catch (e) {
         console.warn(e);
         addToast(message.midi_init_error, 'error');
@@ -41,15 +43,15 @@ export function play(loopCount: number, data: number, datalen: number) {
         altName: undefined
     }];
     if (!seq) {
-        seq = new SpessaSynth!.Sequencer(midiBuffers, synth);
-    } else {
-        seq.loadNewSongList(midiBuffers);
+        seq = new SpessaSynth!.Sequencer(synth);
     }
-    seq.loop = loopCount === 0;
+    seq.loadNewSongList(midiBuffers);
+    seq.loopCount = loopCount === 0 ? Infinity : loopCount - 1;
+    seq.play();
 }
 
 export function stop() {
-    seq?.stop();
+    seq?.pause();
 }
 
 export function pause() {
