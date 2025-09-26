@@ -285,12 +285,12 @@ export class ZipSource extends LoaderSource {
 
     async extractTrack(track: number): Promise<Blob> {
         const zobj = this.tracks.get(track);
-        const buf: ArrayBuffer = await zobj.extract();
+        const buf = await zobj.extract();
         return createBlob(buf, zobj.name);
     }
 }
 
-type SevenZipSourceItem = { name: string, content: Uint8Array };
+type SevenZipSourceItem = { name: string, content: Uint8Array<ArrayBuffer> };
 type SevenZipWorkerResponse = { files: SevenZipSourceItem[] } | { error: string };
 export class SevenZipSource extends LoaderSource {
     private tracks = new CDDATracks<SevenZipSourceItem>();

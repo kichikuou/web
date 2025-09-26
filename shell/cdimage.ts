@@ -57,13 +57,13 @@ async function readSequential(
     blockSize: number,
     sectorSize: number,
     sectorOffset: number
-): Promise<Uint8Array[]> {
+): Promise<Uint8Array<ArrayBuffer>[]> {
     let sectors = Math.ceil(bytesToRead / sectorSize);
     let buf = await image.slice(startOffset, startOffset + sectors * blockSize).arrayBuffer();
     if (sectorSize === blockSize) {
         return [new Uint8Array(buf, 0, bytesToRead)];
     }
-    let bufs: Uint8Array[] = [];
+    let bufs: Uint8Array<ArrayBuffer>[] = [];
     for (let i = 0; i < sectors; i++) {
         bufs.push(new Uint8Array(buf, i * blockSize + sectorOffset, Math.min(bytesToRead, sectorSize)));
         bytesToRead -= sectorSize;

@@ -62,7 +62,7 @@ export class BGMLoader implements CDDALoaderSource {
 async function convertOggToWav(blob: Blob): Promise<Blob> {
     await loadScript('lib/stbvorbis-0.2.2.js');
     const buf = await blob.arrayBuffer();
-    const chunks: Int16Array[] = [];
+    const chunks: Int16Array<ArrayBuffer>[] = [];
     let sampleRate = 0;
     let channels = 0;
     let dataSize = 0;

@@ -69,7 +69,7 @@ async function saveScreenshot() {
     const name = getScreenshotFilename();
     const ptr = Module!.stringToUTF8OnStack(name);
     if (!Module!._save_screenshot(ptr)) return;
-    const content: Uint8Array = Module!.FS.readFile(name, { encoding: 'binary' });
+    const content: Uint8Array<ArrayBuffer> = Module!.FS.readFile(name, { encoding: 'binary' });
     Module!.FS.unlink(name);
     const blob = new Blob([content], { type: 'image/bmp' });
     // Without target="_blank", iOS Safari replaces current page
