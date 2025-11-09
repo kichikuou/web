@@ -40,6 +40,9 @@ Confirm before closing the page
 Streamer Mode (mosaic NSFW images)
 :   Applies a mosaic effect to NSFW images in the game. Currently available only for Kichikuou Rance.
 
+    !!! warning
+        This feature is provided as-is, without any warranty. Please make sure to check the terms of service of your streaming platform and AliceSoft's [copyright guidelines](https://www.alicesoft.com/about/#cont05) before using this feature for streaming.
+
 ## Saved data
 You can back up your save files stored in the browser or transfer it between different browsers.
 
