@@ -10,6 +10,7 @@
         "esModuleInterop": true,
     },
     "files": [
-        "shell.ts"
+        "shell.ts",
+        "global.d.ts"
     ]
 }

@@ -15,6 +15,7 @@ const dictionary_en = {
     restart_confirmation: 'Restart the game?',
     restore_success: 'Save files has been restored successfully.',
     restore_failure: 'Save files could not be restored.',
+    streamer_mode_not_available: 'Streamer mode is not available for this game.',
     unload_confirmation: 'Unsaved data will be lost.',
     unrecognized_format: 'Unrecognized format.',
 };
@@ -34,6 +35,7 @@ const dictionary_ja: Dictionary = {
     restart_confirmation: 'ゲームを再起動しますか？',
     restore_success: 'セーブデータの復元に成功しました。',
     restore_failure: 'セーブデータを復元できませんでした。',
+    streamer_mode_not_available: 'このゲームでは配信者モードは利用できません。',
     unload_confirmation: 'セーブしていないデータは失われます。',
     unrecognized_format: '認識できない形式です。',
 };

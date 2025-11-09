@@ -8,6 +8,7 @@ import { syncfs, load_mincho_font } from './moduleloader.js';
 import * as zoom from './zoom.js';
 import * as cdPlayer from './cdda.js';
 import * as audio from './audio.js';
+import * as censor from './censor.js';
 import * as midiPlayer from './midi.js';
 import * as toolbar from './toolbar.js';
 import * as texthook from './textlog.js';
@@ -51,6 +52,7 @@ class System35Shell {
         if (colon !== -1) {
             title = title.slice(colon + 1).trim();
             texthook.setTitle(title);
+            censor.setTitle(title);
             $('.navbar-brand').textContent = title;
             gtag('event', 'GameStart', { GameTitle: title, event_category: 'Game', event_label: title });
         }

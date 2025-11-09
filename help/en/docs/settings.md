@@ -37,6 +37,9 @@ Confirm before closing the page
     !!! Note
         This feature does not work on iOS.
 
+Streamer Mode (mosaic NSFW images)
+:   Applies a mosaic effect to NSFW images in the game. Currently available only for Kichikuou Rance.
+
 ## Saved data
 You can back up your save files stored in the browser or transfer it between different browsers.
 
