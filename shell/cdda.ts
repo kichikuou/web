@@ -67,6 +67,10 @@ export function setBGMLoader(type: number, base_no: number) {
     setCDDALoader(new CDDALoader(new BGMLoader(type, base_no)));
 }
 
+export function hasAudioTrack() {
+    return cddaLoader!.hasAudioTrack();
+}
+
 export function play(track: number, loop: number) {
     currentTrack = track;
     if (unmute) {

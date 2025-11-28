@@ -219,6 +219,10 @@ export class FileSource extends LoaderSource {
         return new CDDALoader(this);
     }
 
+    hasAudioTrack(): boolean {
+        return !this.tracks.is_empty();
+    }
+
     async extractTrack(track: number): Promise<Blob> {
         return this.tracks.get(track);
     }
@@ -283,6 +287,10 @@ export class ZipSource extends LoaderSource {
         return new CDDALoader(this);
     }
 
+    hasAudioTrack(): boolean {
+        return !this.tracks.is_empty();
+    }
+
     async extractTrack(track: number): Promise<Blob> {
         const zobj = this.tracks.get(track);
         const buf = await zobj.extract();
@@ -333,6 +341,10 @@ export class SevenZipSource extends LoaderSource {
         return new CDDALoader(this);
     }
 
+    hasAudioTrack(): boolean {
+        return !this.tracks.is_empty();
+    }
+
     async extractTrack(track: number): Promise<Blob> {
         let f = this.tracks.get(track);
         return createBlob(f.content, f.name);
@@ -376,6 +388,10 @@ class CDDATracks<T> {
             }
         }
         return false;
+    }
+
+    is_empty(): boolean {
+        return this.tracks.length === 0;
     }
 
     get(track: number): T {

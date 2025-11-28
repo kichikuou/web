@@ -4,6 +4,7 @@
 export interface Reader {
     readSector(sector: number): Promise<ArrayBuffer>;
     readSequentialSectors(startSector: number, length: number): Promise<Uint8Array[]>;
+    hasAudioTrack(): boolean;
     maxTrack(): number;
     extractTrack(track: number): Promise<Blob>;
 }
@@ -39,6 +40,10 @@ class IsoReader implements Reader {
         let start = startSector * 2048;
         let buf = await this.image.slice(start, start + length).arrayBuffer();
         return [new Uint8Array(buf)];
+    }
+
+    hasAudioTrack(): boolean {
+        return false;
     }
 
     maxTrack(): number {
@@ -198,6 +203,10 @@ class ImgCueReader implements Reader {
         }
     }
 
+    hasAudioTrack(): boolean {
+        return this.tracks.some(track => track?.isAudio);
+    }
+
     maxTrack(): number {
         return this.tracks.length - 1;
     }
@@ -273,6 +282,10 @@ class MdfMdsReader implements Reader {
         return readSequential(
             this.mdf, track.offset + startSector * track.sectorSize, length,
             track.sectorSize, 2048, 16);
+    }
+
+    hasAudioTrack(): boolean {
+        return this.tracks.some(track => track?.mode === MdsTrackMode.Audio);
     }
 
     maxTrack(): number {

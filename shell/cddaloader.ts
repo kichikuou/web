@@ -5,6 +5,7 @@ import { ald_getdata, isMobileSafari, createBlob, loadScript } from './util.js';
 import { createWaveFile } from './cdimage.js';
 
 export interface CDDALoaderSource {
+    hasAudioTrack(): boolean;
     extractTrack(track: number): Promise<Blob>;
 }
 
@@ -20,6 +21,10 @@ export class CDDALoader {
         if (isMobileSafari()) {
             indexedDB.deleteDatabase('cdda');
         }
+    }
+
+    hasAudioTrack() {
+        return this.source.hasAudioTrack();
     }
 
     async getCDDA(track: number, target: HTMLAudioElement): Promise<string> {
@@ -50,6 +55,10 @@ export class CDDALoader {
 
 export class BGMLoader implements CDDALoaderSource {
     constructor(private type: number, private base_no: number) {}
+
+    hasAudioTrack(): boolean {
+        return true;
+    }
 
     async extractTrack(track: number): Promise<Blob> {
         const dfile = ald_getdata(Module as XSystem35Module, this.type, track + this.base_no - 1);
