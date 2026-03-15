@@ -237,7 +237,7 @@ export class ZipSource extends LoaderSource {
 
     protected async doLoad() {
         const files = await zip.load(this.zipFile);
-        const dataFiles = files.filter(f => /\.(ald|ain|map|dat|mda|ttf|otf|ini|xsys35rc)$/i.test(f.name));
+        const dataFiles = files.filter(f => /\.(ald|ain|alk|map|dat|mda|ttf|otf|ini|xsys35rc)$/i.test(f.name));
         if (dataFiles.length === 0) {
             const hdmImages = files.filter(f => /\.hdm$/i.test(f.name));
             if (hdmImages.length > 0) {
