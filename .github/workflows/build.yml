@@ -43,7 +43,7 @@ jobs:
         mkdocs build --config-file help/en/mkdocs.yml
 
     - name: Upload artifacts for GitHub Pages
-      uses: actions/upload-pages-artifact@v3
+      uses: actions/upload-pages-artifact@v5
       with:
         path: dist
 
