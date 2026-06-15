@@ -92,7 +92,7 @@ export function ald_getdata(m: XSystem35Module, type: DRIType, no: number): AldE
     let ptr = m.getValue(dfile + 8, '*');
     let size = m.getValue(dfile, 'i32');
     let name = ascii_to_string(m.getValue(dfile + 12, '*'));  // TODO: Shift_JIS decoding
-    let data = m.HEAPU8.buffer.slice(ptr, ptr + size);
+    let data = m.HEAPU8.slice(ptr, ptr + size).buffer;
     m._ald_freedata(dfile);
     return { name, data };
 }

@@ -6,8 +6,10 @@ import {addToast, downloadAs} from './widgets.js';
 import {message} from './strings.js';
 import * as zip from './zip.js';
 
+type FS = IDBFSModule['FS'];
+
 export class SaveDataManager {
-    private FSready!: Promise<IDBFSModule['FS']>;
+    private FSready!: Promise<FS>;
 
     constructor() {
         if (window['Module'])
@@ -28,7 +30,7 @@ export class SaveDataManager {
     }
 
     public async hasSaveData(): Promise<boolean> {
-        function find(fs: IDBFSModule['FS'], dir: string): boolean {
+        function find(fs: FS, dir: string): boolean {
             if (!fs.isDir(fs.stat(dir, undefined).mode))
                 return false;
             for (let name of fs.readdir(dir) as string[]) {
@@ -96,7 +98,7 @@ export class SaveDataManager {
     }
 }
 
-async function addToZip(fs: IDBFSModule['FS'], path: string, builder: zip.ZipBuilder) {
+async function addToZip(fs: FS, path: string, builder: zip.ZipBuilder) {
     if (path[0] !== '/') {
         throw new Error('addToZip: path must start with /');
     }
@@ -114,7 +116,7 @@ async function addToZip(fs: IDBFSModule['FS'], path: string, builder: zip.ZipBui
     }
 }
 
-export function hasPattonSave(fs: IDBFSModule['FS']): boolean {
+export function hasPattonSave(fs: FS): boolean {
     try {
         fs.stat('/patton/patton.nhd', undefined);
         return true;

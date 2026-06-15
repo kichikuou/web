@@ -39,8 +39,7 @@ export function play(loopCount: number, data: number, datalen: number) {
     if (!synth)
         return;
     const midiBuffers = [{
-        binary: Module!.HEAPU8.slice(data, data + datalen),
-        altName: undefined
+        binary: Module!.HEAPU8.slice(data, data + datalen).buffer,
     }];
     if (!seq) {
         seq = new SpessaSynth!.Sequencer(synth);
