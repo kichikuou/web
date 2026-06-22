@@ -132,8 +132,10 @@ async function install(source: LoaderSource) {
             gtag('event', 'LoadFailed', { event_category: 'Loader', event_label: err.message });
             addToast(`${message.cannot_install}: ${message.unrecognized_format}`, 'warning');
         }
+    } finally {
+        cdSource = undefined;
+        installing = false;
     }
-    installing = false;
 }
 
 function isImageFile(file: File): boolean {
