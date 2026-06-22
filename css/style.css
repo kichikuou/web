@@ -107,7 +107,6 @@ dialog::backdrop {
 }
 
 .toast {
-    -webkit-animation: slide-down .2s ease 1;
     animation: slide-down .2s ease 1;
     margin: 5px;
 }
