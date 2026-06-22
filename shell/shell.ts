@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 import type { MainModule as XSystem35Module } from './xsystem35.js';
-import { $, gaException } from './util.js';
+import { $, gaException, syncfsAsync } from './util.js';
 import './settings.js';
 import './loader.js';
 import { syncfs, load_mincho_font } from './moduleloader.js';
@@ -189,15 +189,13 @@ async function launchPatton() {
             const content = Module!.FS.readFile(fname);
             Module!.FS.writeFile('/patton/' + fname, content);
         }
-        const err = await new Promise((resolve) => Module!.FS.syncfs(false, resolve));
-        if (err) throw err;
+        await syncfsAsync(Module!.FS, false);
     }
     config.unloadConfirmation = false;
     window.location.href = '/patton/';  // Patton GO!
     setTimeout(async () => {
         // This *may* run after the user is back from Patton.
-        const err = await new Promise((resolve) => Module!.FS.syncfs(true, resolve));
-        if (err) throw err;
+        await syncfsAsync(Module!.FS, true);
         Module!._sys_restart();
     }, 1000);
 }

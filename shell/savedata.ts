@@ -4,6 +4,7 @@ import type { MainModule as IDBFSModule } from '@irori/idbfs';
 import {saveDirReady} from './moduleloader.js';
 import {addToast, downloadAs} from './widgets.js';
 import {message} from './strings.js';
+import { syncfsAsync } from './util.js';
 import * as zip from './zip.js';
 
 type FS = IDBFSModule['FS'];
@@ -22,8 +23,7 @@ export class SaveDataManager {
                 idbfs.FS.mount(idbfs.IDBFS, {}, '/save');
                 idbfs.FS.mkdir('/patton', undefined);
                 idbfs.FS.mount(idbfs.IDBFS, {}, '/patton');
-                const err = await new Promise((resolve) => idbfs.FS.syncfs(true, resolve));
-                if (err) throw err;
+                await syncfsAsync(idbfs.FS, true);
                 return idbfs.FS;
             })();
         }
@@ -76,14 +76,7 @@ export class SaveDataManager {
                     }
                 }
             }
-            await new Promise((resolve, reject) => {
-                fs.syncfs(false, (err: any) => {
-                    if (err)
-                        reject(err);
-                    else
-                        resolve(undefined);
-                });
-            });
+            await syncfsAsync(fs, false);
             addToast(message.restore_success, 'success');
             gtag('event', 'Restored', { event_category: 'Savedata' });
         } catch (err) {

@@ -62,6 +62,13 @@ export class Deferred<T> {
     }
 }
 
+type SyncfsCapable = { syncfs(populate: boolean, callback: (err: any) => void): void };
+export function syncfsAsync(fs: SyncfsCapable, populate: boolean): Promise<void> {
+    return new Promise((resolve, reject) => {
+        fs.syncfs(populate, (err) => err ? reject(err) : resolve());
+    });
+}
+
 export function gaException(description: any, fatal: boolean = false) {
     let jsonDescription = JSON.stringify(description, (_, value) => {
         if (value instanceof DOMException) {
