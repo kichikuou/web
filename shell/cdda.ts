@@ -9,7 +9,12 @@ let cddaLoader: CDDALoader | undefined;
 let currentTrack: number | null = null;
 let isVolumeSupported: boolean;
 let fadeVolume = 1.0;
+let bgmValance = 1.0;  // BGM volume-valancer gain (0.0-1.0)
 let fader: Fader | undefined;
+
+function targetVolume(): number {
+    return volumeControl.volume() * fadeVolume * bgmValance;
+}
 let unmute: (() => void) | null = null;  // Non-null if emulating mute by pause
 
 class Fader {
@@ -23,7 +28,7 @@ class Fader {
         this.timer = setInterval(() => {
             const t = performance.now() - start;
             fadeVolume = t >= duration ? target : initial + (t / duration) * (target - initial);
-            audio.volume = volumeControl.volume() * fadeVolume;
+            audio.volume = targetVolume();
             if (t >= duration) {
                 clearInterval(this.timer);
                 this.timer = undefined;
@@ -103,7 +108,7 @@ export async function fade(duration: number, target: number): Promise<void> {
     }
     if (duration <= 0) {
         fadeVolume = target;
-        audio.volume = volumeControl.volume() * fadeVolume;
+        audio.volume = targetVolume();
         return;
     }
     fader = new Fader(duration, target);
@@ -138,9 +143,15 @@ function startPlayback(url: string, loop: number) {
     });
 }
 
+export function setValance(vol: number) {
+    bgmValance = vol / 100;
+    if (isVolumeSupported)
+        audio.volume = targetVolume();
+}
+
 function onVolumeChanged(evt: CustomEvent) {
     if (isVolumeSupported) {
-        audio.volume = evt.detail;
+        audio.volume = targetVolume();
         return;
     }
     let muted = evt.detail === 0;

@@ -7,7 +7,8 @@ import { message } from './strings.js';
 let SpessaSynth: typeof import('./spessasynth.js') | undefined;
 let synth: WorkletSynthesizer | undefined;
 let seq: Sequencer | undefined;
-let gain!: GainNode;
+let gain!: GainNode;         // controlled by in-game fade commands
+let valanceGain!: GainNode;  // controlled by the volume-valancer dialog
 let fadeFinishTime = 0;
 let stopTimer: number | null = null;
 
@@ -18,7 +19,9 @@ export async function init(destNode: AudioNode) {
         SpessaSynth = await import("./spessasynth.js");
         await destNode.context.audioWorklet.addModule("./spessasynth_processor.min.js");
         gain = destNode.context.createGain();
-        gain.connect(destNode);
+        valanceGain = destNode.context.createGain();
+        gain.connect(valanceGain);
+        valanceGain.connect(destNode);
         const sfResp = await sfFetch;
         if (!sfResp.ok)
             throw new Error(`Failed to load soundfont: ${sfResp.statusText}`);
@@ -91,4 +94,9 @@ export function fadeStart(ms: number, vol: number, stopAfterFade: number) {
 
 export function isFading(): number {
     return performance.now() < fadeFinishTime ? 1 : 0;
+}
+
+export function setValance(vol: number) {
+    if (valanceGain)
+        valanceGain.gain.value = vol / 100;
 }
