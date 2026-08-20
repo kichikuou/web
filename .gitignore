@@ -1,8 +1,10 @@
 node_modules/
 shell/xsystem35.d.ts
 shell/system3.d.ts
+shell/jspi/
 dist/system3.*
 dist/xsystem35.*
+dist/jspi/
 dist/shell.js*
 dist/archiveworker.js*
 dist/fdimage.js*

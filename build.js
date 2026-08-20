@@ -46,6 +46,8 @@ const configs = [
             './spessasynth.js',
             './system3.js',
             './xsystem35.js',
+            './jspi/system3.js',
+            './jspi/xsystem35.js',
         ],
         plugins: [resolveExternalModules],
         bundle: true,
