@@ -19,7 +19,17 @@ const resolveExternalModules = {
     },
 }
 
+async function installFonts() {
+    return Promise.all([
+        fsPromises.copyFile('xsystem35-sdl2/fonts/MTLc3m.ttf', 'dist/fonts/MTLc3m.ttf'),
+        fsPromises.copyFile('xsystem35-sdl2/licenses/MTLc3m.txt', 'dist/fonts/MTLc3m.ttf.license'),
+        fsPromises.copyFile('xsystem35-sdl2/fonts/mincho.ttf', 'dist/fonts/mincho.ttf'),
+        fsPromises.copyFile('xsystem35-sdl2/licenses/mincho.txt', 'dist/fonts/mincho.ttf.license'),
+    ]);
+}
+
 async function installExternalModules() {
+    await fsPromises.mkdir('dist/fonts', { recursive: true });
     await fsPromises.mkdir('dist/soundfonts', { recursive: true });
     return Promise.all([
         fsPromises.copyFile('node_modules/7z-wasm/7zz.es6.js', 'dist/lib/7zz.es6.js'),
@@ -103,3 +113,4 @@ for (const config of configs) {
 }
 
 await installExternalModules();
+await installFonts();

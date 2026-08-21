@@ -16,4 +16,8 @@ dist/lib/fatfs.*
 dist/lib/idbfs.js
 dist/lib/font-awesome.min.css
 dist/fonts/fontawesome-webfont.woff2
+dist/fonts/MTLc3m.ttf
+dist/fonts/MTLc3m.ttf.license
+dist/fonts/mincho.ttf
+dist/fonts/mincho.ttf.license
 dist/spessasynth_processor.min.js

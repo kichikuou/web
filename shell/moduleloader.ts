@@ -6,7 +6,7 @@ import * as toolbar from './toolbar.js';
 import { message } from './strings.js';
 
 const FontGothic = 'MTLc3m.ttf';
-const FontMincho = 'mincho.otf';
+const FontMincho = 'mincho.ttf';
 
 let fsReady: (_?: any) => void;
 export let fileSystemReady: Promise<any> = new Promise((resolve) => { fsReady = resolve; });

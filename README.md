@@ -46,15 +46,16 @@ The [xsystem35-sdl2] submodule is licensed under
 The [system3-sdl2] submodule is licensed under
 [GPL 2.0](https://github.com/kichikuou/system3-sdl2/blob/master/COPYING).
 
-The font `dist/fonts/MTLc3m.ttf` is the "モトヤLシーダ3等幅" font from the
-Android Open Source Project and is licensed under the
-[Apache License 2.0](dist/fonts/MTLc3m.ttf.license).
+The fonts in `dist/fonts/` are copied from the [xsystem35-sdl2] submodule at
+build time.
 
-The font `dist/fonts/mincho.otf` is a subset of the
-[Source Han Serif](https://github.com/adobe-fonts/source-han-serif/) font and
-is licensed under the
-[SIL Open Font License 1.1](dist/fonts/mincho.otf.license). The script used for
-subsetting can be found in
+`MTLc3m.ttf` is the "モトヤLシーダ3等幅" font from the Android Open Source
+Project and is licensed under the
+[Apache License 2.0](https://github.com/kichikuou/xsystem35-sdl2/blob/master/licenses/MTLc3m.txt).
+
+`mincho.ttf` is a subset of the [IPA Mincho](https://moji.or.jp/ipafont/) font and is licensed under the
+[IPA Font License v1.0](https://github.com/kichikuou/xsystem35-sdl2/blob/master/licenses/mincho.txt).
+The script used for subsetting can be found in
 [xsystem35-sdl2/fonts](https://github.com/kichikuou/xsystem35-sdl2/blob/master/fonts/CMakeLists.txt).
 
 This site also uses the following open-source software:
