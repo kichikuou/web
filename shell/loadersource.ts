@@ -1,9 +1,9 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
-import { $, createBlob, DRIType } from './util.js';
+import { $, basename, createBlob, DRIType } from './util.js';
 import * as cdimage from './cdimage.js';
 import {CDDALoader, BGMLoader} from './cddaloader.js';
-import {registerDataFile} from './datafile.js';
+import {detectEngine, isGameDataFile, registerDataFile} from './datafile.js';
 import * as iso9660 from './iso9660.js';
 import {loadModule, saveDirReady} from './moduleloader.js';
 import {message} from './strings.js';
@@ -17,6 +17,8 @@ export class NoGamedataError implements Error {
         return this.name + ': ' + this.message;
     }
 }
+
+export type GameFileEntry = { name: string, load: () => Promise<Uint8Array[]> };
 
 export abstract class LoaderSource {
     protected abstract createCDDALoader(): CDDALoader;
@@ -48,6 +50,25 @@ export abstract class LoaderSource {
     protected async loadXsystem35() {
         await loadModule('xsystem35');
         Module!.arguments.push('-savedir', '/save');
+    }
+
+    protected async installGameFiles(entries: GameFileEntry[], sys3_savedir = '/save/@') {
+        const engine = detectEngine(entries.map(e => e.name));
+        if (!engine) {
+            throw new NoGamedataError(message.no_gamedata);
+        }
+        if (engine === 'system3') {
+            await this.loadSystem3(sys3_savedir);
+        } else {
+            await this.loadXsystem35();
+        }
+        for (const e of entries) {
+            if (!isGameDataFile(engine, e.name)) {
+                console.log('Skipping ' + e.name);
+                continue;
+            }
+            this.addFile(e.name, await e.load());
+        }
     }
 
     protected addFile(fname: string, chunks: Uint8Array[]) {
@@ -99,7 +120,8 @@ export class CDImageSource extends LoaderSource {
             throw new Error('CDImageSource is not ready to load');
         }
 
-        let engine: 'system3' | 'xsystem35' | undefined;
+        const entries: GameFileEntry[] = [];
+        let savedir: string | undefined;
         for (let { image, metadata } of this.files.values()) {
             const imageReader = await cdimage.createReader(image!, metadata);
             if (!this.cddaReader || imageReader.maxTrack() > 1) {
@@ -110,37 +132,25 @@ export class CDImageSource extends LoaderSource {
             let gamedata = await this.findGameDir(isofs);
             if (!gamedata)
                 continue;
-
-            if (!engine) {
-                engine = (await isofs.getDirEnt('adisk.dat', gamedata)) ? 'system3' : 'xsystem35';
-                if (engine === 'system3') {
-                    await this.loadSystem3(await this.saveDir(isofs));
-                } else {
-                    await this.loadXsystem35();
-                }
-            }
+            if (!savedir)
+                savedir = await this.saveDir(isofs);
 
             for (let e of await isofs.readDir(gamedata)) {
+                if (e.isDirectory)
+                    continue;
+                // Files dropped along with the image take precedence.
                 if (this.patchFiles.some((f) => f.name.toLowerCase() === e.name.toLowerCase()))
                     continue;
-                if (engine === 'system3') {
-                    if (!e.name.toLowerCase().endsWith('.dat'))
-                        continue;
-                } else {
-                    if (e.name.match(/^\.|\.(exe|dll|txt|ini)$/i))
-                        continue;
-                }
-                let chunks = await isofs.readFile(e);
-                this.addFile(e.name, chunks);
+                entries.push({ name: e.name, load: () => isofs.readFile(e) });
             }
         }
-        if (!engine) {
+        if (!savedir) {
             throw new NoGamedataError(message.no_gamedata_dir);
         }
         for (let f of this.patchFiles) {
-            let content = await f.arrayBuffer();
-            this.addFile(f.name, [new Uint8Array(content)]);
+            entries.push({ name: f.name, load: async () => [new Uint8Array(await f.arrayBuffer())] });
         }
+        await this.installGameFiles(entries, savedir);
     }
 
     createCDDALoader(): CDDALoader {
@@ -197,22 +207,18 @@ export class FileSource extends LoaderSource {
     }
 
     protected async doLoad() {
-        if (this.files.some(f => f.name.toLowerCase() === 'adisk.dat')) {
-            await this.loadSystem3('/save/@');
-        } else {
-            await this.loadXsystem35();
-        }
         const playlist = this.files.find(f => f.name.toLowerCase() === 'playlist.txt');
         if (playlist) {
             this.tracks.load_playlist(await playlist.text());
         }
+        const entries: GameFileEntry[] = [];
         for (let f of this.files) {
             if (this.tracks.add(f, f.name)) {
                 continue;
             }
-            let content = await f.arrayBuffer();
-            this.addFile(f.name, [new Uint8Array(content)]);
+            entries.push({ name: f.name, load: async () => [new Uint8Array(await f.arrayBuffer())] });
         }
+        await this.installGameFiles(entries);
     }
 
     createCDDALoader(): CDDALoader {
@@ -237,37 +243,27 @@ export class ZipSource extends LoaderSource {
 
     protected async doLoad() {
         const files = await zip.load(this.zipFile);
-        const dataFiles = files.filter(f => /\.(ald|ain|alk|map|dat|mda|ttf|otf|ini|xsys35rc)$/i.test(f.name));
-        if (dataFiles.length === 0) {
-            const hdmImages = files.filter(f => /\.hdm$/i.test(f.name));
-            if (hdmImages.length > 0) {
-                return this.loadFloppyImages(hdmImages);
-            }
-            const msg = files.some(f => /\.(d88|dsk|xdf)$/i.test(f.name)) ?
-                message.floppy_images_cant_be_used : message.no_ald_in_zip;
-            throw new NoGamedataError(msg);
-        }
-        if (files.some(f => /adisk\.dat$/i.test(f.name))) {
-            await this.loadSystem3('/save/@');
-        } else if (files.some(f => /sa\.ald$/i.test(f.name))) {
-            await this.loadXsystem35();
-        } else {
-            throw new NoGamedataError(message.no_ald_in_zip);
-        }
-
-        for (const f of dataFiles) {
-            const content = await f.extract();
-            const basename = f.name.split('/').pop()!;
-            this.addFile(basename, [content]);
-        }
-        const playlist = files.find(f => /playlist.txt/i.test(f.name));
+        const playlist = files.find(f => /playlist\.txt$/i.test(f.name));
         if (playlist) {
             const text = new TextDecoder().decode(await playlist.extract());
             this.tracks.load_playlist(text);
         }
-        for (const f of files.filter(f => /\.(wav|mp3|ogg)$/i.test(f.name))) {
-            this.tracks.add(f, f.name);
+        const entries: GameFileEntry[] = [];
+        for (const f of files) {
+            if (this.tracks.add(f, f.name)) {
+                continue;
+            }
+            entries.push({ name: basename(f.name), load: async () => [await f.extract()] });
         }
+        if (!detectEngine(entries.map(e => e.name))) {
+            const hdmImages = files.filter(f => /\.hdm$/i.test(f.name));
+            if (hdmImages.length > 0) {
+                return this.loadFloppyImages(hdmImages);
+            }
+            throw new NoGamedataError(files.some(f => /\.(d88|dsk|xdf)$/i.test(f.name)) ?
+                message.floppy_images_cant_be_used : message.no_gamedata);
+        }
+        await this.installGameFiles(entries);
     }
 
     private async loadFloppyImages(floppies: zip.ZipFile[]) {
@@ -319,22 +315,18 @@ export class SevenZipSource extends LoaderSource {
             throw new Error(e.data.error);
         }
         const { files } = e.data;
-        if (files.some(f => f.name.toLowerCase() === 'adisk.dat')) {
-            await this.loadSystem3('/save/@');
-        } else {
-            await this.loadXsystem35();
-        }
-
         const playlist = files.find(f => f.name.toLowerCase() === 'playlist.txt');
         if (playlist) {
             this.tracks.load_playlist(new TextDecoder().decode(playlist.content));
         }
+        const entries: GameFileEntry[] = [];
         for (const f of files) {
             if (this.tracks.add(f, f.name)) {
                 continue;
             }
-            this.addFile(f.name, [f.content]);
+            entries.push({ name: f.name, load: async () => [f.content] });
         }
+        await this.installGameFiles(entries);
     }
 
     createCDDALoader(): CDDALoader {

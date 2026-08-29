@@ -17,6 +17,27 @@ const TADAModePatch: PatchTable = [
     [0x16e61, 0x06, 0x05]
 ];
 
+export type Engine = 'system3' | 'xsystem35';
+
+// Determines the engine to use, from the set of game file names (basenames).
+export function detectEngine(names: Iterable<string>): Engine | undefined {
+    for (const name of names) {
+        const n = name.toLowerCase();
+        if (n === 'adisk.dat')
+            return 'system3';
+        if (n.endsWith('sa.ald'))
+            return 'xsystem35';
+    }
+    return undefined;
+}
+
+export function isGameDataFile(engine: Engine, fname: string): boolean {
+    if (engine === 'system3') {
+        return /\.(dat|mda|ttf|otf)$/i.test(fname) || /^(gakuen\.com|system3\.ini)$/i.test(fname);
+    }
+    return !/\.(exe|dll|txt|wav|mp3|ogg)$/i.test(fname);
+}
+
 export function registerDataFile(fname: string, chunks: Uint8Array[]) {
     const path = '/' + fname;
     var f = Module!.FS.open(path, 'w+', undefined);

@@ -31,6 +31,10 @@ export function isMobileSafari(from?: string, to?: string): boolean {
     return (!from || from <= ver) && (!to || ver < to);
 }
 
+export function basename(path: string): string {
+    return path.replace(/.*[\/\\]/, '');
+}
+
 export function createBlob(data: BlobPart, name: string) {
     return new Blob([data], { type: mimeTypeFromFilename(name) });
 }
