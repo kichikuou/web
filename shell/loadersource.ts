@@ -112,7 +112,7 @@ export class CDImageSource extends LoaderSource {
                 continue;
 
             if (!engine) {
-                engine = (await isofs.getDirEnt('system3.exe', gamedata)) ? 'system3' : 'xsystem35';
+                engine = (await isofs.getDirEnt('adisk.dat', gamedata)) ? 'system3' : 'xsystem35';
                 if (engine === 'system3') {
                     await this.loadSystem3(await this.saveDir(isofs));
                 } else {
