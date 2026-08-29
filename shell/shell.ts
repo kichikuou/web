@@ -58,7 +58,6 @@ class System35Shell {
         }
         switch (gameId) {
         case 'dalk':
-        case 'gakuen_king':
         case 'rance':
         case 'rance2':
         case 'rance3':
