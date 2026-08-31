@@ -4,7 +4,6 @@
 const dictionary_en = {
     cannot_install: 'Cannot install',
     error_occurred: 'An error occurred.',
-    game_over: 'The game is over.',
     input_char_limit: (maxLength: number) => `Up to ${maxLength} characters`,
     midi_init_error: 'Failed to initialize MIDI synthesizer.',
     module_load_failed: (src: string) => `Failed to load ${src}. Please reload the page.`,
@@ -24,7 +23,6 @@ type Dictionary = typeof dictionary_en;
 const dictionary_ja: Dictionary = {
     cannot_install: 'インストールできません',
     error_occurred: 'エラーが発生しました。',
-    game_over: 'ゲームは終了しました。',
     input_char_limit: (maxLength: number) => `全角${maxLength}文字まで`,
     midi_init_error: 'MIDIシンセサイザの初期化に失敗しました。',
     module_load_failed: (src: string) => src + 'の読み込みに失敗しました。リロードしてください。',

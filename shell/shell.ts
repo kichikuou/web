@@ -114,12 +114,6 @@ class System35Shell {
         toolbar.setSkipButtonState(enabled, activated);
     }
 
-    quit() {
-        addToast(message.game_over);
-        gtag('event', 'GameEnd', { event_category: 'Game' });
-        window.onbeforeunload = null;
-    }
-
     syncfs(timeout = 100) {
         syncfs(timeout);
     }
@@ -171,12 +165,6 @@ if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('service-worker.js');
     });
 }
-
-window.addEventListener('beforeinstallprompt', (e: any) => {
-    e.userChoice.then((choiceResult: any) => {
-        gtag('event', 'InstallPrompt', { event_category: 'App', event_label: choiceResult.outcome });
-    });
-});
 
 async function launchPatton() {
     if (!hasPattonSave(Module!.FS)) {
