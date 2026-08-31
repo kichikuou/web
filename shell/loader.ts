@@ -126,7 +126,7 @@ async function install(source: LoaderSource) {
         loaded(source.hasMidi);
     } catch (err) {
         if (err instanceof NoGamedataError) {
-            gtag('event', 'NoGamedata', { event_category: 'Loader', event_label: err.message });
+            gtag('event', 'NoGamedata', { event_category: 'Loader', event_label: err.message, file_types: err.fileTypes });
             addToast(`${message.cannot_install}: ${err.message}`, 'warning');
         } else if (err instanceof Error) {
             gtag('event', 'LoadFailed', { event_category: 'Loader', event_label: err.message });

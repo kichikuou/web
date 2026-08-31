@@ -11,11 +11,25 @@ import * as zip from './zip.js';
 
 export class NoGamedataError implements Error {
     public name = 'NoGamedataError';
-    constructor(public message: string) {}
+    // `fileTypes` summarizes what the user actually gave us, for analytics.
+    constructor(public message: string, public fileTypes?: string) {}
 
     toString() {
         return this.name + ': ' + this.message;
     }
+}
+
+// Returns the most common file extensions in `names`, like "exe:3,cab:2,-:1"
+// ("-" being files without an extension). Kept short because GA4 truncates
+// event parameters at 100 characters.
+export function summarizeFileTypes(names: string[]): string {
+    const counts = new Map<string, number>();
+    for (const name of names) {
+        const ext = /\.([^.]+)$/.exec(basename(name))?.[1].slice(0, 8).toLowerCase() || '-';
+        counts.set(ext, (counts.get(ext) || 0) + 1);
+    }
+    return Array.from(counts).sort((a, b) => b[1] - a[1]).slice(0, 5)
+        .map(([ext, n]) => ext + ':' + n).join(',');
 }
 
 export type GameFileEntry = { name: string, load: () => Promise<Uint8Array[]> };
@@ -55,7 +69,7 @@ export abstract class LoaderSource {
     protected async installGameFiles(entries: GameFileEntry[], sys3_savedir = '/save/@') {
         const engine = detectEngine(entries.map(e => e.name));
         if (!engine) {
-            throw new NoGamedataError(message.no_gamedata);
+            throw new NoGamedataError(message.no_gamedata, summarizeFileTypes(entries.map(e => e.name)));
         }
         if (engine === 'system3') {
             await this.loadSystem3(sys3_savedir);
@@ -261,7 +275,8 @@ export class ZipSource extends LoaderSource {
                 return this.loadFloppyImages(hdmImages);
             }
             throw new NoGamedataError(files.some(f => /\.(d88|dsk|xdf)$/i.test(f.name)) ?
-                message.floppy_images_cant_be_used : message.no_gamedata);
+                message.floppy_images_cant_be_used : message.no_gamedata,
+                summarizeFileTypes(files.map(f => f.name)));
         }
         await this.installGameFiles(entries);
     }
