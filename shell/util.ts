@@ -75,8 +75,8 @@ export function syncfsAsync(fs: SyncfsCapable, populate: boolean): Promise<void>
 
 export function gaException(description: any, fatal: boolean = false) {
     let jsonDescription = JSON.stringify(description, (_, value) => {
-        if (value instanceof DOMException) {
-            return {DOMException: value.name, message: value.message};
+        if (value instanceof Error) {
+            return {name: value.name, message: value.message};
         }
         return value;
     });
