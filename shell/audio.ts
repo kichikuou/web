@@ -21,7 +21,11 @@ const slots: PCMSlot[] = Array.from({length: PCM_SLOTS}, () => ({
 const valance: number[] = new Array(MAX_VOLVAL_CH).fill(1.0);
 let wavCache: AudioBuffer[] = [];
 let bgmCache: AudioBuffer[] = [];
+// A missing archive makes every sound request fail, so report it only once per page session.
+let reportedOpenFailure = false;
 const destNode = volumeControl.audioNode();
+
+class AudioOpenError extends Error {}
 
 function init() {
     document.addEventListener('visibilitychange', onVisibilityChange);
@@ -30,7 +34,7 @@ function init() {
 async function load(type: DRIType, no: number): Promise<AudioBuffer> {
     const dfile = ald_getdata(Module as XSystem35Module, type, no - 1);
     if (!dfile)
-        throw new Error('Failed to open wave ' + no);
+        throw new AudioOpenError('Failed to open wave ' + no);
 
     // If the AudioContext was not created inside a user-initiated event
     // handler, then it will be suspended. Attempt to resume it.
@@ -39,6 +43,15 @@ async function load(type: DRIType, no: number): Promise<AudioBuffer> {
     const audioBuf = await decodeAudioData(dfile.data);
     (type == DRIType.WAVE ? wavCache : bgmCache)[no] = audioBuf;
     return audioBuf;
+}
+
+function reportPCMError(err: unknown) {
+    if (err instanceof AudioOpenError) {
+        if (reportedOpenFailure)
+            return;
+        reportedOpenFailure = true;
+    }
+    gaException({type: 'PCM', err});
 }
 
 async function decodeAudioData(buf: ArrayBuffer): Promise<AudioBuffer> {
@@ -116,7 +129,7 @@ export async function pcm_load(slot: number, no: number, ch: number): Promise<bo
         slots[slot].sound = new PCMSoundSimple(destNode, audioBuf, effectiveGain(slot));
         return true;
     } catch (err) {
-        gaException({type: 'PCM', err});
+        reportPCMError(err);
         return false;
     }
 }
@@ -133,7 +146,7 @@ export async function pcm_load_bgm(slot: number, no: number, ch: number): Promis
         slots[slot].sound = new PCMSoundSimple(destNode, audioBuf, effectiveGain(slot));
         return true;
     } catch (err) {
-        gaException({type: 'PCM', err});
+        reportPCMError(err);
         return false;
     }
 }
@@ -146,7 +159,7 @@ export async function pcm_load_data(slot: number, buf: number, len: number, ch: 
         slots[slot].sound = new PCMSoundSimple(destNode, audioBuf, effectiveGain(slot));
         return true;
     } catch (err) {
-        gaException({type: 'PCM', err});
+        reportPCMError(err);
         return false;
     }
 }
@@ -166,7 +179,7 @@ export async function pcm_load_mixlr(slot: number, noL: number, noR: number, ch:
         slots[slot].sound = new PCMSoundMixLR(destNode, bufs[0], bufs[1], effectiveGain(slot));
         return true;
     } catch (err) {
-        gaException({type: 'PCM', err});
+        reportPCMError(err);
         return false;
     }
 }
