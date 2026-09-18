@@ -264,6 +264,8 @@ export class ZipSource extends LoaderSource {
         }
         const entries: GameFileEntry[] = [];
         for (const f of files) {
+            if (f.name.endsWith('/'))
+                continue;
             if (this.tracks.add(f, f.name)) {
                 continue;
             }
