@@ -83,7 +83,7 @@ export function play(track: number, loop: number) {
         return;
     }
     audio.currentTime = 0;
-    cddaLoader!.getCDDA(track, audio).then(
+    cddaLoader!.getCDDA(track).then(
         (url) => startPlayback(url, loop),
         (err) => gtag('event', 'InvalidTrack', { event_category: 'CDDA' }));
 }

@@ -307,7 +307,7 @@ function ASCIIArrayToString(buffer: Uint8Array): string {
     return String.fromCharCode.apply(null, buffer as any);
 }
 
-export function createWaveFile(sampleRate: number, channels: number, dataSize: number, chunks: BlobPart[]): Blob {
+function createWaveFile(sampleRate: number, channels: number, dataSize: number, chunks: BlobPart[]): Blob {
     let headerBuf = new ArrayBuffer(44);
     let header = new DataView(headerBuf);
     header.setUint32(0, 0x52494646, false); // 'RIFF'

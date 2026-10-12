@@ -1,8 +1,7 @@
 // Copyright (c) 2019 Kichikuou <KichikuouChrome@gmail.com>
 // This source code is governed by the MIT License, see the LICENSE file.
 import type { MainModule as XSystem35Module } from './xsystem35.js';
-import { ald_getdata, isMobileSafari, createBlob, loadScript } from './util.js';
-import { createWaveFile } from './cdimage.js';
+import { ald_getdata, isMobileSafari, createBlob } from './util.js';
 
 export interface CDDALoaderSource {
     hasAudioTrack(): boolean;
@@ -27,12 +26,9 @@ export class CDDALoader {
         return this.source.hasAudioTrack();
     }
 
-    async getCDDA(track: number, target: HTMLAudioElement): Promise<string> {
+    async getCDDA(track: number): Promise<string> {
         if (!this.cache[track]) {
-            let blob = await this.source.extractTrack(track);
-            if (blob.type === 'audio/ogg' && !target.canPlayType('audio/ogg')) {
-                blob = await convertOggToWav(blob);
-            }
+            const blob = await this.source.extractTrack(track);
             this.cache[track] = URL.createObjectURL(blob);
         }
         this.lastTrack = track;
@@ -66,36 +62,4 @@ export class BGMLoader implements CDDALoaderSource {
             throw new Error('BGMLoader: Invalid track ' + track);
         return createBlob(dfile.data, dfile.name);
     }
-}
-
-async function convertOggToWav(blob: Blob): Promise<Blob> {
-    await loadScript('lib/stbvorbis-0.2.2.js');
-    const buf = await blob.arrayBuffer();
-    const chunks: Int16Array<ArrayBuffer>[] = [];
-    let sampleRate = 0;
-    let channels = 0;
-    let dataSize = 0;
-    return new Promise((resolve, reject) => {
-        stbvorbis.decode(buf, (event) => {
-            if (event.error) {
-                reject(event.error);
-            } else if (event.eof) {
-                resolve(createWaveFile(sampleRate, channels, dataSize, chunks));
-            } else {
-                if (chunks.length === 0) {
-                    sampleRate = event.sampleRate;
-                    channels = event.data.length;
-                }
-                const chunk = new Int16Array(event.data[0].length * channels);
-                let ptr = 0;
-                for (let i = 0; i < event.data[0].length; i++) {
-                    for (let j = 0; j < event.data.length; j++) {
-                        chunk[ptr++] = event.data[j][i] * 0x7fff;
-                    }
-                }
-                chunks.push(chunk);
-                dataSize += chunk.byteLength;
-            }
-        });
-    });
 }

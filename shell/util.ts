@@ -7,22 +7,6 @@ export const $: (selector: string) => HTMLElement = document.querySelector.bind(
 
 export const urlParams = new URLSearchParams(location.search.slice(1));
 
-const scriptPromises: Map<string, Promise<any>> = new Map();
-export function loadScript(src: string): Promise<any> {
-    let p = scriptPromises.get(src);
-    if (!p) {
-        let e = document.createElement('script');
-        e.src = src;
-        p = new Promise((resolve, reject) => {
-            e.addEventListener('load', resolve, {once: true});
-            e.addEventListener('error', reject, {once: true});
-        });
-        document.body.appendChild(e);
-        scriptPromises.set(src, p);
-    }
-    return p;
-}
-
 export function isMobileSafari(from?: string, to?: string): boolean {
     let match = navigator.userAgent.match(/OS ([0-9_]+) like Mac OS X\)/);
     if (!match)
@@ -144,15 +128,4 @@ export type EmscriptenModule = (System3Module | XSystem35Module) & EmscriptenOpt
 
 declare global {
     var Module: EmscriptenModule | undefined;
-
-    // stbvorbis.js
-    namespace stbvorbis {
-        type DecodeResult = {
-            data: Float32Array[],
-            sampleRate: number,
-            eof: boolean,
-            error?: string
-        }
-        function decode(buf: ArrayBuffer|Uint8Array, callback: (event: DecodeResult) => void): void;
-    }
 }
